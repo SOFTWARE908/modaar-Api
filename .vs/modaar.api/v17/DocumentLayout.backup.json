@@ -1,0 +1,70 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\modaar\\Backend\\modaar.api\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|d:\\modaar\\backend\\modaar.api\\modaar.api\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|d:\\modaar\\backend\\modaar.api\\modaar.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 4,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:130:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "D:\\modaar\\Backend\\modaar.api\\modaar.api\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "modaar.api\\appsettings.Development.json",
+              "ToolTip": "D:\\modaar\\Backend\\modaar.api\\modaar.api\\appsettings.Development.json",
+              "RelativeToolTip": "modaar.api\\appsettings.Development.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAACOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-05-09T07:51:52.366Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "D:\\modaar\\Backend\\modaar.api\\modaar.api\\appsettings.json",
+              "RelativeDocumentMoniker": "modaar.api\\appsettings.json",
+              "ToolTip": "D:\\modaar\\Backend\\modaar.api\\modaar.api\\appsettings.json",
+              "RelativeToolTip": "modaar.api\\appsettings.json",
+              "ViewState": "AgIAACEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-05-09T07:51:04.794Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

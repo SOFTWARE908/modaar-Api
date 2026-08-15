@@ -1,0 +1,8 @@
+2026-05-09 10:52:42.832 +03:00 [DBG] Microsoft.Extensions.Hosting.Internal.Host Hosting starting
+2026-05-09 10:52:43.187 +03:00 [INF] Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager User profile is available. Using 'C:\Users\softw\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-05-09 10:52:44.294 +03:00 [INF] Microsoft.Hosting.Lifetime Now listening on: https://localhost:7055
+2026-05-09 10:52:44.307 +03:00 [INF] Microsoft.Hosting.Lifetime Now listening on: http://localhost:5259
+2026-05-09 10:52:44.603 +03:00 [INF] Microsoft.Hosting.Lifetime Application started. Press Ctrl+C to shut down.
+2026-05-09 10:52:44.641 +03:00 [INF] Microsoft.Hosting.Lifetime Hosting environment: Development
+2026-05-09 10:52:44.669 +03:00 [INF] Microsoft.Hosting.Lifetime Content root path: D:\modaar\Backend\modaar.Api\modaar.api
+2026-05-09 10:52:44.690 +03:00 [DBG] Microsoft.Extensions.Hosting.Internal.Host Hosting started
