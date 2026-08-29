@@ -1,0 +1,46 @@
+2026-08-15 14:15:21.673 +03:00 [DBG] Microsoft.Extensions.Hosting.Internal.Host Hosting starting
+2026-08-15 14:15:21.752 +03:00 [INF] Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager User profile is available. Using 'C:\Users\Compumarts\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-08-15 14:15:21.976 +03:00 [INF] Microsoft.Hosting.Lifetime Now listening on: https://localhost:7055
+2026-08-15 14:15:21.978 +03:00 [INF] Microsoft.Hosting.Lifetime Now listening on: http://localhost:5259
+2026-08-15 14:15:22.265 +03:00 [INF] Microsoft.Hosting.Lifetime Application started. Press Ctrl+C to shut down.
+2026-08-15 14:15:22.267 +03:00 [INF] Microsoft.Hosting.Lifetime Hosting environment: Development
+2026-08-15 14:15:22.268 +03:00 [INF] Microsoft.Hosting.Lifetime Content root path: C:\Users\Compumarts\Source\Repos\modaar-Api\modaar.api
+2026-08-15 14:15:22.269 +03:00 [DBG] Microsoft.Extensions.Hosting.Internal.Host Hosting started
+2026-08-15 14:15:49.347 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5259/swagger - null null
+2026-08-15 14:15:50.441 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /swagger responded 301 in 10.3909 ms
+2026-08-15 14:15:50.508 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5259/swagger - 301 0 null 1165.3404ms
+2026-08-15 14:15:50.536 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5259/swagger/index.html - null null
+2026-08-15 14:15:50.732 +03:00 [DBG] Microsoft.WebTools.BrowserLink.Net.BrowserLinkMiddleware Response markup is scheduled to include Browser Link script injection.
+2026-08-15 14:15:50.765 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /swagger/index.html responded 200 in 210.0527 ms
+2026-08-15 14:15:50.795 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5259/swagger/swagger-ui.css - null null
+2026-08-15 14:15:50.815 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5259/swagger/index.css - null null
+2026-08-15 14:15:50.825 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5259/swagger/swagger-ui-bundle.js - null null
+2026-08-15 14:15:50.836 +03:00 [DBG] Microsoft.WebTools.BrowserLink.Net.BrowserLinkMiddleware Response markup was updated to include Browser Link script injection.
+2026-08-15 14:15:50.837 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5259/swagger/swagger-ui-standalone-preset.js - null null
+2026-08-15 14:15:50.840 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5259/swagger/index.js - null null
+2026-08-15 14:15:50.918 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /swagger/index.css responded 200 in 12.4897 ms
+2026-08-15 14:15:50.919 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /swagger/swagger-ui.css responded 200 in 62.8993 ms
+2026-08-15 14:15:50.920 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5259/swagger/index.html - 200 null text/html;charset=utf-8 383.7982ms
+2026-08-15 14:15:50.949 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /swagger/swagger-ui-bundle.js responded 200 in 32.7837 ms
+2026-08-15 14:15:50.962 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /swagger/swagger-ui-standalone-preset.js responded 200 in 11.4529 ms
+2026-08-15 14:15:50.973 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /swagger/index.js responded 200 in 1.1222 ms
+2026-08-15 14:15:50.979 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5259/swagger/index.css - 200 152 text/css 164.1924ms
+2026-08-15 14:15:50.985 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5259/swagger/swagger-ui.css - 200 26479 text/css 189.8652ms
+2026-08-15 14:15:51.114 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5259/_framework/aspnetcore-browser-refresh.js - null null
+2026-08-15 14:15:51.167 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5259/swagger/swagger-ui-bundle.js - 200 418181 text/javascript 347.4759ms
+2026-08-15 14:15:51.204 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5259/swagger/swagger-ui-standalone-preset.js - 200 76613 text/javascript 367.1727ms
+2026-08-15 14:15:51.210 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5259/swagger/index.js - 200 null application/javascript;charset=utf-8 369.8456ms
+2026-08-15 14:15:51.223 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5259/_vs/browserLink - null null
+2026-08-15 14:15:51.270 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5259/_framework/aspnetcore-browser-refresh.js - 200 16505 application/javascript; charset=utf-8 156.2696ms
+2026-08-15 14:15:51.622 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5259/_vs/browserLink - 200 null text/javascript; charset=UTF-8 398.5079ms
+2026-08-15 14:15:51.684 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5259/swagger/v1/swagger.json - null null
+2026-08-15 14:15:51.711 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5259/swagger/favicon-32x32.png - null null
+2026-08-15 14:15:51.799 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /swagger/v1/swagger.json responded 200 in 80.4187 ms
+2026-08-15 14:15:51.935 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /swagger/favicon-32x32.png responded 200 in 1.9095 ms
+2026-08-15 14:15:51.938 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5259/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 254.404ms
+2026-08-15 14:15:51.947 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5259/swagger/favicon-32x32.png - 200 628 image/png 235.4576ms
+2026-08-15 22:44:40.249 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5259/_framework/aspnetcore-browser-refresh.js - null null
+2026-08-15 22:44:40.313 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5259/_framework/aspnetcore-browser-refresh.js - 200 16505 application/javascript; charset=utf-8 74.1443ms
+2026-08-15 22:44:40.604 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5259/swagger/v1/swagger.json - null null
+2026-08-15 22:44:40.877 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /swagger/v1/swagger.json responded 200 in 241.0177 ms
+2026-08-15 22:44:40.887 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5259/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 282.336ms

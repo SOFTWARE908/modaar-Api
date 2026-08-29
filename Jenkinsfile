@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOTNET_CLI_HOME = "C:\\Windows\\Temp"
         PUBLISH_DIR     = "C:\\publish_output"
-        IIS_SITE_PATH   = "E:\\test"
+        IIS_SITE_PATH   = "E:\\modaar"
         APP_NAME        = "modaar.api"
     }
 
