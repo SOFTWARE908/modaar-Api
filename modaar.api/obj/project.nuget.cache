@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "TnRCTkxwNsw=",
+  "dgSpecHash": "ltuBXo+Gn8Q=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Compumarts\\Source\\Repos\\modaar-Api\\modaar.api\\modaar.api.csproj",
+  "projectFilePath": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\modaar.api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Compumarts\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\Compumarts\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
