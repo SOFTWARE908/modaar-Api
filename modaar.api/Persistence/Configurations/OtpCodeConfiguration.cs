@@ -14,6 +14,7 @@ public class OtpCodeConfiguration : IEntityTypeConfiguration<OtpCode>
 
         b.Property(o => o.Identifier).HasMaxLength(256).IsRequired();
         b.Property(o => o.CodeHash).HasMaxLength(200).IsRequired();
+        b.Property(o => o.CountryCode).HasMaxLength(8);
 
         b.Property(o => o.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
 

@@ -1,0 +1,720 @@
+2026-09-08 17:45:32.927 +03:00 [DBG] Microsoft.Extensions.Hosting.Internal.Host Hosting starting
+2026-09-08 17:45:32.981 +03:00 [INF] Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager User profile is available. Using 'C:\Users\softw\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-09-08 17:45:33.220 +03:00 [INF] Microsoft.Hosting.Lifetime Now listening on: http://localhost:5299
+2026-09-08 17:45:33.220 +03:00 [INF] Microsoft.Hosting.Lifetime Application started. Press Ctrl+C to shut down.
+2026-09-08 17:45:33.220 +03:00 [INF] Microsoft.Hosting.Lifetime Hosting environment: Development
+2026-09-08 17:45:33.220 +03:00 [INF] Microsoft.Hosting.Lifetime Content root path: D:\modaar1\modaar-Api\modaar.api
+2026-09-08 17:45:33.221 +03:00 [DBG] Microsoft.Extensions.Hosting.Internal.Host Hosting started
+2026-09-08 17:45:44.272 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5299/swagger/v1/swagger.json - null null
+2026-09-08 17:45:44.434 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /swagger/v1/swagger.json responded 200 in 142.0617 ms
+2026-09-08 17:45:44.441 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5299/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 172.7369ms
+2026-09-08 17:45:50.510 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/login - application/json 73
+2026-09-08 17:45:50.519 +03:00 [WRN] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware Failed to determine the https port for redirect.
+2026-09-08 17:45:51.721 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:45:51.746 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(modaar.api.Features.Authentication.Dtos.LoginRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:45:52.781 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (98ms) [Parameters=[@__identifier_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:45:52.823 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (4ms) [Parameters=[@__identifier_0='?' (Size = 20), @__countryCode_1='?' (Size = 8)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[PhoneNumber] = @__identifier_0 AND [u].[CountryCode] = @__countryCode_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:45:52.834 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (2ms) [Parameters=[@__identifier_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+2026-09-08 17:45:52.941 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (2ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Int32), @p2='?' (Size = 200), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 8), @p5='?' (DbType = DateTimeOffset), @p6='?' (Size = 256), @p7='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [OtpCodes] ([Id], [Attempts], [CodeHash], [ConsumedAt], [CountryCode], [ExpiresAt], [Identifier], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7);
+2026-09-08 17:45:52.959 +03:00 [WRN] modaar.api.Common.Auth.LoggingOtpDeliverySender [OTP-DEV] Would deliver code 123456 to 512345678 via "Sms"
+2026-09-08 17:45:52.966 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.SendOtpResponseDto'.
+2026-09-08 17:45:52.977 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api) in 1228.4074ms
+2026-09-08 17:45:52.978 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:45:52.978 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/login responded 200 in 2465.7611 ms
+2026-09-08 17:45:52.983 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/login - 200 null application/json; charset=utf-8 2473.5019ms
+2026-09-08 17:45:53.044 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - application/json 45
+2026-09-08 17:45:53.049 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:45:53.053 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "VerifyOtp", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyOtp(modaar.api.Features.Authentication.Dtos.VerifyOtpRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:45:53.111 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (6ms) [Parameters=[@__identifierNorm_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifierNorm_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:45:53.118 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@p1='?' (DbType = Guid), @p0='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [OtpCodes] SET [ConsumedAt] = @p0
+OUTPUT 1
+WHERE [Id] = @p1;
+2026-09-08 17:45:53.129 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (3ms) [Parameters=[@__otp_CountryCode_0='?' (Size = 8), @__identifierNorm_1='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[CountryCode] = @__otp_CountryCode_0 AND [u].[PhoneNumber] = @__identifierNorm_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:45:53.161 +03:00 [INF] modaar.api.Features.Authentication.Services.AuthService Created account "5b88e7c2-d608-4141-b5c6-eb05e2bc12fe" from a confirmed mobile number.
+2026-09-08 17:45:53.534 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (5ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (Size = 20), @p2='?' (Size = 8), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 256), @p5='?' (Size = 150), @p6='?' (DbType = Boolean), @p7='?' (DbType = Boolean), @p8='?' (DbType = Boolean), @p9='?' (DbType = Boolean), @p10='?' (DbType = DateTimeOffset), @p11='?' (Size = 50), @p12='?' (Size = 500), @p13='?' (Size = 20), @p14='?' (Size = 500), @p15='?' (Size = 20), @p16='?' (DbType = DateTimeOffset), @p17='?' (DbType = Guid), @p18='?' (DbType = DateTimeOffset), @p19='?' (DbType = Guid), @p20='?' (DbType = DateTimeOffset), @p21='?' (Size = 200), @p22='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET NOCOUNT ON;
+INSERT INTO [Users] ([Id], [AccountType], [CountryCode], [DeletedAt], [Email], [FullName], [IsActive], [IsDeleted], [IsEmailVerified], [IsPhoneVerified], [LastLoginAt], [NationalId], [PasswordHash], [PhoneNumber], [ProfileImageUrl], [ProfileStatus], [UpdatedAt])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16);
+INSERT INTO [RefreshTokens] ([Id], [ExpiresAt], [ReplacedByTokenId], [RevokedAt], [TokenHash], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p17, @p18, @p19, @p20, @p21, @p22);
+2026-09-08 17:45:53.544 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.AuthSuccessResponseDto'.
+2026-09-08 17:45:53.550 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api) in 497.0265ms
+2026-09-08 17:45:53.550 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:45:53.550 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/verify-otp responded 200 in 503.5279 ms
+2026-09-08 17:45:53.551 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - 200 null application/json; charset=utf-8 506.3081ms
+2026-09-08 17:46:01.497 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/login - application/json 73
+2026-09-08 17:46:01.501 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:46:01.501 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(modaar.api.Features.Authentication.Dtos.LoginRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:46:01.520 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (2ms) [Parameters=[@__identifier_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:46:01.526 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (6ms) [Parameters=[@__identifier_0='?' (Size = 20), @__countryCode_1='?' (Size = 8)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[PhoneNumber] = @__identifier_0 AND [u].[CountryCode] = @__countryCode_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:46:01.528 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__identifier_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+2026-09-08 17:46:01.530 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Int32), @p2='?' (Size = 200), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 8), @p5='?' (DbType = DateTimeOffset), @p6='?' (Size = 256), @p7='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [OtpCodes] ([Id], [Attempts], [CodeHash], [ConsumedAt], [CountryCode], [ExpiresAt], [Identifier], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7);
+2026-09-08 17:46:01.530 +03:00 [WRN] modaar.api.Common.Auth.LoggingOtpDeliverySender [OTP-DEV] Would deliver code 123456 to 599999999 via "Sms"
+2026-09-08 17:46:01.530 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.SendOtpResponseDto'.
+2026-09-08 17:46:01.530 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api) in 29.243ms
+2026-09-08 17:46:01.530 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:46:01.530 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/login responded 200 in 32.8342 ms
+2026-09-08 17:46:01.531 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/login - 200 null application/json; charset=utf-8 33.3307ms
+2026-09-08 17:46:02.665 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - application/json 45
+2026-09-08 17:46:02.666 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:46:02.666 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "VerifyOtp", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyOtp(modaar.api.Features.Authentication.Dtos.VerifyOtpRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:46:02.680 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__identifierNorm_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifierNorm_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:46:02.682 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing ObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ProblemDetails'.
+2026-09-08 17:46:02.701 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api) in 34.6026ms
+2026-09-08 17:46:02.701 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:46:02.701 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/verify-otp responded 410 in 35.2508 ms
+2026-09-08 17:46:02.701 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - 410 null application/json; charset=utf-8 35.7639ms
+2026-09-08 17:46:03.053 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/resend-otp - application/json 51
+2026-09-08 17:46:03.054 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.ResendOtp (modaar.api)'
+2026-09-08 17:46:03.059 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "ResendOtp", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ResendOtp(modaar.api.Features.Authentication.Dtos.ResendOtpRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:46:03.065 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__identifier_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:46:03.066 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing ObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ProblemDetails'.
+2026-09-08 17:46:03.066 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.ResendOtp (modaar.api) in 7.094ms
+2026-09-08 17:46:03.067 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.ResendOtp (modaar.api)'
+2026-09-08 17:46:03.067 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/resend-otp responded 429 in 12.9243 ms
+2026-09-08 17:46:03.067 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/resend-otp - 429 null application/json; charset=utf-8 13.3546ms
+2026-09-08 17:46:12.352 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/login - application/json 73
+2026-09-08 17:46:12.352 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:46:12.352 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(modaar.api.Features.Authentication.Dtos.LoginRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:46:12.354 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__identifier_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:46:12.355 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__identifier_0='?' (Size = 20), @__countryCode_1='?' (Size = 8)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[PhoneNumber] = @__identifier_0 AND [u].[CountryCode] = @__countryCode_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:46:12.356 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__identifier_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+2026-09-08 17:46:12.358 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Int32), @p2='?' (Size = 200), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 8), @p5='?' (DbType = DateTimeOffset), @p6='?' (Size = 256), @p7='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [OtpCodes] ([Id], [Attempts], [CodeHash], [ConsumedAt], [CountryCode], [ExpiresAt], [Identifier], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7);
+2026-09-08 17:46:12.358 +03:00 [WRN] modaar.api.Common.Auth.LoggingOtpDeliverySender [OTP-DEV] Would deliver code 123456 to 555000111 via "Sms"
+2026-09-08 17:46:12.358 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.SendOtpResponseDto'.
+2026-09-08 17:46:12.358 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api) in 6.0807ms
+2026-09-08 17:46:12.358 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:46:12.358 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/login responded 200 in 6.4223 ms
+2026-09-08 17:46:12.358 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/login - 200 null application/json; charset=utf-8 6.6408ms
+2026-09-08 17:46:12.445 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - application/json 45
+2026-09-08 17:46:12.446 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:46:12.446 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "VerifyOtp", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyOtp(modaar.api.Features.Authentication.Dtos.VerifyOtpRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:46:12.448 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__identifierNorm_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifierNorm_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:46:12.451 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (3ms) [Parameters=[@p1='?' (DbType = Guid), @p0='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [OtpCodes] SET [ConsumedAt] = @p0
+OUTPUT 1
+WHERE [Id] = @p1;
+2026-09-08 17:46:12.455 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (2ms) [Parameters=[@__otp_CountryCode_0='?' (Size = 8), @__identifierNorm_1='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[CountryCode] = @__otp_CountryCode_0 AND [u].[PhoneNumber] = @__identifierNorm_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:46:12.455 +03:00 [INF] modaar.api.Features.Authentication.Services.AuthService Created account "a57c83ea-52ad-44fc-a57d-6140a3ef6c47" from a confirmed mobile number.
+2026-09-08 17:46:12.457 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (Size = 20), @p2='?' (Size = 8), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 256), @p5='?' (Size = 150), @p6='?' (DbType = Boolean), @p7='?' (DbType = Boolean), @p8='?' (DbType = Boolean), @p9='?' (DbType = Boolean), @p10='?' (DbType = DateTimeOffset), @p11='?' (Size = 50), @p12='?' (Size = 500), @p13='?' (Size = 20), @p14='?' (Size = 500), @p15='?' (Size = 20), @p16='?' (DbType = DateTimeOffset), @p17='?' (DbType = Guid), @p18='?' (DbType = DateTimeOffset), @p19='?' (DbType = Guid), @p20='?' (DbType = DateTimeOffset), @p21='?' (Size = 200), @p22='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET NOCOUNT ON;
+INSERT INTO [Users] ([Id], [AccountType], [CountryCode], [DeletedAt], [Email], [FullName], [IsActive], [IsDeleted], [IsEmailVerified], [IsPhoneVerified], [LastLoginAt], [NationalId], [PasswordHash], [PhoneNumber], [ProfileImageUrl], [ProfileStatus], [UpdatedAt])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16);
+INSERT INTO [RefreshTokens] ([Id], [ExpiresAt], [ReplacedByTokenId], [RevokedAt], [TokenHash], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p17, @p18, @p19, @p20, @p21, @p22);
+2026-09-08 17:46:12.458 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.AuthSuccessResponseDto'.
+2026-09-08 17:46:12.459 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api) in 12.9622ms
+2026-09-08 17:46:12.459 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:46:12.459 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/verify-otp responded 200 in 13.2547 ms
+2026-09-08 17:46:12.459 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - 200 null application/json; charset=utf-8 13.4845ms
+2026-09-08 17:46:12.778 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5299/api/profile - null null
+2026-09-08 17:46:12.806 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Users.Controllers.ProfileController.Get (modaar.api)'
+2026-09-08 17:46:12.809 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Get", controller = "Profile"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Get(System.Threading.CancellationToken) on controller modaar.api.Features.Users.Controllers.ProfileController (modaar.api).
+2026-09-08 17:46:12.825 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__userId_0='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[Id] = @__userId_0 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:46:12.828 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Users.Dtos.UserProfileDto'.
+2026-09-08 17:46:12.829 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Users.Controllers.ProfileController.Get (modaar.api) in 20.5783ms
+2026-09-08 17:46:12.829 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Users.Controllers.ProfileController.Get (modaar.api)'
+2026-09-08 17:46:12.829 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /api/profile responded 200 in 51.5929 ms
+2026-09-08 17:46:12.829 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5299/api/profile - 200 null application/json; charset=utf-8 51.8015ms
+2026-09-08 17:46:12.872 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 PUT http://localhost:5299/api/profile - application/json 99
+2026-09-08 17:46:12.874 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Users.Controllers.ProfileController.Update (modaar.api)'
+2026-09-08 17:46:12.876 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Update", controller = "Profile"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Update(modaar.api.Features.Users.Dtos.UpdateProfileRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Users.Controllers.ProfileController (modaar.api).
+2026-09-08 17:46:12.912 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__userId_0='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[Id] = @__userId_0 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:46:12.932 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (5ms) [Parameters=[@__8__locals1_userId_0='?' (DbType = Guid), @__email_1='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Users] AS [u]
+        WHERE [u].[IsDeleted] = CAST(0 AS bit) AND [u].[Id] <> @__8__locals1_userId_0 AND [u].[Email] = @__email_1) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-09-08 17:46:12.940 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (3ms) [Parameters=[@__8__locals2_userId_0='?' (DbType = Guid), @__nationalId_1='?' (Size = 50)], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Users] AS [u]
+        WHERE [u].[IsDeleted] = CAST(0 AS bit) AND [u].[Id] <> @__8__locals2_userId_0 AND [u].[NationalId] = @__nationalId_1) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-09-08 17:46:12.954 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (10ms) [Parameters=[@p6='?' (DbType = Guid), @p0='?' (Size = 20), @p1='?' (Size = 256), @p2='?' (Size = 150), @p3='?' (Size = 50), @p4='?' (Size = 20), @p5='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [Users] SET [AccountType] = @p0, [Email] = @p1, [FullName] = @p2, [NationalId] = @p3, [ProfileStatus] = @p4, [UpdatedAt] = @p5
+OUTPUT 1
+WHERE [Id] = @p6;
+2026-09-08 17:46:12.954 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Users.Dtos.UserProfileDto'.
+2026-09-08 17:46:12.955 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Users.Controllers.ProfileController.Update (modaar.api) in 78.2794ms
+2026-09-08 17:46:12.955 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Users.Controllers.ProfileController.Update (modaar.api)'
+2026-09-08 17:46:12.955 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP PUT /api/profile responded 200 in 82.4589 ms
+2026-09-08 17:46:12.955 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 PUT http://localhost:5299/api/profile - 200 null application/json; charset=utf-8 82.6734ms
+2026-09-08 17:46:13.012 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5299/api/auth/me - null null
+2026-09-08 17:46:13.015 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Me (modaar.api)'
+2026-09-08 17:46:13.019 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Me", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Me(System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:46:13.021 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__userId_0='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[Id] = @__userId_0 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:46:13.022 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Users.Dtos.UserProfileDto'.
+2026-09-08 17:46:13.022 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.Me (modaar.api) in 3.0103ms
+2026-09-08 17:46:13.022 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Me (modaar.api)'
+2026-09-08 17:46:13.022 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /api/auth/me responded 200 in 9.4410 ms
+2026-09-08 17:46:13.022 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5299/api/auth/me - 200 null application/json; charset=utf-8 9.6847ms
+2026-09-08 17:46:55.072 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/login - application/json 73
+2026-09-08 17:46:55.072 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:46:55.073 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(modaar.api.Features.Authentication.Dtos.LoginRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:46:55.075 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__identifier_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:46:55.076 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__identifier_0='?' (Size = 20), @__countryCode_1='?' (Size = 8)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[PhoneNumber] = @__identifier_0 AND [u].[CountryCode] = @__countryCode_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:46:55.077 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__identifier_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+2026-09-08 17:46:55.085 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (4ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Int32), @p2='?' (Size = 200), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 8), @p5='?' (DbType = DateTimeOffset), @p6='?' (Size = 256), @p7='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [OtpCodes] ([Id], [Attempts], [CodeHash], [ConsumedAt], [CountryCode], [ExpiresAt], [Identifier], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7);
+2026-09-08 17:46:55.085 +03:00 [WRN] modaar.api.Common.Auth.LoggingOtpDeliverySender [OTP-DEV] Would deliver code 123456 to 555000111 via "Sms"
+2026-09-08 17:46:55.085 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.SendOtpResponseDto'.
+2026-09-08 17:46:55.085 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api) in 12.8768ms
+2026-09-08 17:46:55.086 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:46:55.086 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/login responded 200 in 13.1783 ms
+2026-09-08 17:46:55.086 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/login - 200 null application/json; charset=utf-8 13.3914ms
+2026-09-08 17:46:55.157 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - application/json 45
+2026-09-08 17:46:55.158 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:46:55.158 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "VerifyOtp", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyOtp(modaar.api.Features.Authentication.Dtos.VerifyOtpRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:46:55.163 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (2ms) [Parameters=[@__identifierNorm_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifierNorm_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:46:55.168 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (4ms) [Parameters=[@p1='?' (DbType = Guid), @p0='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [OtpCodes] SET [ConsumedAt] = @p0
+OUTPUT 1
+WHERE [Id] = @p1;
+2026-09-08 17:46:55.181 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (2ms) [Parameters=[@__knownUserId_0='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[Id] = @__knownUserId_0 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:46:55.189 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (3ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTimeOffset), @p2='?' (DbType = Guid), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 200), @p5='?' (DbType = Guid), @p8='?' (DbType = Guid), @p6='?' (DbType = DateTimeOffset), @p7='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SET NOCOUNT ON;
+INSERT INTO [RefreshTokens] ([Id], [ExpiresAt], [ReplacedByTokenId], [RevokedAt], [TokenHash], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5);
+UPDATE [Users] SET [LastLoginAt] = @p6, [UpdatedAt] = @p7
+OUTPUT 1
+WHERE [Id] = @p8;
+2026-09-08 17:46:55.190 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.AuthSuccessResponseDto'.
+2026-09-08 17:46:55.190 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api) in 32.4311ms
+2026-09-08 17:46:55.190 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:46:55.190 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/verify-otp responded 200 in 33.0796 ms
+2026-09-08 17:46:55.190 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - 200 null application/json; charset=utf-8 33.6727ms
+2026-09-08 17:46:55.842 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5299/api/profile - null null
+2026-09-08 17:46:55.842 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Users.Controllers.ProfileController.Get (modaar.api)'
+2026-09-08 17:46:55.842 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Get", controller = "Profile"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Get(System.Threading.CancellationToken) on controller modaar.api.Features.Users.Controllers.ProfileController (modaar.api).
+2026-09-08 17:46:55.844 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__userId_0='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[Id] = @__userId_0 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:46:55.845 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Users.Dtos.UserProfileDto'.
+2026-09-08 17:46:55.845 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Users.Controllers.ProfileController.Get (modaar.api) in 2.298ms
+2026-09-08 17:46:55.845 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Users.Controllers.ProfileController.Get (modaar.api)'
+2026-09-08 17:46:55.845 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /api/profile responded 200 in 3.0943 ms
+2026-09-08 17:46:55.845 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5299/api/profile - 200 null application/json; charset=utf-8 3.3541ms
+2026-09-08 17:46:55.904 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/login - application/json 72
+2026-09-08 17:46:55.904 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:46:55.904 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(modaar.api.Features.Authentication.Dtos.LoginRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:46:55.905 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__identifier_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:46:55.906 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing ObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ProblemDetails'.
+2026-09-08 17:46:55.906 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api) in 1.9555ms
+2026-09-08 17:46:55.906 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:46:55.906 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/login responded 429 in 2.2625 ms
+2026-09-08 17:46:55.906 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/login - 429 null application/json; charset=utf-8 2.4512ms
+2026-09-08 17:46:55.966 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/login - application/json 57
+2026-09-08 17:46:55.966 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:46:55.966 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(modaar.api.Features.Authentication.Dtos.LoginRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:46:55.968 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__identifier_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:46:55.976 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (3ms) [Parameters=[@__identifier_0='?' (Size = 50)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[NationalId] = @__identifier_0 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:46:55.977 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__identifier_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+2026-09-08 17:46:55.978 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Int32), @p2='?' (Size = 200), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 8), @p5='?' (DbType = DateTimeOffset), @p6='?' (Size = 256), @p7='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [OtpCodes] ([Id], [Attempts], [CodeHash], [ConsumedAt], [CountryCode], [ExpiresAt], [Identifier], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7);
+2026-09-08 17:46:55.978 +03:00 [WRN] modaar.api.Common.Auth.LoggingOtpDeliverySender [OTP-DEV] Would deliver code 123456 to 9999999999 via "Email"
+2026-09-08 17:46:55.978 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.SendOtpResponseDto'.
+2026-09-08 17:46:55.978 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api) in 12.3021ms
+2026-09-08 17:46:55.978 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:46:55.979 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/login responded 200 in 12.6879 ms
+2026-09-08 17:46:55.979 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/login - 200 null application/json; charset=utf-8 12.8993ms
+2026-09-08 17:46:56.033 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - application/json 46
+2026-09-08 17:46:56.033 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:46:56.033 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "VerifyOtp", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyOtp(modaar.api.Features.Authentication.Dtos.VerifyOtpRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:46:56.035 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__identifierNorm_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifierNorm_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:46:56.036 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@p1='?' (DbType = Guid), @p0='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [OtpCodes] SET [ConsumedAt] = @p0
+OUTPUT 1
+WHERE [Id] = @p1;
+2026-09-08 17:46:56.036 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing ObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ProblemDetails'.
+2026-09-08 17:46:56.037 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api) in 3.4039ms
+2026-09-08 17:46:56.037 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:46:56.037 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/verify-otp responded 404 in 3.7337 ms
+2026-09-08 17:46:56.037 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - 404 null application/json; charset=utf-8 3.9349ms
+2026-09-08 17:48:33.784 +03:00 [DBG] Microsoft.Extensions.Hosting.Internal.Host Hosting starting
+2026-09-08 17:48:33.827 +03:00 [INF] Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager User profile is available. Using 'C:\Users\softw\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-09-08 17:48:33.891 +03:00 [INF] Microsoft.Hosting.Lifetime Now listening on: http://localhost:5299
+2026-09-08 17:48:33.891 +03:00 [INF] Microsoft.Hosting.Lifetime Application started. Press Ctrl+C to shut down.
+2026-09-08 17:48:33.892 +03:00 [INF] Microsoft.Hosting.Lifetime Hosting environment: Development
+2026-09-08 17:48:33.892 +03:00 [INF] Microsoft.Hosting.Lifetime Content root path: D:\modaar1\modaar-Api\modaar.api
+2026-09-08 17:48:33.892 +03:00 [DBG] Microsoft.Extensions.Hosting.Internal.Host Hosting started
+2026-09-08 17:48:44.553 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5299/swagger/v1/swagger.json - null null
+2026-09-08 17:48:44.690 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /swagger/v1/swagger.json responded 200 in 125.3151 ms
+2026-09-08 17:48:44.697 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5299/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 145.279ms
+2026-09-08 17:48:57.665 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/login - application/json 73
+2026-09-08 17:48:57.672 +03:00 [WRN] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware Failed to determine the https port for redirect.
+2026-09-08 17:48:57.685 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:48:57.699 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(modaar.api.Features.Authentication.Dtos.LoginRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:48:58.560 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (27ms) [Parameters=[@__identifier_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:48:58.592 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (3ms) [Parameters=[@__nationalNumber_0='?' (Size = 20), @__countryCode_1='?' (Size = 8)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[PhoneNumber] = @__nationalNumber_0 AND [u].[CountryCode] = @__countryCode_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:48:58.602 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (2ms) [Parameters=[@__identifier_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+2026-09-08 17:48:58.701 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (4ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Int32), @p2='?' (Size = 200), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 8), @p5='?' (DbType = DateTimeOffset), @p6='?' (Size = 256), @p7='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [OtpCodes] ([Id], [Attempts], [CodeHash], [ConsumedAt], [CountryCode], [ExpiresAt], [Identifier], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7);
+2026-09-08 17:48:58.717 +03:00 [WRN] modaar.api.Common.Auth.LoggingOtpDeliverySender [OTP-DEV] Would deliver code 123456 to +966777000111 via "Sms"
+2026-09-08 17:48:58.722 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.SendOtpResponseDto'.
+2026-09-08 17:48:58.735 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api) in 1033.8984ms
+2026-09-08 17:48:58.735 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:48:58.736 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/login responded 200 in 1069.0591 ms
+2026-09-08 17:48:58.740 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/login - 200 null application/json; charset=utf-8 1075.9558ms
+2026-09-08 17:48:59.097 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/login - application/json 72
+2026-09-08 17:48:59.099 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:48:59.099 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(modaar.api.Features.Authentication.Dtos.LoginRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:48:59.144 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__identifier_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:48:59.145 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__nationalNumber_0='?' (Size = 20), @__countryCode_1='?' (Size = 8)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[PhoneNumber] = @__nationalNumber_0 AND [u].[CountryCode] = @__countryCode_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:48:59.146 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__identifier_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+2026-09-08 17:48:59.151 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (3ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Int32), @p2='?' (Size = 200), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 8), @p5='?' (DbType = DateTimeOffset), @p6='?' (Size = 256), @p7='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [OtpCodes] ([Id], [Attempts], [CodeHash], [ConsumedAt], [CountryCode], [ExpiresAt], [Identifier], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7);
+2026-09-08 17:48:59.151 +03:00 [WRN] modaar.api.Common.Auth.LoggingOtpDeliverySender [OTP-DEV] Would deliver code 123456 to +20777000111 via "Sms"
+2026-09-08 17:48:59.152 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.SendOtpResponseDto'.
+2026-09-08 17:48:59.152 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api) in 52.5165ms
+2026-09-08 17:48:59.152 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:48:59.152 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/login responded 200 in 53.9049 ms
+2026-09-08 17:48:59.152 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/login - 200 null application/json; charset=utf-8 55.3799ms
+2026-09-08 17:48:59.536 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - application/json 49
+2026-09-08 17:48:59.538 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:48:59.541 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "VerifyOtp", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyOtp(modaar.api.Features.Authentication.Dtos.VerifyOtpRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:48:59.565 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (2ms) [Parameters=[@__identifierNorm_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifierNorm_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:48:59.574 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (4ms) [Parameters=[@p1='?' (DbType = Guid), @p0='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [OtpCodes] SET [ConsumedAt] = @p0
+OUTPUT 1
+WHERE [Id] = @p1;
+2026-09-08 17:48:59.583 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (2ms) [Parameters=[@__8__locals1_otp_CountryCode_0='?' (Size = 8), @__nationalNumber_1='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[CountryCode] = @__8__locals1_otp_CountryCode_0 AND [u].[PhoneNumber] = @__nationalNumber_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:48:59.610 +03:00 [INF] modaar.api.Features.Authentication.Services.AuthService Created account "c1d327c4-c37c-42a5-bbb6-0818f5b3e0ef" from a confirmed mobile number.
+2026-09-08 17:48:59.669 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (4ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (Size = 20), @p2='?' (Size = 8), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 256), @p5='?' (Size = 150), @p6='?' (DbType = Boolean), @p7='?' (DbType = Boolean), @p8='?' (DbType = Boolean), @p9='?' (DbType = Boolean), @p10='?' (DbType = DateTimeOffset), @p11='?' (Size = 50), @p12='?' (Size = 500), @p13='?' (Size = 20), @p14='?' (Size = 500), @p15='?' (Size = 20), @p16='?' (DbType = DateTimeOffset), @p17='?' (DbType = Guid), @p18='?' (DbType = DateTimeOffset), @p19='?' (DbType = Guid), @p20='?' (DbType = DateTimeOffset), @p21='?' (Size = 200), @p22='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET NOCOUNT ON;
+INSERT INTO [Users] ([Id], [AccountType], [CountryCode], [DeletedAt], [Email], [FullName], [IsActive], [IsDeleted], [IsEmailVerified], [IsPhoneVerified], [LastLoginAt], [NationalId], [PasswordHash], [PhoneNumber], [ProfileImageUrl], [ProfileStatus], [UpdatedAt])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16);
+INSERT INTO [RefreshTokens] ([Id], [ExpiresAt], [ReplacedByTokenId], [RevokedAt], [TokenHash], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p17, @p18, @p19, @p20, @p21, @p22);
+2026-09-08 17:48:59.676 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.AuthSuccessResponseDto'.
+2026-09-08 17:48:59.680 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api) in 139.3031ms
+2026-09-08 17:48:59.680 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:48:59.680 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/verify-otp responded 200 in 144.1181 ms
+2026-09-08 17:48:59.680 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - 200 null application/json; charset=utf-8 144.5337ms
+2026-09-08 17:48:59.758 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - application/json 48
+2026-09-08 17:48:59.758 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:48:59.772 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "VerifyOtp", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyOtp(modaar.api.Features.Authentication.Dtos.VerifyOtpRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:48:59.776 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__identifierNorm_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifierNorm_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:48:59.778 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@p1='?' (DbType = Guid), @p0='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [OtpCodes] SET [ConsumedAt] = @p0
+OUTPUT 1
+WHERE [Id] = @p1;
+2026-09-08 17:48:59.780 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__8__locals1_otp_CountryCode_0='?' (Size = 8), @__nationalNumber_1='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[CountryCode] = @__8__locals1_otp_CountryCode_0 AND [u].[PhoneNumber] = @__nationalNumber_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:48:59.780 +03:00 [INF] modaar.api.Features.Authentication.Services.AuthService Created account "f7d770b4-3817-4b03-b94e-f28c16b5bd75" from a confirmed mobile number.
+2026-09-08 17:48:59.783 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (Size = 20), @p2='?' (Size = 8), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 256), @p5='?' (Size = 150), @p6='?' (DbType = Boolean), @p7='?' (DbType = Boolean), @p8='?' (DbType = Boolean), @p9='?' (DbType = Boolean), @p10='?' (DbType = DateTimeOffset), @p11='?' (Size = 50), @p12='?' (Size = 500), @p13='?' (Size = 20), @p14='?' (Size = 500), @p15='?' (Size = 20), @p16='?' (DbType = DateTimeOffset), @p17='?' (DbType = Guid), @p18='?' (DbType = DateTimeOffset), @p19='?' (DbType = Guid), @p20='?' (DbType = DateTimeOffset), @p21='?' (Size = 200), @p22='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET NOCOUNT ON;
+INSERT INTO [Users] ([Id], [AccountType], [CountryCode], [DeletedAt], [Email], [FullName], [IsActive], [IsDeleted], [IsEmailVerified], [IsPhoneVerified], [LastLoginAt], [NationalId], [PasswordHash], [PhoneNumber], [ProfileImageUrl], [ProfileStatus], [UpdatedAt])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16);
+INSERT INTO [RefreshTokens] ([Id], [ExpiresAt], [ReplacedByTokenId], [RevokedAt], [TokenHash], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p17, @p18, @p19, @p20, @p21, @p22);
+2026-09-08 17:48:59.784 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.AuthSuccessResponseDto'.
+2026-09-08 17:48:59.785 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api) in 12.8451ms
+2026-09-08 17:48:59.785 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:48:59.785 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/verify-otp responded 200 in 26.6445 ms
+2026-09-08 17:48:59.785 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - 200 null application/json; charset=utf-8 26.9484ms
+2026-09-08 17:49:09.865 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/login - application/json 73
+2026-09-08 17:49:09.866 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:49:09.866 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(modaar.api.Features.Authentication.Dtos.LoginRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:49:09.870 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__identifier_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:49:09.872 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__nationalNumber_0='?' (Size = 20), @__countryCode_1='?' (Size = 8)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[PhoneNumber] = @__nationalNumber_0 AND [u].[CountryCode] = @__countryCode_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:49:09.874 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__identifier_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+2026-09-08 17:49:09.876 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Int32), @p2='?' (Size = 200), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 8), @p5='?' (DbType = DateTimeOffset), @p6='?' (Size = 256), @p7='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [OtpCodes] ([Id], [Attempts], [CodeHash], [ConsumedAt], [CountryCode], [ExpiresAt], [Identifier], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7);
+2026-09-08 17:49:09.876 +03:00 [WRN] modaar.api.Common.Auth.LoggingOtpDeliverySender [OTP-DEV] Would deliver code 123456 to +966888000111 via "Sms"
+2026-09-08 17:49:09.877 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.SendOtpResponseDto'.
+2026-09-08 17:49:09.877 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api) in 10.8981ms
+2026-09-08 17:49:09.877 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:49:09.877 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/login responded 200 in 11.6073 ms
+2026-09-08 17:49:09.877 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/login - 200 null application/json; charset=utf-8 12.1293ms
+2026-09-08 17:49:10.204 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - application/json 49
+2026-09-08 17:49:10.204 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:49:10.204 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "VerifyOtp", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyOtp(modaar.api.Features.Authentication.Dtos.VerifyOtpRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:49:10.206 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__identifierNorm_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifierNorm_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:49:10.209 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (3ms) [Parameters=[@p1='?' (DbType = Guid), @p0='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [OtpCodes] SET [ConsumedAt] = @p0
+OUTPUT 1
+WHERE [Id] = @p1;
+2026-09-08 17:49:10.210 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__8__locals1_otp_CountryCode_0='?' (Size = 8), @__nationalNumber_1='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[CountryCode] = @__8__locals1_otp_CountryCode_0 AND [u].[PhoneNumber] = @__nationalNumber_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:49:10.210 +03:00 [INF] modaar.api.Features.Authentication.Services.AuthService Created account "308e4b13-24cc-4902-b022-545bec1a4e8d" from a confirmed mobile number.
+2026-09-08 17:49:10.212 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (Size = 20), @p2='?' (Size = 8), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 256), @p5='?' (Size = 150), @p6='?' (DbType = Boolean), @p7='?' (DbType = Boolean), @p8='?' (DbType = Boolean), @p9='?' (DbType = Boolean), @p10='?' (DbType = DateTimeOffset), @p11='?' (Size = 50), @p12='?' (Size = 500), @p13='?' (Size = 20), @p14='?' (Size = 500), @p15='?' (Size = 20), @p16='?' (DbType = DateTimeOffset), @p17='?' (DbType = Guid), @p18='?' (DbType = DateTimeOffset), @p19='?' (DbType = Guid), @p20='?' (DbType = DateTimeOffset), @p21='?' (Size = 200), @p22='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET NOCOUNT ON;
+INSERT INTO [Users] ([Id], [AccountType], [CountryCode], [DeletedAt], [Email], [FullName], [IsActive], [IsDeleted], [IsEmailVerified], [IsPhoneVerified], [LastLoginAt], [NationalId], [PasswordHash], [PhoneNumber], [ProfileImageUrl], [ProfileStatus], [UpdatedAt])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16);
+INSERT INTO [RefreshTokens] ([Id], [ExpiresAt], [ReplacedByTokenId], [RevokedAt], [TokenHash], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p17, @p18, @p19, @p20, @p21, @p22);
+2026-09-08 17:49:10.213 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.AuthSuccessResponseDto'.
+2026-09-08 17:49:10.213 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api) in 9.0324ms
+2026-09-08 17:49:10.213 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:49:10.213 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/verify-otp responded 200 in 9.4357 ms
+2026-09-08 17:49:10.213 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - 200 null application/json; charset=utf-8 9.669ms
+2026-09-08 17:49:10.478 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5299/api/profile - null null
+2026-09-08 17:49:10.504 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Users.Controllers.ProfileController.Get (modaar.api)'
+2026-09-08 17:49:10.506 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Get", controller = "Profile"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Get(System.Threading.CancellationToken) on controller modaar.api.Features.Users.Controllers.ProfileController (modaar.api).
+2026-09-08 17:49:10.519 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__userId_0='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[Id] = @__userId_0 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:49:10.522 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Users.Dtos.UserProfileDto'.
+2026-09-08 17:49:10.523 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Users.Controllers.ProfileController.Get (modaar.api) in 17.0426ms
+2026-09-08 17:49:10.523 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Users.Controllers.ProfileController.Get (modaar.api)'
+2026-09-08 17:49:10.523 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /api/profile responded 200 in 44.8684 ms
+2026-09-08 17:49:10.523 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5299/api/profile - 200 null application/json; charset=utf-8 45.0897ms
+2026-09-08 17:49:10.568 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/register - application/json 2
+2026-09-08 17:49:10.568 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/register responded 404 in 0.1990 ms
+2026-09-08 17:49:10.569 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/register - 404 0 null 0.5492ms
+2026-09-08 17:49:10.569 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request reached the end of the middleware pipeline without being handled by application code. Request path: POST http://localhost:5299/api/auth/register, Response status code: 404
+2026-09-08 17:49:10.614 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 PUT http://localhost:5299/api/profile - application/json 38
+2026-09-08 17:49:10.616 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Users.Controllers.ProfileController.Update (modaar.api)'
+2026-09-08 17:49:10.619 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Update", controller = "Profile"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Update(modaar.api.Features.Users.Dtos.UpdateProfileRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Users.Controllers.ProfileController (modaar.api).
+2026-09-08 17:49:10.656 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing BadRequestObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ValidationProblemDetails'.
+2026-09-08 17:49:10.670 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Users.Controllers.ProfileController.Update (modaar.api) in 51.4722ms
+2026-09-08 17:49:10.671 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Users.Controllers.ProfileController.Update (modaar.api)'
+2026-09-08 17:49:10.671 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP PUT /api/profile responded 400 in 55.9903 ms
+2026-09-08 17:49:10.671 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 PUT http://localhost:5299/api/profile - 400 null application/json; charset=utf-8 56.1835ms
+2026-09-08 17:49:10.724 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 PUT http://localhost:5299/api/profile - application/json 27
+2026-09-08 17:49:10.726 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Users.Controllers.ProfileController.Update (modaar.api)'
+2026-09-08 17:49:10.727 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Update", controller = "Profile"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Update(modaar.api.Features.Users.Dtos.UpdateProfileRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Users.Controllers.ProfileController (modaar.api).
+2026-09-08 17:49:10.737 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__userId_0='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[Id] = @__userId_0 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:49:10.754 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (4ms) [Parameters=[@__8__locals1_userId_0='?' (DbType = Guid), @__email_1='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Users] AS [u]
+        WHERE [u].[IsDeleted] = CAST(0 AS bit) AND [u].[Id] <> @__8__locals1_userId_0 AND [u].[Email] = @__email_1) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-09-08 17:49:10.755 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing ObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ProblemDetails'.
+2026-09-08 17:49:10.759 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Users.Controllers.ProfileController.Update (modaar.api) in 32.7861ms
+2026-09-08 17:49:10.759 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Users.Controllers.ProfileController.Update (modaar.api)'
+2026-09-08 17:49:10.760 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP PUT /api/profile responded 409 in 35.0497 ms
+2026-09-08 17:49:10.760 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 PUT http://localhost:5299/api/profile - 409 null application/json; charset=utf-8 35.3434ms
+2026-09-08 17:49:10.814 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - application/json 49
+2026-09-08 17:49:10.814 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:49:10.814 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "VerifyOtp", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyOtp(modaar.api.Features.Authentication.Dtos.VerifyOtpRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:49:10.816 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__identifierNorm_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifierNorm_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:49:10.816 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing ObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ProblemDetails'.
+2026-09-08 17:49:10.816 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api) in 2.257ms
+2026-09-08 17:49:10.817 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:49:10.817 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/verify-otp responded 410 in 2.6142 ms
+2026-09-08 17:49:10.817 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - 410 null application/json; charset=utf-8 2.8587ms
+2026-09-08 17:49:10.878 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5299/api/profile - null null
+2026-09-08 17:49:10.879 +03:00 [INF] Microsoft.AspNetCore.Authorization.DefaultAuthorizationService Authorization failed. These requirements were not met:
+DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+2026-09-08 17:49:10.886 +03:00 [INF] Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerHandler AuthenticationScheme: Bearer was challenged.
+2026-09-08 17:49:10.886 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /api/profile responded 401 in 7.4166 ms
+2026-09-08 17:49:10.886 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5299/api/profile - 401 0 null 7.7605ms
+2026-09-08 17:49:21.284 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/login - application/json 73
+2026-09-08 17:49:21.284 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:49:21.284 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(modaar.api.Features.Authentication.Dtos.LoginRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:49:21.286 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__identifier_0='?' (Size = 256)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:49:21.286 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__nationalNumber_0='?' (Size = 20), @__countryCode_1='?' (Size = 8)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[PhoneNumber] = @__nationalNumber_0 AND [u].[CountryCode] = @__countryCode_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:49:21.287 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__identifier_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifier_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+2026-09-08 17:49:21.288 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Int32), @p2='?' (Size = 200), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 8), @p5='?' (DbType = DateTimeOffset), @p6='?' (Size = 256), @p7='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [OtpCodes] ([Id], [Attempts], [CodeHash], [ConsumedAt], [CountryCode], [ExpiresAt], [Identifier], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7);
+2026-09-08 17:49:21.288 +03:00 [WRN] modaar.api.Common.Auth.LoggingOtpDeliverySender [OTP-DEV] Would deliver code 123456 to +966999000111 via "Sms"
+2026-09-08 17:49:21.288 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.SendOtpResponseDto'.
+2026-09-08 17:49:21.288 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api) in 4.1092ms
+2026-09-08 17:49:21.288 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.Login (modaar.api)'
+2026-09-08 17:49:21.288 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/login responded 200 in 4.3409 ms
+2026-09-08 17:49:21.288 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/login - 200 null application/json; charset=utf-8 4.5174ms
+2026-09-08 17:49:21.627 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - application/json 49
+2026-09-08 17:49:21.627 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:49:21.627 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "VerifyOtp", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyOtp(modaar.api.Features.Authentication.Dtos.VerifyOtpRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:49:21.630 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@__identifierNorm_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifierNorm_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:49:21.632 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (2ms) [Parameters=[@p1='?' (DbType = Guid), @p0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [OtpCodes] SET [Attempts] = @p0
+OUTPUT 1
+WHERE [Id] = @p1;
+2026-09-08 17:49:21.633 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing ObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ProblemDetails'.
+2026-09-08 17:49:21.633 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api) in 5.2229ms
+2026-09-08 17:49:21.633 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:49:21.633 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/verify-otp responded 400 in 5.5147 ms
+2026-09-08 17:49:21.634 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - 400 null application/json; charset=utf-8 6.3567ms
+2026-09-08 17:49:21.675 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - application/json 49
+2026-09-08 17:49:21.675 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:49:21.675 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "VerifyOtp", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyOtp(modaar.api.Features.Authentication.Dtos.VerifyOtpRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:49:21.677 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__identifierNorm_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifierNorm_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:49:21.678 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (1ms) [Parameters=[@p1='?' (DbType = Guid), @p0='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [OtpCodes] SET [ConsumedAt] = @p0
+OUTPUT 1
+WHERE [Id] = @p1;
+2026-09-08 17:49:21.678 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__8__locals1_otp_CountryCode_0='?' (Size = 8), @__nationalNumber_1='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[Id], [u].[AccountType], [u].[CountryCode], [u].[CreatedAt], [u].[DeletedAt], [u].[Email], [u].[FullName], [u].[IsActive], [u].[IsDeleted], [u].[IsEmailVerified], [u].[IsPhoneVerified], [u].[LastLoginAt], [u].[NationalId], [u].[PasswordHash], [u].[PhoneNumber], [u].[ProfileImageUrl], [u].[ProfileStatus], [u].[UpdatedAt]
+FROM [Users] AS [u]
+WHERE [u].[CountryCode] = @__8__locals1_otp_CountryCode_0 AND [u].[PhoneNumber] = @__nationalNumber_1 AND [u].[IsDeleted] = CAST(0 AS bit)
+2026-09-08 17:49:21.678 +03:00 [INF] modaar.api.Features.Authentication.Services.AuthService Created account "00ad955e-4eee-4688-96aa-c3ca21da2ee6" from a confirmed mobile number.
+2026-09-08 17:49:21.680 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (Size = 20), @p2='?' (Size = 8), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 256), @p5='?' (Size = 150), @p6='?' (DbType = Boolean), @p7='?' (DbType = Boolean), @p8='?' (DbType = Boolean), @p9='?' (DbType = Boolean), @p10='?' (DbType = DateTimeOffset), @p11='?' (Size = 50), @p12='?' (Size = 500), @p13='?' (Size = 20), @p14='?' (Size = 500), @p15='?' (Size = 20), @p16='?' (DbType = DateTimeOffset), @p17='?' (DbType = Guid), @p18='?' (DbType = DateTimeOffset), @p19='?' (DbType = Guid), @p20='?' (DbType = DateTimeOffset), @p21='?' (Size = 200), @p22='?' (DbType = Guid)], CommandType='"Text"', CommandTimeout='30']
+SET NOCOUNT ON;
+INSERT INTO [Users] ([Id], [AccountType], [CountryCode], [DeletedAt], [Email], [FullName], [IsActive], [IsDeleted], [IsEmailVerified], [IsPhoneVerified], [LastLoginAt], [NationalId], [PasswordHash], [PhoneNumber], [ProfileImageUrl], [ProfileStatus], [UpdatedAt])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16);
+INSERT INTO [RefreshTokens] ([Id], [ExpiresAt], [ReplacedByTokenId], [RevokedAt], [TokenHash], [UserId])
+OUTPUT INSERTED.[CreatedAt]
+VALUES (@p17, @p18, @p19, @p20, @p21, @p22);
+2026-09-08 17:49:21.680 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing OkObjectResult, writing value of type 'modaar.api.Features.Authentication.Dtos.AuthSuccessResponseDto'.
+2026-09-08 17:49:21.680 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api) in 5.0436ms
+2026-09-08 17:49:21.680 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:49:21.680 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/verify-otp responded 200 in 5.3006 ms
+2026-09-08 17:49:21.680 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - 200 null application/json; charset=utf-8 5.4658ms
+2026-09-08 17:49:21.932 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - application/json 49
+2026-09-08 17:49:21.933 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executing endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:49:21.933 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Route matched with {action = "VerifyOtp", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyOtp(modaar.api.Features.Authentication.Dtos.VerifyOtpRequestDto, System.Threading.CancellationToken) on controller modaar.api.Features.Authentication.Controllers.AuthController (modaar.api).
+2026-09-08 17:49:21.934 +03:00 [INF] Microsoft.EntityFrameworkCore.Database.Command Executed DbCommand (0ms) [Parameters=[@__identifierNorm_0='?' (Size = 256), @__now_1='?' (DbType = DateTimeOffset)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [o].[Id], [o].[Attempts], [o].[CodeHash], [o].[ConsumedAt], [o].[CountryCode], [o].[CreatedAt], [o].[ExpiresAt], [o].[Identifier], [o].[UserId]
+FROM [OtpCodes] AS [o]
+WHERE [o].[Identifier] = @__identifierNorm_0 AND [o].[ConsumedAt] IS NULL AND [o].[ExpiresAt] > @__now_1
+ORDER BY [o].[CreatedAt] DESC
+2026-09-08 17:49:21.934 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor Executing ObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ProblemDetails'.
+2026-09-08 17:49:21.935 +03:00 [INF] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker Executed action modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api) in 1.8181ms
+2026-09-08 17:49:21.935 +03:00 [INF] Microsoft.AspNetCore.Routing.EndpointMiddleware Executed endpoint 'modaar.api.Features.Authentication.Controllers.AuthController.VerifyOtp (modaar.api)'
+2026-09-08 17:49:21.935 +03:00 [INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP POST /api/auth/verify-otp responded 410 in 2.0497 ms
+2026-09-08 17:49:21.935 +03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 POST http://localhost:5299/api/auth/verify-otp - 410 null application/json; charset=utf-8 2.2267ms

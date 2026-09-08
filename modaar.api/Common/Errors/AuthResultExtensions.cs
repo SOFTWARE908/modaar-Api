@@ -32,7 +32,7 @@ public static class AuthResultExtensions
         AuthErrorCode.UserNotFound             => (StatusCodes.Status404NotFound,      "User not found"),
         AuthErrorCode.AccountInactive          => (StatusCodes.Status403Forbidden,     "Account inactive"),
         AuthErrorCode.AccountTypeNotAllowed    => (StatusCodes.Status400BadRequest,    "Account type not allowed"),
-        AuthErrorCode.DuplicateRegistration    => (StatusCodes.Status409Conflict,      "Duplicate registration"),
+        AuthErrorCode.ProfileFieldTaken        => (StatusCodes.Status409Conflict,      "Profile field already in use"),
         AuthErrorCode.OtpExpired               => (StatusCodes.Status410Gone,          "OTP expired"),
         AuthErrorCode.OtpInvalid               => (StatusCodes.Status400BadRequest,    "Invalid OTP"),
         AuthErrorCode.OtpMaxAttempts           => (StatusCodes.Status429TooManyRequests, "Too many OTP attempts"),

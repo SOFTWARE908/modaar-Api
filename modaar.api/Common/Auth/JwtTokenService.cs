@@ -25,6 +25,19 @@ public sealed class JwtTokenService : IJwtTokenService
     public string CreateAccessToken(User user)
     {
         var now = _time.GetUtcNow().UtcDateTime;
+
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(JwtRegisteredClaimNames.PhoneNumber, user.CountryCode + user.PhoneNumber),
+            new("account_type", user.AccountType.ToString())
+        };
+
+        // Only present once the user has filled in their profile.
+        if (!string.IsNullOrEmpty(user.Email))
+            claims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
+
         var descriptor = new SecurityTokenDescriptor
         {
             Issuer = _settings.Issuer,
@@ -32,13 +45,7 @@ public sealed class JwtTokenService : IJwtTokenService
             IssuedAt = now,
             NotBefore = now,
             Expires = now.AddMinutes(_settings.AccessTokenExpiresMinutes),
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("account_type", user.AccountType.ToString())
-            }),
+            Subject = new ClaimsIdentity(claims),
             SigningCredentials = _signingCredentials
         };
 

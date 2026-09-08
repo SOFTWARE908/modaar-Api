@@ -1138,7 +1138,14 @@
           }
         }
       },
-      "System.Formats.Asn1/9.0.19": {},
+      "System.Formats.Asn1/9.0.19": {
+        "runtime": {
+          "lib/net9.0/System.Formats.Asn1.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.1926.36724"
+          }
+        }
+      },
       "System.IdentityModel.Tokens.Jwt/8.19.2": {
         "dependencies": {
           "Microsoft.IdentityModel.JsonWebTokens": "8.19.2",

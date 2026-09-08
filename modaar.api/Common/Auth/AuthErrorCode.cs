@@ -6,7 +6,7 @@ public enum AuthErrorCode
     UserNotFound,
     AccountInactive,
     AccountTypeNotAllowed,
-    DuplicateRegistration,
+    ProfileFieldTaken,
     OtpExpired,
     OtpInvalid,
     OtpMaxAttempts,
