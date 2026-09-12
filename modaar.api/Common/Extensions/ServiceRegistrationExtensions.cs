@@ -9,6 +9,7 @@ using Microsoft.OpenApi;
 using modaar.api.Common.Auth;
 using modaar.api.Common.Validation;
 using modaar.api.Features.Authentication.Services;
+using modaar.api.Features.Properties.Services;
 using modaar.api.Features.Users.Services;
 using modaar.api.Persistence;
 using JsonWebTokens = Microsoft.IdentityModel.JsonWebTokens;
@@ -39,6 +40,9 @@ public static class ServiceRegistrationExtensions
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IProfileService, ProfileService>();
+
+        //////////////Properties//////////////////////
+        services.AddScoped<IPropertyService, PropertyService>();
 
         var jwtSection = configuration.GetSection(JwtSettings.SectionName);
         services.Configure<JwtSettings>(jwtSection);
@@ -76,6 +80,8 @@ public static class ServiceRegistrationExtensions
             });
 
         services.AddAuthorization();
+
+
         return services;
     }
 

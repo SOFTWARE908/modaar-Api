@@ -3,6 +3,14 @@
   "WorkspaceRootPath": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\persistence\\configurations\\maintenanceconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\persistence\\configurations\\maintenanceconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\persistence\\configurations\\userconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\persistence\\configurations\\userconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
@@ -11,12 +19,12 @@
       "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\modaar.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
-      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\modaar.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\persistence\\configurations\\contractconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\persistence\\configurations\\contractconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\properties\\dtos\\propertydetailsdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\properties\\dtos\\propertydetailsdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -27,8 +35,128 @@
       "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\common\\extensions\\serviceregistrationextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\common\\errors\\globalexceptionhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\common\\errors\\globalexceptionhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\common\\results\\result.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\common\\results\\result.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\common\\dtos\\pagedresultdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\common\\dtos\\pagedresultdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\properties\\controllers\\propertiescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\properties\\controllers\\propertiescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\users\\entities\\brokerreview.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\users\\entities\\brokerreview.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\properties\\dtos\\propertyrequestdtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\properties\\dtos\\propertyrequestdtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\properties\\validation\\propertyvalidators.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\properties\\validation\\propertyvalidators.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\properties\\services\\propertyservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\properties\\services\\propertyservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\properties\\services\\ipropertyservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\properties\\services\\ipropertyservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\properties\\enums\\propertyenums.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\properties\\enums\\propertyenums.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\persistence\\modaardbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\persistence\\modaardbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\persistence\\configurations\\brokerconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\persistence\\configurations\\brokerconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\users\\entities\\broker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\users\\entities\\broker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\persistence\\configurations\\propertyconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\persistence\\configurations\\propertyconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\properties\\entities\\propertyhandover.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\properties\\entities\\propertyhandover.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\properties\\entities\\property.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\properties\\entities\\property.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\common\\time\\sauditime.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\common\\time\\sauditime.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\maintenance\\enums\\maintenanceservicetype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\maintenance\\enums\\maintenanceservicetype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\payments\\dtos\\paymentdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\payments\\dtos\\paymentdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\contracts\\enums\\contractenums.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\contracts\\enums\\contractenums.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\contracts\\entities\\contract.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\contracts\\entities\\contract.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\contracts\\entities\\contractrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\contracts\\entities\\contractrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\users\\dtos\\tenantdashboarddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\users\\dtos\\tenantdashboarddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\payments\\enums\\paymenttype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\payments\\enums\\paymenttype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\users\\dtos\\tenantdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\users\\dtos\\tenantdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\users\\dtos\\tenantunitcarddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\users\\dtos\\tenantunitcarddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\users\\dtos\\updateprofilerequestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\users\\dtos\\updateprofilerequestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\users\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\features\\users\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\persistence\\configurations\\otpcodeconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\persistence\\configurations\\otpcodeconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\modaar.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\modaar.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|solutionrelative:modaar.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{3AF25085-6782-45E2-88DD-0F84D3C51E43}|modaar.api\\modaar.api.csproj|c:\\users\\compumarts\\source\\repos\\modaar-api\\modaar.api\\features\\authentication\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -42,7 +170,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 9,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Bookmark",
@@ -66,7 +194,411 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
+              "Title": "MaintenanceConfiguration.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\Configurations\\MaintenanceConfiguration.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Persistence\\Configurations\\MaintenanceConfiguration.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\Configurations\\MaintenanceConfiguration.cs*",
+              "RelativeToolTip": "modaar.api\\Persistence\\Configurations\\MaintenanceConfiguration.cs*",
+              "ViewState": "AgIAAJoAAAAAAAAAAAAjwKQAAABhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T12:03:22.375Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ContractConfiguration.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\Configurations\\ContractConfiguration.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Persistence\\Configurations\\ContractConfiguration.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\Configurations\\ContractConfiguration.cs",
+              "RelativeToolTip": "modaar.api\\Persistence\\Configurations\\ContractConfiguration.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T12:03:15.377Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "PropertyDetailsDto.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Dtos\\PropertyDetailsDto.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Properties\\Dtos\\PropertyDetailsDto.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Dtos\\PropertyDetailsDto.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Properties\\Dtos\\PropertyDetailsDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T12:03:04.08Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "GlobalExceptionHandler.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Common\\Errors\\GlobalExceptionHandler.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Common\\Errors\\GlobalExceptionHandler.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Common\\Errors\\GlobalExceptionHandler.cs",
+              "RelativeToolTip": "modaar.api\\Common\\Errors\\GlobalExceptionHandler.cs",
+              "ViewState": "AgIAABIAAAAAAAAAAAA1wEoAAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T11:49:01.576Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "PagedResultDto.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Common\\Dtos\\PagedResultDto.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Common\\Dtos\\PagedResultDto.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Common\\Dtos\\PagedResultDto.cs",
+              "RelativeToolTip": "modaar.api\\Common\\Dtos\\PagedResultDto.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAqwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T11:38:19.372Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "PropertyValidators.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Validation\\PropertyValidators.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Properties\\Validation\\PropertyValidators.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Validation\\PropertyValidators.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Properties\\Validation\\PropertyValidators.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADEAAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T10:45:19.449Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "PropertyRequestDtos.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Dtos\\PropertyRequestDtos.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Properties\\Dtos\\PropertyRequestDtos.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Dtos\\PropertyRequestDtos.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Properties\\Dtos\\PropertyRequestDtos.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAAwDUAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T10:40:25.266Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "BrokerReview.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Entities\\BrokerReview.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Users\\Entities\\BrokerReview.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Entities\\BrokerReview.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Users\\Entities\\BrokerReview.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAACAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T10:04:48.117Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "PropertiesController.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Controllers\\PropertiesController.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Properties\\Controllers\\PropertiesController.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Controllers\\PropertiesController.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Properties\\Controllers\\PropertiesController.cs",
+              "ViewState": "AgIAAE8AAAAAAAAAAAAUwFAAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T09:45:48.11Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "SaudiTime.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Common\\Time\\SaudiTime.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Common\\Time\\SaudiTime.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Common\\Time\\SaudiTime.cs",
+              "RelativeToolTip": "modaar.api\\Common\\Time\\SaudiTime.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABgAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T09:44:42.137Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Result.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Common\\Results\\Result.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Common\\Results\\Result.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Common\\Results\\Result.cs",
+              "RelativeToolTip": "modaar.api\\Common\\Results\\Result.cs",
+              "ViewState": "AgIAABgAAAAAAAAAAAAywCIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T09:41:14.334Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "PropertyService.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Services\\PropertyService.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Properties\\Services\\PropertyService.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Services\\PropertyService.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Properties\\Services\\PropertyService.cs",
+              "ViewState": "AgIAACwBAAAAAAAAAADwvzwBAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T09:39:11.032Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "IPropertyService.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Services\\IPropertyService.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Properties\\Services\\IPropertyService.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Services\\IPropertyService.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Properties\\Services\\IPropertyService.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAA2wBsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-12T09:39:06.551Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "PropertyHandover.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Entities\\PropertyHandover.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Properties\\Entities\\PropertyHandover.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Entities\\PropertyHandover.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Properties\\Entities\\PropertyHandover.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:43:21.736Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "ContractRequest.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Contracts\\Entities\\ContractRequest.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Contracts\\Entities\\ContractRequest.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Contracts\\Entities\\ContractRequest.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Contracts\\Entities\\ContractRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:39:48.081Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "Contract.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Contracts\\Entities\\Contract.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Contracts\\Entities\\Contract.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Contracts\\Entities\\Contract.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Contracts\\Entities\\Contract.cs",
+              "ViewState": "AgIAACUAAAAAAAAAAAAmwDEAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:38:20.428Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "ContractEnums.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Contracts\\Enums\\ContractEnums.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Contracts\\Enums\\ContractEnums.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Contracts\\Enums\\ContractEnums.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Contracts\\Enums\\ContractEnums.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:37:38.564Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "PropertyConfiguration.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\Configurations\\PropertyConfiguration.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Persistence\\Configurations\\PropertyConfiguration.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\Configurations\\PropertyConfiguration.cs",
+              "RelativeToolTip": "modaar.api\\Persistence\\Configurations\\PropertyConfiguration.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAQwBwAAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:19:32.486Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "Property.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Entities\\Property.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Properties\\Entities\\Property.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Entities\\Property.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Properties\\Entities\\Property.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:19:13.779Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "PropertyEnums.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Enums\\PropertyEnums.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Properties\\Enums\\PropertyEnums.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Properties\\Enums\\PropertyEnums.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Properties\\Enums\\PropertyEnums.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAAwBQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:18:45.479Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "MaintenanceServiceType.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Maintenance\\Enums\\MaintenanceServiceType.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Maintenance\\Enums\\MaintenanceServiceType.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Maintenance\\Enums\\MaintenanceServiceType.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Maintenance\\Enums\\MaintenanceServiceType.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:05:40.752Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "PaymentDto.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Payments\\Dtos\\PaymentDto.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Payments\\Dtos\\PaymentDto.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Payments\\Dtos\\PaymentDto.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Payments\\Dtos\\PaymentDto.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAYwAIAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:14:08.854Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "PaymentType.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Payments\\Enums\\PaymentType.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Payments\\Enums\\PaymentType.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Payments\\Enums\\PaymentType.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Payments\\Enums\\PaymentType.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:13:14.768Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "TenantDashboardDto.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Dtos\\TenantDashboardDto.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Users\\Dtos\\TenantDashboardDto.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Dtos\\TenantDashboardDto.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Users\\Dtos\\TenantDashboardDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:12:54.867Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "TenantDto.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Dtos\\TenantDto.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Users\\Dtos\\TenantDto.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Dtos\\TenantDto.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Users\\Dtos\\TenantDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:12:45.241Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "TenantUnitCardDto.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Dtos\\TenantUnitCardDto.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Users\\Dtos\\TenantUnitCardDto.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Dtos\\TenantUnitCardDto.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Users\\Dtos\\TenantUnitCardDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:12:33.868Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 34,
+              "Title": "UpdateProfileRequestDto.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Dtos\\UpdateProfileRequestDto.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Users\\Dtos\\UpdateProfileRequestDto.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Dtos\\UpdateProfileRequestDto.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Users\\Dtos\\UpdateProfileRequestDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T17:12:26.373Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 36,
+              "Title": "OtpCodeConfiguration.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\Configurations\\OtpCodeConfiguration.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Persistence\\Configurations\\OtpCodeConfiguration.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\Configurations\\OtpCodeConfiguration.cs",
+              "RelativeToolTip": "modaar.api\\Persistence\\Configurations\\OtpCodeConfiguration.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T14:38:25.468Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "BrokerConfiguration.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\Configurations\\BrokerConfiguration.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Persistence\\Configurations\\BrokerConfiguration.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\Configurations\\BrokerConfiguration.cs",
+              "RelativeToolTip": "modaar.api\\Persistence\\Configurations\\BrokerConfiguration.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAA6AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T14:37:52.454Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "UserConfiguration.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\Configurations\\UserConfiguration.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Persistence\\Configurations\\UserConfiguration.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\Configurations\\UserConfiguration.cs",
+              "RelativeToolTip": "modaar.api\\Persistence\\Configurations\\UserConfiguration.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAQwBgAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T14:37:32.013Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "Broker.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Entities\\Broker.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Users\\Entities\\Broker.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Entities\\Broker.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Users\\Entities\\Broker.cs",
+              "ViewState": "AgIAAC4AAAAAAAAAAAAuwD8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T14:32:29.683Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 35,
+              "Title": "User.cs",
+              "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Entities\\User.cs",
+              "RelativeDocumentMoniker": "modaar.api\\Features\\Users\\Entities\\User.cs",
+              "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Users\\Entities\\User.cs",
+              "RelativeToolTip": "modaar.api\\Features\\Users\\Entities\\User.cs",
+              "ViewState": "AgIAABQAAAAAAAAAAAAowCEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-11T14:14:09.352Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 37,
               "Title": "modaar.api.csproj",
               "DocumentMoniker": "C:\\Users\\Compumarts\\Source\\Repos\\modaar-Api\\modaar.api\\modaar.api.csproj",
               "RelativeDocumentMoniker": "modaar.api\\modaar.api.csproj",
@@ -74,12 +606,11 @@
               "RelativeToolTip": "modaar.api\\modaar.api.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-08-29T14:50:38.976Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-08-29T14:50:38.976Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 38,
               "Title": "launchSettings.json",
               "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Properties\\launchSettings.json",
               "RelativeDocumentMoniker": "modaar.api\\Properties\\launchSettings.json",
@@ -91,57 +622,59 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 7,
               "Title": "ServiceRegistrationExtensions.cs",
               "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Common\\Extensions\\ServiceRegistrationExtensions.cs",
               "RelativeDocumentMoniker": "modaar.api\\Common\\Extensions\\ServiceRegistrationExtensions.cs",
               "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Common\\Extensions\\ServiceRegistrationExtensions.cs",
               "RelativeToolTip": "modaar.api\\Common\\Extensions\\ServiceRegistrationExtensions.cs",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAAABQAAAAqAAAAAAAAAA==",
+              "ViewState": "AgIAAEoAAAAAAAAAAAAcwFMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-29T11:56:32.947Z"
+              "WhenOpened": "2026-08-29T11:56:32.947Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 18,
               "Title": "ModaarDbContext.cs",
               "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\ModaarDbContext.cs",
               "RelativeDocumentMoniker": "modaar.api\\Persistence\\ModaarDbContext.cs",
               "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Persistence\\ModaarDbContext.cs",
               "RelativeToolTip": "modaar.api\\Persistence\\ModaarDbContext.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-29T11:56:01.441Z"
+              "WhenOpened": "2026-08-29T11:56:01.441Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\appsettings.json",
               "RelativeDocumentMoniker": "modaar.api\\appsettings.json",
               "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\appsettings.json",
               "RelativeToolTip": "modaar.api\\appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACsAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2026-08-29T11:55:40.844Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "appsettings.Development.json",
               "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\appsettings.Development.json",
               "RelativeDocumentMoniker": "modaar.api\\appsettings.Development.json",
               "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\appsettings.Development.json",
               "RelativeToolTip": "modaar.api\\appsettings.Development.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAADAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAhAQAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2026-08-29T11:55:37.6Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 39,
               "Title": "AuthController.cs",
               "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Features\\Authentication\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "modaar.api\\Features\\Authentication\\Controllers\\AuthController.cs",
@@ -153,15 +686,16 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Program.cs",
               "RelativeDocumentMoniker": "modaar.api\\Program.cs",
               "ToolTip": "C:\\Users\\Compumarts\\source\\repos\\modaar-Api\\modaar.api\\Program.cs",
               "RelativeToolTip": "modaar.api\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAiAAAAAAAAAA==",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAowBQAAABZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-15T11:09:38.866Z"
+              "WhenOpened": "2026-08-15T11:09:38.866Z",
+              "EditorCaption": ""
             }
           ]
         }

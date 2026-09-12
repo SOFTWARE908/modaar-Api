@@ -5,64 +5,6 @@
     "version": "v1"
   },
   "paths": {
-    "/api/Auth/register": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterRequestDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterRequestDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthSuccessResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/Auth/login": {
       "post": {
         "tags": [
@@ -93,7 +35,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SendOtpResponseDto"
+                  "$ref": "#/components/schemas/AuthSuccessResponseDto"
                 }
               }
             }
@@ -110,6 +52,26 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
             "content": {
               "application/json": {
                 "schema": {
@@ -158,6 +120,16 @@
           },
           "400": {
             "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
@@ -333,16 +305,480 @@
           }
         }
       }
+    },
+    "/api/profile": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/properties": {
+      "get": {
+        "tags": [
+          "Properties"
+        ],
+        "parameters": [
+          {
+            "name": "Status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PropertyRentalStatus"
+            }
+          },
+          {
+            "name": "PropertyType",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PropertyType"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PropertyListSort"
+            }
+          },
+          {
+            "name": "SkipCount",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "MaxResultCount",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyListItemDtoPagedResultDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Properties"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePropertyRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePropertyRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePropertyRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyDetailsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/properties/{propertyId}": {
+      "get": {
+        "tags": [
+          "Properties"
+        ],
+        "parameters": [
+          {
+            "name": "propertyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Properties"
+        ],
+        "parameters": [
+          {
+            "name": "propertyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePropertyRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePropertyRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePropertyRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyDetailsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Properties"
+        ],
+        "parameters": [
+          {
+            "name": "propertyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
       "AccountType": {
         "enum": [
-          "Owner",
-          "Tenant",
-          "Broker",
-          "Technician"
+          "owner",
+          "tenant",
+          "broker",
+          "technician"
         ],
         "type": "string"
       },
@@ -350,6 +786,8 @@
         "required": [
           "accessToken",
           "accountType",
+          "isNewUser",
+          "profileStatus",
           "refreshToken"
         ],
         "type": "object",
@@ -364,15 +802,137 @@
           },
           "accountType": {
             "$ref": "#/components/schemas/AccountType"
+          },
+          "isNewUser": {
+            "type": "boolean"
+          },
+          "profileStatus": {
+            "$ref": "#/components/schemas/ProfileStatus"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BrokerSummaryDto": {
+        "required": [
+          "id",
+          "isVerified",
+          "name",
+          "ratingAverage",
+          "reviewsCount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "subtitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "ratingAverage": {
+            "type": "number",
+            "format": "double"
+          },
+          "reviewsCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isVerified": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ContractRenewalAvailability": {
+        "enum": [
+          "available",
+          "unavailable",
+          "pending"
+        ],
+        "type": "string"
+      },
+      "ContractStatus": {
+        "enum": [
+          "active",
+          "expired",
+          "terminated"
+        ],
+        "type": "string"
+      },
+      "CreatePropertyRequestDto": {
+        "required": [
+          "annualRent",
+          "propertyType",
+          "roomsCount",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "propertyType": {
+            "$ref": "#/components/schemas/PropertyType"
+          },
+          "roomsCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "annualRent": {
+            "type": "number",
+            "format": "double"
+          },
+          "addressLine": {
+            "type": "string",
+            "nullable": true
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coverImageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PropertyImageDto"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
       },
       "LoginMethod": {
         "enum": [
-          "EmailPassword",
-          "PhoneOtp",
-          "NationalIdOtp"
+          "emailPassword",
+          "phoneOtp",
+          "nationalIdOtp"
         ],
         "type": "string"
       },
@@ -408,6 +968,27 @@
         },
         "additionalProperties": false
       },
+      "MaintenanceRequestStatus": {
+        "enum": [
+          "pending",
+          "accepted",
+          "onTheWay",
+          "inProgress",
+          "completed",
+          "rejected",
+          "cancelled"
+        ],
+        "type": "string"
+      },
+      "MaintenanceServiceType": {
+        "enum": [
+          "cleaning",
+          "paintRepair",
+          "appliances",
+          "ac"
+        ],
+        "type": "string"
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -434,6 +1015,366 @@
           }
         },
         "additionalProperties": { }
+      },
+      "ProfileStatus": {
+        "enum": [
+          "incomplete",
+          "complete"
+        ],
+        "type": "string"
+      },
+      "PropertyDetailsDto": {
+        "required": [
+          "handoverImageUrls",
+          "imageUrls",
+          "maintenanceHistory",
+          "summary"
+        ],
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/PropertySummaryDto"
+          },
+          "tenantContract": {
+            "$ref": "#/components/schemas/PropertyTenantContractDto"
+          },
+          "broker": {
+            "$ref": "#/components/schemas/BrokerSummaryDto"
+          },
+          "imageUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "handoverImageUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "handoverDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "maintenanceHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PropertyMaintenanceHistoryItemDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PropertyImageDto": {
+        "required": [
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PropertyListItemDto": {
+        "required": [
+          "annualRent",
+          "currency",
+          "id",
+          "status",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/PropertyRentalStatus"
+          },
+          "monthlyRent": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "annualRent": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "tenantName": {
+            "type": "string",
+            "nullable": true
+          },
+          "leaseStart": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "leaseEnd": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "rentalProgress": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PropertyListItemDtoPagedResultDto": {
+        "required": [
+          "items",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PropertyListItemDto"
+            },
+            "nullable": true
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PropertyListSort": {
+        "enum": [
+          "createdDesc",
+          "titleAsc",
+          "leaseEndAsc"
+        ],
+        "type": "string"
+      },
+      "PropertyMaintenanceHistoryItemDto": {
+        "required": [
+          "date",
+          "requestId",
+          "requestNumber",
+          "serviceType",
+          "status",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "serviceType": {
+            "$ref": "#/components/schemas/MaintenanceServiceType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MaintenanceRequestStatus"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "costAmount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PropertyRentalStatus": {
+        "enum": [
+          "rented",
+          "notRented"
+        ],
+        "type": "string"
+      },
+      "PropertySummaryDto": {
+        "required": [
+          "annualRent",
+          "currency",
+          "id",
+          "propertyType",
+          "roomsCount",
+          "status",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "propertyType": {
+            "$ref": "#/components/schemas/PropertyType"
+          },
+          "roomsCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "annualRent": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/PropertyRentalStatus"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PropertyTenantContractDto": {
+        "required": [
+          "contractEnd",
+          "contractId",
+          "contractNumber",
+          "contractStart",
+          "currency",
+          "monthlyAmount",
+          "remainingDays",
+          "renewalAvailability",
+          "status",
+          "tenantUserId"
+        ],
+        "type": "object",
+        "properties": {
+          "contractId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contractNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "tenantUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tenantName": {
+            "type": "string",
+            "nullable": true
+          },
+          "tenantAvatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "tenantSubtitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/ContractStatus"
+          },
+          "contractStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "contractEnd": {
+            "type": "string",
+            "format": "date"
+          },
+          "remainingDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "monthlyAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "renewalAvailability": {
+            "$ref": "#/components/schemas/ContractRenewalAvailability"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PropertyType": {
+        "enum": [
+          "apartment",
+          "villa",
+          "floor",
+          "studio",
+          "duplex",
+          "office",
+          "shop",
+          "warehouse",
+          "land"
+        ],
+        "type": "string"
       },
       "RefreshTokenRequestDto": {
         "required": [
@@ -466,47 +1407,6 @@
         },
         "additionalProperties": false
       },
-      "RegisterRequestDto": {
-        "required": [
-          "accountType",
-          "countryCode",
-          "email",
-          "nationalId",
-          "phoneNumber",
-          "userName"
-        ],
-        "type": "object",
-        "properties": {
-          "accountType": {
-            "$ref": "#/components/schemas/AccountType"
-          },
-          "userName": {
-            "type": "string",
-            "nullable": true
-          },
-          "nationalId": {
-            "type": "string",
-            "nullable": true
-          },
-          "phoneNumber": {
-            "type": "string",
-            "nullable": true
-          },
-          "countryCode": {
-            "type": "string",
-            "nullable": true
-          },
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "inviteCode": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
       "ResendOtpRequestDto": {
         "required": [
           "identifier",
@@ -526,7 +1426,9 @@
       },
       "ResendOtpResponseDto": {
         "required": [
+          "identifier",
           "message",
+          "otpExpiresInSeconds",
           "success"
         ],
         "type": "object",
@@ -537,22 +1439,94 @@
           "message": {
             "type": "string",
             "nullable": true
+          },
+          "identifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "otpExpiresInSeconds": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
       },
-      "SendOtpResponseDto": {
-        "required": [
-          "message",
-          "success"
-        ],
+      "UpdateProfileRequestDto": {
         "type": "object",
         "properties": {
-          "success": {
-            "type": "boolean"
-          },
-          "message": {
+          "fullName": {
             "type": "string",
+            "nullable": true
+          },
+          "accountType": {
+            "$ref": "#/components/schemas/AccountType"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "nationalId": {
+            "type": "string",
+            "nullable": true
+          },
+          "profileImageUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdatePropertyRequestDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "propertyType": {
+            "$ref": "#/components/schemas/PropertyType"
+          },
+          "roomsCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "annualRent": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "addressLine": {
+            "type": "string",
+            "nullable": true
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "coverImageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PropertyImageDto"
+            },
             "nullable": true
           }
         },
@@ -562,21 +1536,11 @@
         "required": [
           "accountType",
           "countryCode",
-          "email",
-          "fullName",
-          "nationalId",
-          "phoneNumber"
+          "phoneNumber",
+          "profileStatus"
         ],
         "type": "object",
         "properties": {
-          "fullName": {
-            "type": "string",
-            "nullable": true
-          },
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
           "phoneNumber": {
             "type": "string",
             "nullable": true
@@ -585,12 +1549,23 @@
             "type": "string",
             "nullable": true
           },
-          "nationalId": {
+          "accountType": {
+            "$ref": "#/components/schemas/AccountType"
+          },
+          "profileStatus": {
+            "$ref": "#/components/schemas/ProfileStatus"
+          },
+          "fullName": {
             "type": "string",
             "nullable": true
           },
-          "accountType": {
-            "$ref": "#/components/schemas/AccountType"
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "nationalId": {
+            "type": "string",
+            "nullable": true
           },
           "profileImageUrl": {
             "type": "string",
@@ -598,6 +1573,43 @@
           }
         },
         "additionalProperties": false
+      },
+      "ValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
       },
       "VerifyOtpRequestDto": {
         "required": [
@@ -635,6 +1647,12 @@
   "tags": [
     {
       "name": "Auth"
+    },
+    {
+      "name": "Profile"
+    },
+    {
+      "name": "Properties"
     }
   ]
 }
