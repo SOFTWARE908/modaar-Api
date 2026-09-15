@@ -568,3 +568,4 @@ D:\modaar1\modaar-Api\modaar.api\obj\Debug\net9.0\refint\modaar.api.dll
 D:\modaar1\modaar-Api\modaar.api\obj\Debug\net9.0\modaar.api.pdb
 D:\modaar1\modaar-Api\modaar.api\obj\Debug\net9.0\modaar.api.genruntimeconfig.cache
 D:\modaar1\modaar-Api\modaar.api\obj\Debug\net9.0\ref\modaar.api.dll
+C:\Users\Compumarts\Source\Repos\modaar-Api\modaar.api\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
