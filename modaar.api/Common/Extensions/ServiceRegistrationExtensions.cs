@@ -1,4 +1,3 @@
-using System.Text;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -9,9 +8,12 @@ using Microsoft.OpenApi;
 using modaar.api.Common.Auth;
 using modaar.api.Common.Validation;
 using modaar.api.Features.Authentication.Services;
+using modaar.api.Features.Contracts.Services;
+using modaar.api.Features.Maintenance.Services;
 using modaar.api.Features.Properties.Services;
 using modaar.api.Features.Users.Services;
 using modaar.api.Persistence;
+using System.Text;
 using JsonWebTokens = Microsoft.IdentityModel.JsonWebTokens;
 
 namespace modaar.api.Common.Extensions;
@@ -41,6 +43,15 @@ public static class ServiceRegistrationExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IProfileService, ProfileService>();
 
+        services.AddHttpContextAccessor();
+        services.AddScoped<IMaintenanceService, MaintenanceService>();
+        services.AddScoped<IMaintenanceAttachmentService, MaintenanceAttachmentService>();
+
+        services.AddScoped<IMaintenanceActionService, MaintenanceActionService>();
+
+        services.AddScoped<IMaintenanceFeedbackService, MaintenanceFeedbackService>();
+
+        services.AddScoped<IContractService, ContractService>();
         //////////////Properties//////////////////////
         services.AddScoped<IPropertyService, PropertyService>();
 

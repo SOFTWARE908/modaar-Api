@@ -26,12 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Contracts\Controllers\" />
-    <Folder Include="Features\Contracts\Dtos\" />
-    <Folder Include="Features\Contracts\Services\" />
-    <Folder Include="Features\Maintenance\Controllers\" />
-    <Folder Include="Features\Maintenance\Dtos\" />
-    <Folder Include="Features\Maintenance\Services\" />
     <Folder Include="Features\Payments\Controllers\" />
     <Folder Include="Features\Payments\Services\" />
   </ItemGroup>
