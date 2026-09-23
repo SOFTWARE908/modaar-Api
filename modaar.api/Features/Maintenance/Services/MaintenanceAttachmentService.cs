@@ -12,6 +12,8 @@ namespace modaar.api.Features.Maintenance.Services;
 // storage means replacing this class and nothing else — the entity stores a URL either way.
 public sealed class MaintenanceAttachmentService : IMaintenanceAttachmentService
 {
+
+
     private const long MaxBytes = 25 * 1024 * 1024;
 
     // Extension allow-list, not a content-type check: the browser-supplied content type is
@@ -33,13 +35,17 @@ public sealed class MaintenanceAttachmentService : IMaintenanceAttachmentService
     private readonly IWebHostEnvironment _env;
     private readonly IHttpContextAccessor _http;
 
+    // بدل IWebHostEnvironment
+    private readonly string _uploadsRoot;
+
     public MaintenanceAttachmentService(
-        ModaarDbContext db, TimeProvider time, IWebHostEnvironment env, IHttpContextAccessor http)
+        ModaarDbContext db, TimeProvider time, IConfiguration config, IHttpContextAccessor http)
     {
         _db = db;
         _time = time;
-        _env = env;
         _http = http;
+        _uploadsRoot = config["Uploads:Root"]
+            ?? throw new InvalidOperationException("Uploads:Root is not configured.");
     }
 
     public async Task<Result<AttachmentDto>> UploadAsync(
@@ -61,8 +67,7 @@ public sealed class MaintenanceAttachmentService : IMaintenanceAttachmentService
         // is kept only as a display label and never touches the file system — it is the classic
         // path-traversal vector.
         var storedName = $"{id:N}{extension.ToLowerInvariant()}";
-        var folder = Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"),
-            "uploads", "maintenance");
+        var folder = Path.Combine(_uploadsRoot, "maintenance");
 
         Directory.CreateDirectory(folder);
 
