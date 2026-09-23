@@ -51,9 +51,12 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+    var uploadsRoot = builder.Configuration["Uploads:Root"] ?? @"E:\modaar-uploads";
+    Directory.CreateDirectory(uploadsRoot);
+
     app.UseStaticFiles(new StaticFileOptions
     {
-        FileProvider = new PhysicalFileProvider(@"E:\modaar-uploads"),
+        FileProvider = new PhysicalFileProvider(uploadsRoot),
         RequestPath = "/uploads"
     });
     app.UseHttpsRedirection();
