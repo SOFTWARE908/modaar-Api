@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using modaar.api.Common.Auth;
 using modaar.api.Common.Errors;
+using modaar.api.Common.Results;
 using modaar.api.Features.Authentication.Dtos;
 using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Authentication.Services;
@@ -115,6 +116,21 @@ public class AuthController : ControllerBase
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
         return (await _profiles.GetAsync(userId, ct)).ToActionResult();
+    }
+
+
+    [Authorize]
+    [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Logout(
+        [FromBody] LogoutRequestDto? request, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        var result = await _auth.LogoutAsync(userId, request ?? new LogoutRequestDto(), ct);
+        return result.Success ? NoContent() : result.ToActionResult();
     }
 
     private IActionResult BadField(string detail) =>

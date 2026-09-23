@@ -9,8 +9,11 @@ using modaar.api.Common.Auth;
 using modaar.api.Common.Validation;
 using modaar.api.Features.Authentication.Services;
 using modaar.api.Features.Contracts.Services;
+using modaar.api.Features.Dashboards.Services;
 using modaar.api.Features.Maintenance.Services;
+using modaar.api.Features.Payments.Services;
 using modaar.api.Features.Properties.Services;
+using modaar.api.Features.Users.Entities;
 using modaar.api.Features.Users.Services;
 using modaar.api.Persistence;
 using System.Text;
@@ -42,6 +45,9 @@ public static class ServiceRegistrationExtensions
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IProfileService, ProfileService>();
+        services.AddScoped<ISecuritySettingsService, SecuritySettingsService>();
+        services.AddScoped<IBrokerService, Features.Users.Services.BrokerService>();
+
 
         services.AddHttpContextAccessor();
         services.AddScoped<IMaintenanceService, MaintenanceService>();
@@ -54,6 +60,14 @@ public static class ServiceRegistrationExtensions
         services.AddScoped<IContractService, ContractService>();
         //////////////Properties//////////////////////
         services.AddScoped<IPropertyService, PropertyService>();
+
+        services.AddScoped<IPropertyHandoverService, PropertyHandoverService>();
+
+        ///////////////////////////payments/////////////////////
+        services.AddScoped<IPaymentService, PaymentService>();
+
+
+        services.AddScoped<IDashboardService, DashboardService>();
 
         var jwtSection = configuration.GetSection(JwtSettings.SectionName);
         services.Configure<JwtSettings>(jwtSection);

@@ -12,4 +12,6 @@ public record UpdateProfileRequestDto
     public string? Email { get; init; }
     public string? NationalId { get; init; }
     public string? ProfileImageUrl { get; init; }
+    public string? Language { get; init; }
+
 }

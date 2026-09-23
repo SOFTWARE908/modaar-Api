@@ -1,6 +1,8 @@
+using Microsoft.Extensions.FileProviders;
 using modaar.api.Common.Errors;
 using modaar.api.Common.Extensions;
 using modaar.api.Common.Responses;
+using modaar.api.Features.App;
 using Serilog;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -30,6 +32,8 @@ try
                 // actually sent, so "annualRent" is the key rather than "AnnualRent".
                 options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
             }); ;
+    builder.Services.Configure<AppVersionOptions>(
+          builder.Configuration.GetSection(AppVersionOptions.SectionName));
     builder.Services.AddProblemDetails();
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddModaarPersistence(builder.Configuration);
@@ -47,7 +51,11 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
-
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(@"E:\modaar-uploads"),
+        RequestPath = "/uploads"
+    });
     app.UseHttpsRedirection();
     app.UseAuthentication();
     app.UseAuthorization();

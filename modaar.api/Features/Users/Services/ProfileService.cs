@@ -81,6 +81,9 @@ public sealed class ProfileService : IProfileService
         if (!string.IsNullOrWhiteSpace(user.FullName))
             user.ProfileStatus = ProfileStatus.Complete;
 
+        if (request.Language is not null)
+            user.PreferredLanguage = request.Language;
+
         user.UpdatedAt = _time.GetUtcNow();
         await _db.SaveChangesAsync(ct);
 
@@ -96,6 +99,8 @@ public sealed class ProfileService : IProfileService
         FullName = user.FullName,
         Email = user.Email,
         NationalId = user.NationalId,
-        ProfileImageUrl = user.ProfileImageUrl
+        ProfileImageUrl = user.ProfileImageUrl,
+        Id = user.Id,
+        Language = user.PreferredLanguage
     };
 }

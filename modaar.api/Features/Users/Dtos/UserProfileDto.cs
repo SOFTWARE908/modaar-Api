@@ -5,6 +5,9 @@ namespace modaar.api.Features.Users.Dtos;
 
 public record UserProfileDto
 {
+    public required Guid Id { get; init; }
+
+    public required string Language { get; init; }
     // Always present: the account cannot exist without a confirmed mobile number.
     public required string PhoneNumber { get; init; }
     public required string CountryCode { get; init; }

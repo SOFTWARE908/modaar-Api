@@ -31,6 +31,15 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(20)
             .IsRequired();
 
+        b.Property(u => u.PreferredLanguage)
+            .HasMaxLength(2)
+            .IsRequired()
+            .HasDefaultValue("ar");
+
+        b.Property(u => u.RememberMe).HasDefaultValue(false);
+        b.Property(u => u.FaceIdEnabled).HasDefaultValue(false);
+        b.Property(u => u.BiometricEnabled).HasDefaultValue(false);
+
         b.Property(u => u.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
         b.Property(u => u.UpdatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
 

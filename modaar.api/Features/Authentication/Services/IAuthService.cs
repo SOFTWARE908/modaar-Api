@@ -1,4 +1,5 @@
 using modaar.api.Common.Auth;
+using modaar.api.Common.Results;
 using modaar.api.Features.Authentication.Dtos;
 
 namespace modaar.api.Features.Authentication.Services;
@@ -18,4 +19,6 @@ public interface IAuthService
     Task<AuthResult<AuthSuccessResponseDto>> VerifyOtpAsync(string identifier, string otpCode, CancellationToken ct);
 
     Task<AuthResult<RefreshTokenResponseDto>> RefreshTokenAsync(string refreshToken, CancellationToken ct);
+
+    Task<Result<bool>> LogoutAsync(Guid userId, LogoutRequestDto request, CancellationToken ct);
 }

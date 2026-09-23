@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using modaar.api.Common.Auth;
+using modaar.api.Common.Results;
 using modaar.api.Features.Authentication.Dtos;
 using modaar.api.Features.Authentication.Entities;
 using modaar.api.Features.Authentication.Enums;
@@ -308,6 +309,32 @@ public sealed class AuthService : IAuthService
             IsNewUser = isNewUser,
             ProfileStatus = user.ProfileStatus
         });
+    }
+
+
+
+    public async Task<Result<bool>> LogoutAsync(
+        Guid userId, LogoutRequestDto request, CancellationToken ct)
+    {
+        var now = _time.GetUtcNow();
+
+        // Every device, not just this one: the client has no per-session identifier to pass, and
+        // "log me out" meaning "log me out everywhere" is the safer reading.
+        var liveTokens = await _db.RefreshTokens
+            .Where(rt => rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > now)
+            .ToListAsync(ct);
+
+        foreach (var token in liveTokens)
+            token.RevokedAt = now;
+
+        await _db.SaveChangesAsync(ct);
+
+        // DeviceToken is accepted and ignored: push notifications are not implemented, so there is
+        // no registration to remove. Kept on the DTO because the client already sends it.
+        _logger.LogInformation("User {UserId} logged out; revoked {Count} refresh token(s).",
+            userId, liveTokens.Count);
+
+        return Result<bool>.Ok(true);
     }
 
     private static AuthResult<ResendOtpResponseDto> Map(AuthResult<SendOtpResponseDto> source, string successMessage)

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using modaar.api.Features.Authentication.Entities;
 using modaar.api.Features.Contracts.Entities;
 using modaar.api.Features.Maintenance.Entities;
+using modaar.api.Features.Payments.Entities;
 using modaar.api.Features.Properties.Entities;
 using modaar.api.Features.Users.Entities;
 using Property = modaar.api.Features.Properties.Entities.Property;
@@ -19,6 +20,7 @@ public class ModaarDbContext : DbContext
     // Brokers
     public DbSet<Broker> Brokers => Set<Broker>();
     public DbSet<BrokerReview> BrokerReviews => Set<BrokerReview>();
+    public DbSet<BrokerManagementRequest> BrokerManagementRequests => Set<BrokerManagementRequest>();
 
     // Properties
     public DbSet<Property> Properties => Set<Property>();
@@ -35,6 +37,10 @@ public class ModaarDbContext : DbContext
     public DbSet<MaintenanceRequestAction> MaintenanceRequestActions => Set<MaintenanceRequestAction>();
     public DbSet<MaintenanceRating> MaintenanceRatings => Set<MaintenanceRating>();
     public DbSet<MaintenanceNeedHelp> MaintenanceNeedHelpTickets => Set<MaintenanceNeedHelp>();
+
+
+    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

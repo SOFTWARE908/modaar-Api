@@ -25,6 +25,13 @@ public class User
     public string? PasswordHash { get; set; }
     public string? ProfileImageUrl { get; set; }
 
+    public string PreferredLanguage { get; set; } = "ar";
+
+    public bool RememberMe { get; set; }
+    public bool FaceIdEnabled { get; set; }
+    public bool BiometricEnabled { get; set; }
+
+
     public bool IsEmailVerified { get; set; }
     public bool IsPhoneVerified { get; set; }
 

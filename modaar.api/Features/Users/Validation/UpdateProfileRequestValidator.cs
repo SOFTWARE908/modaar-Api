@@ -31,5 +31,10 @@ public sealed class UpdateProfileRequestValidator : AbstractValidator<UpdateProf
                 .MaximumLength(500));
 
         RuleFor(x => x.AccountType).IsInEnum();
+
+        When(x => x.Language is not null, () =>
+            RuleFor(x => x.Language!)
+                .Must(l => l is "ar" or "en")
+                .WithMessage("Language must be 'ar' or 'en'."));
     }
 }

@@ -26,8 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Payments\Controllers\" />
-    <Folder Include="Features\Payments\Services\" />
+    <Folder Include="Features\App\Services\" />
   </ItemGroup>
 
 </Project>

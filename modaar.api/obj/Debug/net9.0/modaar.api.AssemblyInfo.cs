@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("modaar.api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cb6e2b9f4513684ae3e2e130858678b2907874c8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3f73dcc953773018e4161863667082731c5e5a0f")]
 [assembly: System.Reflection.AssemblyProductAttribute("modaar.api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("modaar.api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
