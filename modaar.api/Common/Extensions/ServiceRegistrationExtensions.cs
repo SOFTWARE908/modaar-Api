@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using modaar.api.Common.Auth;
+using modaar.api.Common.Localization;
 using modaar.api.Common.Validation;
 using modaar.api.Features.Authentication.Services;
 using modaar.api.Features.Contracts.Services;
@@ -68,6 +69,9 @@ public static class ServiceRegistrationExtensions
 
 
         services.AddScoped<IDashboardService, DashboardService>();
+
+
+        services.AddScoped<IRequestLanguage, RequestLanguage>();
 
         var jwtSection = configuration.GetSection(JwtSettings.SectionName);
         services.Configure<JwtSettings>(jwtSection);
