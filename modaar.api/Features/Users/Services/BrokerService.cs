@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using modaar.api.Common.Dtos;
+using modaar.api.Common.Localization;
 using modaar.api.Common.Results;
 using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Users.Dtos;
@@ -16,12 +17,18 @@ public sealed class BrokerService : IBrokerService
 
     private readonly ModaarDbContext _db;
     private readonly TimeProvider _time;
+    private readonly IRequestLanguage _language;
     private readonly ILogger<BrokerService> _logger;
 
-    public BrokerService(ModaarDbContext db, TimeProvider time, ILogger<BrokerService> logger)
+    public BrokerService(
+        ModaarDbContext db,
+        TimeProvider time,
+        IRequestLanguage language,
+        ILogger<BrokerService> logger)
     {
         _db = db;
         _time = time;
+        _language = language;
         _logger = logger;
     }
 
@@ -54,17 +61,19 @@ public sealed class BrokerService : IBrokerService
             Id = broker.Id,
             Name = user?.FullName ?? string.Empty,
             LogoUrl = user?.ProfileImageUrl,
-            Subtitle = broker.SubtitleEn,
+            Subtitle = _language.Pick(broker.SubtitleAr, broker.SubtitleEn),
             Rating = broker.RatingAverage,
             ReviewsCount = broker.ReviewsCount,
             IsVerified = broker.IsVerified,
             LicenseNumber = broker.LicenseNumber,
-            About = broker.AboutEn,
-            Services = broker.Services.OrderBy(s => s.SortOrder).Select(s => s.NameEn).ToList(),
-            CoverageAreas = broker.CoverageAreas.OrderBy(a => a.SortOrder).Select(a => a.NameEn).ToList(),
+            About = _language.Pick(broker.AboutAr, broker.AboutEn),
+            Services = broker.Services.OrderBy(s => s.SortOrder)
+        .Select(s => _language.Pick(s.NameAr, s.NameEn)).ToList(),
+            CoverageAreas = broker.CoverageAreas.OrderBy(a => a.SortOrder)
+        .Select(a => _language.Pick(a.NameAr, a.NameEn)).ToList(),
             Stats = broker.Stats.OrderBy(s => s.SortOrder).Select(s => new BrokerStatDto
             {
-                Title = s.TitleEn,
+                Title = _language.Pick(s.TitleAr, s.TitleEn),
                 Value = s.Value,
                 Icon = s.Icon
             }).ToList(),

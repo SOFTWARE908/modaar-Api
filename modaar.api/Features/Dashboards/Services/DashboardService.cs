@@ -1,15 +1,17 @@
 using Microsoft.EntityFrameworkCore;
+using modaar.api.Common.Localization;
 using modaar.api.Common.Results;
 using modaar.api.Common.Time;
 using modaar.api.Features.Authentication.Enums;
-using modaar.api.Features.Users.Dtos;
 using modaar.api.Features.Contracts.Enums;
 using modaar.api.Features.Dashboards.Dtos;
+using modaar.api.Features.Maintenance;
 using modaar.api.Features.Maintenance.Dtos;
 using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Features.Payments.Dtos;
 using modaar.api.Features.Payments.Entities;
 using modaar.api.Features.Payments.Enums;
+using modaar.api.Features.Users.Dtos;
 using modaar.api.Persistence;
 
 namespace modaar.api.Features.Dashboards.Services;
@@ -22,11 +24,13 @@ public sealed class DashboardService : IDashboardService
 
     private readonly ModaarDbContext _db;
     private readonly TimeProvider _time;
+    private readonly IRequestLanguage _language;
 
-    public DashboardService(ModaarDbContext db, TimeProvider time)
+    public DashboardService(ModaarDbContext db, TimeProvider time, IRequestLanguage language)
     {
         _db = db;
         _time = time;
+        _language = language;
     }
 
     public async Task<Result<OwnerDashboardDto>> GetOwnerAsync(Guid userId, CancellationToken ct)
@@ -68,9 +72,10 @@ public sealed class DashboardService : IDashboardService
 
         var stats = new List<DashboardStatDto>
         {
-            new() { Icon = "building", Label = "Units",            Value = unitsCount.ToString() },
-            new() { Icon = "contract", Label = "Active contracts", Value = activeContracts.ToString() }
+            new() { Icon = "building", Label = DashboardLabels.Units(_language),           Value = unitsCount.ToString() },
+            new() { Icon = "contract", Label = DashboardLabels.ActiveContracts(_language), Value = activeContracts.ToString() }
         };
+
 
         // Only shown once something has been billed; a rate over an empty denominator would
         // read as 0% rather than "nothing to collect".
@@ -78,7 +83,7 @@ public sealed class DashboardService : IDashboardService
             stats.Add(new DashboardStatDto
             {
                 Icon = "percent",
-                Label = "Collection rate",
+                Label = DashboardLabels.CollectionRate(_language),
                 Value = $"{rate:0}%"
             });
 
@@ -243,22 +248,22 @@ public sealed class DashboardService : IDashboardService
 
         var stats = new List<DashboardStatDto>
         {
-            new() { Icon = "building", Label = "Units managed",    Value = unitsManaged.ToString() },
-            new() { Icon = "contract", Label = "Active contracts", Value = activeContracts.ToString() }
+            new() { Icon = "building", Label = DashboardLabels.UnitsManaged(_language),    Value = unitsManaged.ToString() },
+            new() { Icon = "contract", Label = DashboardLabels.ActiveContracts(_language), Value = activeContracts.ToString() }
         };
 
         if (collectionRate is { } rate)
             stats.Add(new DashboardStatDto
             {
                 Icon = "percent",
-                Label = "Collection rate",
+                Label = DashboardLabels.CollectionRate(_language),
                 Value = $"{rate:0}%"
             });
 
         return Result<BrokerDashboardDto>.Ok(new BrokerDashboardDto
         {
             UserName = user.FullName,
-            ClosedDeals = new BrokerDealsSummaryDto { Count = closedThisMonth, PeriodLabel = "This month" },
+            ClosedDeals = new BrokerDealsSummaryDto { Count = closedThisMonth, PeriodLabel = DashboardLabels.ThisMonth(_language) },
             Stats = stats,
             MaintenancePreview = maintenancePreview,
             ClientsPreview = clients.Select(c => new BrokerClientDto
@@ -374,6 +379,7 @@ public sealed class DashboardService : IDashboardService
                     {
                         t.Id,
                         t.RoleEn,
+                        t.RoleAr,
                         t.RatingAverage,
                         Name = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault(),
                         ImageUrl = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault()
@@ -391,16 +397,17 @@ public sealed class DashboardService : IDashboardService
             {
                 Id = m.Id,
                 RequestCode = m.RequestNumber,
-                Title = m.ServiceType.ToString(),
+                Title = MaintenanceServiceTypeNames.Title(m.ServiceType, _language),
                 ServiceType = m.ServiceType,
                 Status = m.Status,
                 CreatedAt = m.CreatedAt,
-                VisitSummary = $"{date:d MMM yyyy} · {slot}",
+                VisitSummary = $"{date.ToString("d MMMM yyyy", _language.Culture)} · " +
+                               $"{MaintenanceTimeSlotNames.Label(slot, _language)}",
                 AssignedTechnician = m.Technician is null ? null : new TechnicianDto
                 {
                     Id = m.Technician.Id,
                     Name = m.Technician.Name ?? string.Empty,
-                    Role = m.Technician.RoleEn,
+                    Role = _language.Pick(m.Technician.RoleAr, m.Technician.RoleEn),
                     ImageUrl = m.Technician.ImageUrl,
                     AverageRating = m.Technician.RatingAverage
                 }

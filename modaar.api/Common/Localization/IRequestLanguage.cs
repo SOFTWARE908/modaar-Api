@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace modaar.api.Common.Localization;
 
 // One place that answers "which language is this response in". Everything that picks between an
@@ -9,6 +11,7 @@ public interface IRequestLanguage
 
     bool IsArabic { get; }
 
+    CultureInfo Culture { get; }
     // Picks between a paired Arabic/English value.
     string Pick(string? arabic, string? english);
 }

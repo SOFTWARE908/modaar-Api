@@ -9,19 +9,26 @@ using modaar.api.Features.Maintenance.Entities;
 using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Features.Users.Dtos;
 using modaar.api.Persistence;
-
+using modaar.api.Common.Localization;
+using modaar.api.Features.Maintenance;
 namespace modaar.api.Features.Maintenance.Services;
 
 public sealed class MaintenanceService : IMaintenanceService
 {
     private readonly ModaarDbContext _db;
     private readonly TimeProvider _time;
+    private readonly IRequestLanguage _language;
     private readonly ILogger<MaintenanceService> _logger;
 
-    public MaintenanceService(ModaarDbContext db, TimeProvider time, ILogger<MaintenanceService> logger)
+    public MaintenanceService(
+        ModaarDbContext db,
+        TimeProvider time,
+        IRequestLanguage language,
+        ILogger<MaintenanceService> logger)
     {
         _db = db;
         _time = time;
+        _language = language;
         _logger = logger;
     }
 
@@ -103,6 +110,7 @@ public sealed class MaintenanceService : IMaintenanceService
                     {
                         t.Id,
                         t.RoleEn,
+                        t.RoleAr,
                         t.RatingAverage,
                         Name = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault(),
                         ImageUrl = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault()
@@ -120,16 +128,17 @@ public sealed class MaintenanceService : IMaintenanceService
             {
                 Id = m.Id,
                 RequestCode = m.RequestNumber,
-                Title = m.ServiceType.ToString(),
+                Title = MaintenanceServiceTypeNames.Title(m.ServiceType, _language),
                 ServiceType = m.ServiceType,
                 Status = m.Status,
                 CreatedAt = m.CreatedAt,
-                VisitSummary = $"{date:d MMM yyyy} · {slot}",
+                VisitSummary = $"{date.ToString("d MMMM yyyy", _language.Culture)} · " +
+                   $"{MaintenanceTimeSlotNames.Label(slot, _language)}",
                 AssignedTechnician = m.Technician is null ? null : new TechnicianDto
                 {
                     Id = m.Technician.Id,
                     Name = m.Technician.Name ?? string.Empty,
-                    Role = m.Technician.RoleEn,
+                    Role = _language.Pick(m.Technician.RoleAr, m.Technician.RoleEn),
                     ImageUrl = m.Technician.ImageUrl,
                     AverageRating = m.Technician.RatingAverage
                 }
@@ -177,7 +186,7 @@ public sealed class MaintenanceService : IMaintenanceService
             {
                 Id = t.Id,
                 Name = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault() ?? string.Empty,
-                Role = t.RoleEn,
+                Role = _language.Pick(t.RoleAr, t.RoleEn),
                 ImageUrl = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault(),
                 AverageRating = t.RatingAverage
             })
