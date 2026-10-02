@@ -56,6 +56,8 @@ namespace modaar.api.Features.Contracts.Dtos
         public required ContractRequestStatus Status { get; init; }
 
         public string? Notes { get; init; }
+        public required string Title { get; init; }
+
         public string? DecisionReason { get; init; }
 
         public required DateTimeOffset Date { get; init; }

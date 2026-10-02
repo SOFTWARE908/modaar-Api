@@ -415,21 +415,35 @@ public sealed class DashboardService : IDashboardService
         }).ToList();
     }
 
-    private Task<BrokerSummaryDto?> BrokerSummaryAsync(Guid brokerId, CancellationToken ct) =>
-        _db.Brokers
+    private async Task<BrokerSummaryDto?> BrokerSummaryAsync(Guid brokerId, CancellationToken ct)
+    {
+        var row = await _db.Brokers
             .AsNoTracking()
             .Where(b => b.Id == brokerId)
-            .Select(b => new BrokerSummaryDto
+            .Select(b => new
             {
-                Id = b.Id,
-                Name = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.FullName).FirstOrDefault() ?? string.Empty,
-                LogoUrl = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault(),
-                Subtitle = b.SubtitleEn,
-                RatingAverage = b.RatingAverage,
-                ReviewsCount = b.ReviewsCount,
-                IsVerified = b.IsVerified
+                b.Id,
+                b.SubtitleAr,
+                b.SubtitleEn,
+                b.RatingAverage,
+                b.ReviewsCount,
+                b.IsVerified,
+                Name = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.FullName).FirstOrDefault(),
+                LogoUrl = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault()
             })
-            .FirstOrDefaultAsync(ct)!;
+            .FirstOrDefaultAsync(ct);
+
+        return row is null ? null : new BrokerSummaryDto
+        {
+            Id = row.Id,
+            Name = row.Name ?? string.Empty,
+            LogoUrl = row.LogoUrl,
+            Subtitle = _language.Pick(row.SubtitleAr, row.SubtitleEn),
+            RatingAverage = row.RatingAverage,
+            ReviewsCount = row.ReviewsCount,
+            IsVerified = row.IsVerified
+        };
+    }
 
     private async Task<UserSummary?> LoadUserAsync(Guid userId, CancellationToken ct) =>
         await _db.Users

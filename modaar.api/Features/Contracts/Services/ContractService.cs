@@ -8,6 +8,7 @@ using modaar.api.Features.Contracts.Dtos;
 using modaar.api.Features.Contracts.Entities;
 using modaar.api.Features.Contracts.Enums;
 using modaar.api.Persistence;
+using modaar.api.Common.Localization;
 
 namespace modaar.api.Features.Contracts.Services;
 
@@ -19,12 +20,18 @@ public sealed class ContractService : IContractService
 
     private readonly ModaarDbContext _db;
     private readonly TimeProvider _time;
+    private readonly IRequestLanguage _language;
     private readonly ILogger<ContractService> _logger;
 
-    public ContractService(ModaarDbContext db, TimeProvider time, ILogger<ContractService> logger)
+    public ContractService(
+        ModaarDbContext db,
+        TimeProvider time,
+        IRequestLanguage language,
+        ILogger<ContractService> logger)
     {
         _db = db;
         _time = time;
+        _language = language;
         _logger = logger;
     }
 
@@ -95,37 +102,61 @@ public sealed class ContractService : IContractService
         BrokerSummaryDto? broker = null;
         if (contract.BrokerId is { } brokerId)
         {
-            broker = await _db.Brokers
+            var row = await _db.Brokers
                 .AsNoTracking()
                 .Where(b => b.Id == brokerId)
-                .Select(b => new BrokerSummaryDto
+                .Select(b => new
                 {
-                    Id = b.Id,
-                    Name = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.FullName).FirstOrDefault() ?? string.Empty,
-                    LogoUrl = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault(),
-                    Subtitle = b.SubtitleEn,
-                    RatingAverage = b.RatingAverage,
-                    ReviewsCount = b.ReviewsCount,
-                    IsVerified = b.IsVerified
+                    b.Id,
+                    b.SubtitleAr,
+                    b.SubtitleEn,
+                    b.RatingAverage,
+                    b.ReviewsCount,
+                    b.IsVerified,
+                    Name = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.FullName).FirstOrDefault(),
+                    LogoUrl = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault()
                 })
                 .FirstOrDefaultAsync(ct);
+
+            broker = row is null ? null : new BrokerSummaryDto
+            {
+                Id = row.Id,
+                Name = row.Name ?? string.Empty,
+                LogoUrl = row.LogoUrl,
+                Subtitle = _language.Pick(row.SubtitleAr, row.SubtitleEn),
+                RatingAverage = row.RatingAverage,
+                ReviewsCount = row.ReviewsCount,
+                IsVerified = row.IsVerified
+            };
         }
 
-        var history = await _db.ContractRequests
-            .AsNoTracking()
-            .Where(r => r.ContractId == contractId)
-            .OrderByDescending(r => r.CreatedAt)
-            .Select(r => new ContractRequestHistoryItemDto
-            {
-                Id = r.Id,
-                Type = r.Type,
-                Status = r.Status,
-                Notes = r.Notes,
-                DecisionReason = r.DecisionReason,
-                Date = r.CreatedAt,
-                DecidedAt = r.DecidedAt
-            })
-            .ToListAsync(ct);
+        var historyRows = await _db.ContractRequests
+    .AsNoTracking()
+    .Where(r => r.ContractId == contractId)
+    .OrderByDescending(r => r.CreatedAt)
+    .Select(r => new
+    {
+        r.Id,
+        r.Type,
+        r.Status,
+        r.Notes,
+        r.DecisionReason,
+        r.CreatedAt,
+        r.DecidedAt
+    })
+    .ToListAsync(ct);
+
+        var history = historyRows.Select(r => new ContractRequestHistoryItemDto
+        {
+            Id = r.Id,
+            Title = ContractRequestLabels.Title(r.Type, _language),
+            Type = r.Type,
+            Status = r.Status,
+            Notes = r.Notes,
+            DecisionReason = r.DecisionReason,
+            Date = r.CreatedAt,
+            DecidedAt = r.DecidedAt
+        }).ToList();
 
         var availability = RenewalAvailability(contract, history, today);
         var remainingDays = contract.EndDate.DayNumber - today.DayNumber;
@@ -308,6 +339,7 @@ public sealed class ContractService : IContractService
         return new ContractRequestHistoryItemDto
         {
             Id = entity.Id,
+            Title = ContractRequestLabels.Title(entity.Type, _language),
             Type = entity.Type,
             Status = entity.Status,
             Notes = entity.Notes,

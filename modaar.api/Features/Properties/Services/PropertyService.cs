@@ -10,6 +10,8 @@ using modaar.api.Features.Properties.Entities;
 using modaar.api.Features.Properties.Enums;
 using modaar.api.Features.Users.Dtos;
 using modaar.api.Persistence;
+using modaar.api.Common.Localization;
+using modaar.api.Features.Maintenance;
 
 namespace modaar.api.Features.Properties.Services;
 
@@ -22,11 +24,13 @@ public sealed class PropertyService : IPropertyService
 
     private readonly ModaarDbContext _db;
     private readonly TimeProvider _time;
+    private readonly IRequestLanguage _language;
 
-    public PropertyService(ModaarDbContext db, TimeProvider time)
+    public PropertyService(ModaarDbContext db, TimeProvider time, IRequestLanguage language)
     {
         _db = db;
         _time = time;
+        _language = language;
     }
 
     public async Task<Result<PagedResultDto<PropertyListItemDto>>> ListForOwnerAsync(
@@ -190,20 +194,32 @@ public sealed class PropertyService : IPropertyService
         BrokerSummaryDto? broker = null;
         if (property.BrokerId is { } id)
         {
-            broker = await _db.Brokers
+            var row = await _db.Brokers
                 .AsNoTracking()
                 .Where(b => b.Id == id)
-                .Select(b => new BrokerSummaryDto
+                .Select(b => new
                 {
-                    Id = b.Id,
-                    Name = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.FullName).FirstOrDefault() ?? string.Empty,
-                    LogoUrl = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault(),
-                    Subtitle = b.SubtitleEn,
-                    RatingAverage = b.RatingAverage,
-                    ReviewsCount = b.ReviewsCount,
-                    IsVerified = b.IsVerified
+                    b.Id,
+                    b.SubtitleAr,
+                    b.SubtitleEn,
+                    b.RatingAverage,
+                    b.ReviewsCount,
+                    b.IsVerified,
+                    Name = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.FullName).FirstOrDefault(),
+                    LogoUrl = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault()
                 })
                 .FirstOrDefaultAsync(ct);
+
+            broker = row is null ? null : new BrokerSummaryDto
+            {
+                Id = row.Id,
+                Name = row.Name ?? string.Empty,
+                LogoUrl = row.LogoUrl,
+                Subtitle = _language.Pick(row.SubtitleAr, row.SubtitleEn),
+                RatingAverage = row.RatingAverage,
+                ReviewsCount = row.ReviewsCount,
+                IsVerified = row.IsVerified
+            };
         }
 
         // The handover for the current tenancy only — an earlier tenant's record is not this
@@ -216,24 +232,34 @@ public sealed class PropertyService : IPropertyService
                 .Select(h => new { h.Description, h.Images })
                 .FirstOrDefaultAsync(ct);
 
-        var history = await _db.MaintenanceRequests
-            .AsNoTracking()
-            .Where(m => m.PropertyId == propertyId)
-            .OrderByDescending(m => m.CreatedAt)
-            .Take(20)
-            .Select(m => new PropertyMaintenanceHistoryItemDto
-            {
-                RequestId = m.Id,
-                RequestNumber = m.RequestNumber,
-                Title = m.ServiceType.ToString(),
-                Description = m.ProblemDescription,
-                ServiceType = m.ServiceType,
-                Status = m.Status,
-                Date = m.CreatedAt,
-                CostAmount = null,
-                Currency = null
-            })
-            .ToListAsync(ct);
+        var historyRows = await _db.MaintenanceRequests
+    .AsNoTracking()
+    .Where(m => m.PropertyId == propertyId)
+    .OrderByDescending(m => m.CreatedAt)
+    .Take(20)
+    .Select(m => new
+    {
+        m.Id,
+        m.RequestNumber,
+        m.ProblemDescription,
+        m.ServiceType,
+        m.Status,
+        m.CreatedAt
+    })
+    .ToListAsync(ct);
+
+        var history = historyRows.Select(m => new PropertyMaintenanceHistoryItemDto
+        {
+            RequestId = m.Id,
+            RequestNumber = m.RequestNumber,
+            Title = MaintenanceServiceTypeNames.Title(m.ServiceType, _language),
+            Description = m.ProblemDescription,
+            ServiceType = m.ServiceType,
+            Status = m.Status,
+            Date = m.CreatedAt,
+            CostAmount = null,
+            Currency = null
+        }).ToList();
 
         return Result<PropertyDetailsDto>.Ok(new PropertyDetailsDto
         {
@@ -271,10 +297,10 @@ public sealed class PropertyService : IPropertyService
         return Math.Clamp((double)elapsed / total, 0d, 1d);
     }
 
-    private static string? ComposeAddress(string? line, string? district, string? city)
+    private string? ComposeAddress(string? line, string? district, string? city)
     {
         var parts = new[] { line, district, city }.Where(p => !string.IsNullOrWhiteSpace(p));
-        var joined = string.Join("، ", parts);
+        var joined = string.Join(_language.IsArabic ? "، " : ", ", parts);
         return joined.Length == 0 ? null : joined;
     }
 

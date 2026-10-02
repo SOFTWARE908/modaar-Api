@@ -54,8 +54,6 @@ public sealed class BrokerService : IBrokerService
             .Take(ProfileReviewPreviewCount)
             .ToListAsync(ct);
 
-        // TODO: pick _Ar or _En from the request's Accept-Language once the localization helper
-        // exists. English until then, as everywhere else.
         return Result<BrokerDto>.Ok(new BrokerDto
         {
             Id = broker.Id,
