@@ -1,6 +1,8 @@
 using modaar.api.Common.Auth;
+using modaar.api.Common.Dtos;
 using modaar.api.Common.Results;
 using modaar.api.Features.Authentication.Dtos;
+using modaar.api.Features.Authentication.Enums;
 
 namespace modaar.api.Features.Authentication.Services;
 
@@ -21,4 +23,11 @@ public interface IAuthService
     Task<AuthResult<RefreshTokenResponseDto>> RefreshTokenAsync(string refreshToken, CancellationToken ct);
 
     Task<Result<bool>> LogoutAsync(Guid userId, LogoutRequestDto request, CancellationToken ct);
+
+    Task<AuthResult<AccountTypesResponseDto>> GetAccountTypesAsync(Guid userId, CancellationToken ct);
+
+    // Issues the real token pair in the chosen role. The last step of login, and later the
+    // in-app role switcher — same call either way.
+    Task<AuthResult<AuthSuccessResponseDto>> SelectRoleAsync(
+        Guid userId, AccountType accountType, CancellationToken ct);
 }

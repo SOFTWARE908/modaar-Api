@@ -21,10 +21,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(u => u.PasswordHash).HasMaxLength(500);
         b.Property(u => u.ProfileImageUrl).HasMaxLength(500);
 
-        b.Property(u => u.AccountType)
-            .HasConversion<string>()
-            .HasMaxLength(20)
+        b.PrimitiveCollection(u => u.AccountTypes)
+            .ElementType(e => e.HasConversion<string>().HasMaxLength(20))
+            .HasMaxLength(200)
             .IsRequired();
+
+        b.Ignore(u => u.PrimaryAccountType);
 
         b.Property(u => u.ProfileStatus)
             .HasConversion<string>()

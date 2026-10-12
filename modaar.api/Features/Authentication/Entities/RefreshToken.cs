@@ -1,9 +1,12 @@
+using modaar.api.Features.Authentication.Enums;
+
 namespace modaar.api.Features.Authentication.Entities;
 
 public class RefreshToken
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
+    public AccountType? ActiveRole { get; set; }
 
     public string TokenHash { get; set; } = null!;
 

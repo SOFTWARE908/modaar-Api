@@ -17,7 +17,10 @@ public class User
     public string? NationalId { get; set; }
 
     // Defaulted on creation; the user can change it while completing their profile.
-    public AccountType AccountType { get; set; } = AccountType.Tenant;
+    public List<AccountType> AccountTypes { get; set; } = [];
+
+    public AccountType PrimaryAccountType =>
+        AccountTypes.Count > 0 ? AccountTypes[0] : AccountType.Tenant;
 
     public ProfileStatus ProfileStatus { get; set; } = ProfileStatus.Incomplete;
 

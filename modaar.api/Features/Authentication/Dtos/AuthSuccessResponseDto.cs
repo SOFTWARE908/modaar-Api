@@ -14,4 +14,8 @@ public record AuthSuccessResponseDto
     public required bool IsNewUser { get; init; }
 
     public required ProfileStatus ProfileStatus { get; init; }
+
+    public AccountType? ActiveRole { get; init; }
+
+    public required IReadOnlyList<AccountType> AccountTypes { get; init; }
 }

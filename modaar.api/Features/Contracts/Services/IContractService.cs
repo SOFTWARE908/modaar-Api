@@ -1,5 +1,6 @@
 using modaar.api.Common.Dtos;
 using modaar.api.Common.Results;
+using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Contracts.Dtos;
 
 namespace modaar.api.Features.Contracts.Services;
@@ -9,7 +10,7 @@ public interface IContractService
     // Scoped by account type: a tenant sees their own leases, an owner sees leases on properties
     // they own, a broker sees the ones on properties they manage.
     Task<Result<PagedResultDto<ContractDto>>> ListAsync(
-        Guid callerUserId, ContractListQueryDto query, CancellationToken ct);
+        Guid callerUserId, AccountType activeRole, ContractListQueryDto query, CancellationToken ct);
 
     Task<Result<ContractDetailsDto>> GetDetailsAsync(
         Guid contractId, Guid callerUserId, CancellationToken ct);

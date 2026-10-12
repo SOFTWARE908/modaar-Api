@@ -12,5 +12,6 @@ public enum AuthErrorCode
     OtpMaxAttempts,
     OtpResendCooldown,
     InvalidRefreshToken,
-    UnsupportedLoginMethod
+    UnsupportedLoginMethod,
+    RoleNotSelected
 }

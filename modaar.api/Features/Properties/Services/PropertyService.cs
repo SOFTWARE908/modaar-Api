@@ -34,9 +34,13 @@ public sealed class PropertyService : IPropertyService
     }
 
     public async Task<Result<PagedResultDto<PropertyListItemDto>>> ListForOwnerAsync(
-        Guid ownerUserId, PropertyListQueryDto query, CancellationToken ct)
+        Guid ownerUserId, PropertyListQueryDto query, AccountType activeRole, CancellationToken ct)
     {
         var today = SaudiTime.Today(_time);
+
+        if (activeRole != AccountType.Owner)
+            return Result<PagedResultDto<PropertyListItemDto>>.Fail(AppErrorCode.Forbidden,
+                "Switch to your owner account to view your properties.");
 
         var properties = _db.Properties
             .AsNoTracking()
@@ -129,7 +133,7 @@ public sealed class PropertyService : IPropertyService
         });
     }
 
-    public async Task<Result<PropertyDetailsDto>> GetDetailsAsync(Guid propertyId, Guid callerUserId, CancellationToken ct)
+    public async Task<Result<PropertyDetailsDto>> GetDetailsAsync(Guid propertyId, Guid callerUserId, AccountType activeRole, CancellationToken ct)
     {
         var today = SaudiTime.Today(_time);
 
@@ -141,8 +145,8 @@ public sealed class PropertyService : IPropertyService
             return Result<PropertyDetailsDto>.Fail(AppErrorCode.NotFound, "Property not found.");
 
         // The owner, or the brokerage managing it. Deliberately not "any broker".
-        var isOwner = property.OwnerUserId == callerUserId;
-        var isManagingBroker = property.BrokerId is { } brokerId &&
+        var isOwner = property.OwnerUserId == callerUserId && activeRole == AccountType.Owner;
+        var isManagingBroker = property.BrokerId is { } brokerId && activeRole == AccountType.Broker &&
             await _db.Brokers.AnyAsync(b => b.Id == brokerId && b.UserId == callerUserId, ct);
 
         if (!isOwner && !isManagingBroker)
@@ -308,21 +312,21 @@ public sealed class PropertyService : IPropertyService
 
 
     public async Task<Result<PropertyDetailsDto>> CreateAsync(
-        Guid ownerUserId, CreatePropertyRequestDto request, CancellationToken ct)
+        Guid ownerUserId, CreatePropertyRequestDto request, AccountType activeRole, CancellationToken ct)
     {
         // Only an owner lists a unit. A tenant or broker account calling this is a client bug, not a
         // reason to silently create a property they can never see in their own list.
         var accountType = await _db.Users
-            .Where(u => u.Id == ownerUserId && !u.IsDeleted)
-            .Select(u => (AccountType?)u.AccountType)
+            .Where(u => u.Id == ownerUserId && !u.IsDeleted && u.AccountTypes.Contains(AccountType.Owner))
+            .Select(u => u.AccountTypes)
             .FirstOrDefaultAsync(ct);
 
         if (accountType is null)
             return Result<PropertyDetailsDto>.Fail(AppErrorCode.NotFound, "User not found.");
 
-        if (accountType != AccountType.Owner)
+        if (activeRole != AccountType.Owner)
             return Result<PropertyDetailsDto>.Fail(AppErrorCode.Forbidden,
-                "Only an owner account can add a property.");
+                "Switch to your owner account to add a property.");
 
         var now = _time.GetUtcNow();
 
@@ -351,11 +355,11 @@ public sealed class PropertyService : IPropertyService
         _db.Properties.Add(property);
         await _db.SaveChangesAsync(ct);
 
-        return await GetDetailsAsync(property.Id, ownerUserId, ct);
+        return await GetDetailsAsync(property.Id, ownerUserId, activeRole, ct);
     }
 
     public async Task<Result<PropertyDetailsDto>> UpdateAsync(
-        Guid propertyId, Guid callerUserId, UpdatePropertyRequestDto request, CancellationToken ct)
+        Guid propertyId, Guid callerUserId, UpdatePropertyRequestDto request, AccountType activeRole, CancellationToken ct)
     {
         var property = await _db.Properties
             .FirstOrDefaultAsync(p => p.Id == propertyId && !p.IsDeleted, ct);
@@ -389,10 +393,10 @@ public sealed class PropertyService : IPropertyService
         property.UpdatedAt = _time.GetUtcNow();
         await _db.SaveChangesAsync(ct);
 
-        return await GetDetailsAsync(property.Id, callerUserId, ct);
+        return await GetDetailsAsync(propertyId, callerUserId, activeRole, ct);
     }
 
-    public async Task<Result<bool>> DeleteAsync(Guid propertyId, Guid callerUserId, CancellationToken ct)
+    public async Task<Result<bool>> DeleteAsync(Guid propertyId, Guid callerUserId, AccountType activeRole, CancellationToken ct)
     {
         var property = await _db.Properties
             .FirstOrDefaultAsync(p => p.Id == propertyId && !p.IsDeleted, ct);
@@ -400,7 +404,9 @@ public sealed class PropertyService : IPropertyService
         if (property is null)
             return Result<bool>.Fail(AppErrorCode.NotFound, "Property not found.");
 
-        if (property.OwnerUserId != callerUserId)
+
+
+        if (property.OwnerUserId != callerUserId || activeRole != AccountType.Owner)
             return Result<bool>.Fail(AppErrorCode.Forbidden, "Only the owner can delete this property.");
 
         // A unit with someone living in it cannot be delisted. The lease has to be ended first, which

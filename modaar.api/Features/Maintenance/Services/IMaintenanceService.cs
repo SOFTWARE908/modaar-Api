@@ -1,5 +1,6 @@
 using modaar.api.Common.Dtos;
 using modaar.api.Common.Results;
+using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Maintenance.Dtos;
 using modaar.api.Features.Maintenance.Enums;
 
@@ -10,13 +11,13 @@ public interface IMaintenanceService
     // Scoped by the caller's account type: a tenant sees their own, an owner sees requests on
     // properties they own, a broker sees the properties they manage.
     Task<Result<PagedResultDto<MaintenanceRequestListItemDto>>> ListAsync(
-        Guid callerUserId, MaintenanceListQueryDto query, CancellationToken ct);
+        Guid callerUserId, MaintenanceListQueryDto query, AccountType activeRole, CancellationToken ct);
 
     Task<Result<MaintenanceRequestDetailsDto>> GetDetailsAsync(
-        Guid requestId, Guid callerUserId, CancellationToken ct);
+        Guid requestId, Guid callerUserId, AccountType activeRole, CancellationToken ct);
 
     Task<Result<CreateMaintenanceRequestResponseDto>> CreateAsync(
-        Guid tenantUserId, CreateMaintenanceRequestDto request, CancellationToken ct);
+        Guid tenantUserId, CreateMaintenanceRequestDto request, AccountType activeRole, CancellationToken ct);
 }
 
 public interface IMaintenanceAttachmentService

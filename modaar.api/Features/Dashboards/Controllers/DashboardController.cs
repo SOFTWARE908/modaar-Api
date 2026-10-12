@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using modaar.api.Common.Auth;
 using modaar.api.Common.Results;
+using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Dashboards.Dtos;
 using modaar.api.Features.Dashboards.Services;
 using modaar.api.Features.Users.Dtos;
@@ -29,7 +30,10 @@ public class DashboardController : ControllerBase
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
-        return (await _dashboards.GetOwnerAsync(userId, ct)).ToActionResult();
+        if (User.GetActiveRole() is not { } role)
+            return Problem(statusCode: StatusCodes.Status403Forbidden, detail: "User is not an owner.");
+
+        return (await _dashboards.GetOwnerAsync(userId, role, ct)).ToActionResult();
     }
 
     [HttpGet("tenant")]
@@ -40,8 +44,10 @@ public class DashboardController : ControllerBase
     {
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+        if (User.GetActiveRole() is not { } role)
+            return Problem(statusCode: StatusCodes.Status403Forbidden, detail: "User is not a tenant.");
 
-        return (await _dashboards.GetTenantAsync(userId, ct)).ToActionResult();
+        return (await _dashboards.GetTenantAsync(userId, role, ct)).ToActionResult();
     }
 
     [HttpGet("broker")]
@@ -52,7 +58,9 @@ public class DashboardController : ControllerBase
     {
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+        if (User.GetActiveRole() is not { } role)
+            return Problem(statusCode: StatusCodes.Status403Forbidden, detail: "User is not a broker.");
 
-        return (await _dashboards.GetBrokerAsync(userId, ct)).ToActionResult();
+        return (await _dashboards.GetBrokerAsync(userId, role, ct)).ToActionResult();
     }
 }

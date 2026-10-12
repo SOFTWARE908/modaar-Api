@@ -13,6 +13,10 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         b.HasKey(r => r.Id);
         b.Property(r => r.Id).ValueGeneratedNever();
 
+        b.Property(t => t.ActiveRole)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
         b.Property(r => r.TokenHash).HasMaxLength(200).IsRequired();
 
         b.Property(r => r.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");

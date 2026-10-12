@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using modaar.api.Common.Auth;
+using modaar.api.Common.Dtos;
 using modaar.api.Common.Errors;
 using modaar.api.Common.Results;
 using modaar.api.Features.Authentication.Dtos;
@@ -132,6 +133,40 @@ public class AuthController : ControllerBase
         var result = await _auth.LogoutAsync(userId, request ?? new LogoutRequestDto(), ct);
         return result.Success ? NoContent() : result.ToActionResult();
     }
+
+    // The picker's data. Authenticated by the token verify-otp returned, which is why this
+    // works before a role exists.
+    [Authorize]
+    [HttpGet("account-types")]
+    [ProducesResponseType(typeof(AccountTypesResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAccountTypes(CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        return (await _auth.GetAccountTypesAsync(userId, ct)).ToActionResult();
+    }
+
+    // The last step of login. Also the in-app role switcher: an already-scoped token calling
+    // this just gets a new pair in a different role.
+    [Authorize]
+    [HttpPost("select-role")]
+    [ProducesResponseType(typeof(AuthSuccessResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> SelectRole(
+        [FromBody] SelectRoleRequestDto request, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        return (await _auth.SelectRoleAsync(userId, request.AccountType, ct)).ToActionResult();
+    }
+
 
     private IActionResult BadField(string detail) =>
         Problem(detail: detail, statusCode: StatusCodes.Status400BadRequest);

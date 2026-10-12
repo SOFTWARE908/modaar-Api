@@ -13,6 +13,7 @@ public record UserProfileDto
     public required string CountryCode { get; init; }
 
     public required AccountType AccountType { get; init; }
+    public required IReadOnlyList<AccountType> AccountTypes { get; init; }
     public required ProfileStatus ProfileStatus { get; init; }
 
     // Filled in after the first login; null until the user completes their profile.

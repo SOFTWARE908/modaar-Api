@@ -1,5 +1,6 @@
 using modaar.api.Common.Dtos;
 using modaar.api.Common.Results;
+using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Users.Dtos;
 
 namespace modaar.api.Features.Users.Services;
@@ -12,5 +13,5 @@ public interface IBrokerService
         Guid brokerId, Guid callerUserId, PagedRequestDto query, CancellationToken ct);
 
     Task<Result<bool>> RequestManagementAsync(
-        Guid brokerId, Guid ownerUserId, BrokerManagementRequestDto request, CancellationToken ct);
+        Guid brokerId, Guid ownerUserId, BrokerManagementRequestDto request, AccountType activeRole, CancellationToken ct);
 }

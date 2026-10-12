@@ -1,5 +1,6 @@
 using modaar.api.Common.Dtos;
 using modaar.api.Common.Results;
+using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Properties.Dtos;
 using modaar.api.Features.Properties.Enums;
 
@@ -9,21 +10,19 @@ public interface IPropertyService
 {
     // Scoped to the properties the caller owns.
     Task<Result<PagedResultDto<PropertyListItemDto>>> ListForOwnerAsync(
-        Guid ownerUserId, PropertyListQueryDto query, CancellationToken ct);
+        Guid ownerUserId, PropertyListQueryDto query, AccountType activeRole, CancellationToken ct);
 
     // Readable by the owner or by the brokerage currently managing the property.
-    Task<Result<PropertyDetailsDto>> GetDetailsAsync(Guid propertyId, Guid callerUserId, CancellationToken ct);
-
+    Task<Result<PropertyDetailsDto>> GetDetailsAsync(Guid propertyId, Guid callerUserId, AccountType activeRole, CancellationToken ct);
 
 
 
     Task<Result<PropertyDetailsDto>> CreateAsync(
-        Guid ownerUserId, CreatePropertyRequestDto request, CancellationToken ct);
+        Guid ownerUserId, CreatePropertyRequestDto request, AccountType activeRole, CancellationToken ct);
 
     Task<Result<PropertyDetailsDto>> UpdateAsync(
-        Guid propertyId, Guid callerUserId, UpdatePropertyRequestDto request, CancellationToken ct);
-
-    Task<Result<bool>> DeleteAsync(Guid propertyId, Guid callerUserId, CancellationToken ct);
+        Guid propertyId, Guid callerUserId, UpdatePropertyRequestDto request, AccountType activeRole, CancellationToken ct);
+    Task<Result<bool>> DeleteAsync(Guid propertyId, Guid callerUserId, AccountType activeRole, CancellationToken ct);
 
 
 }

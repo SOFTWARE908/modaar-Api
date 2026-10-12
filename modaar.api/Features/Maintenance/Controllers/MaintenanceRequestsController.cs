@@ -61,7 +61,13 @@ namespace modaar.api.Features.Maintenance.Controllers
             if (User.GetUserId() is not { } userId)
                 return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
-            return (await _maintenance.ListAsync(userId, query, ct)).ToActionResult();
+            if (User.GetActiveRole() is not { } activeRole)
+                return Problem(
+                    statusCode: StatusCodes.Status403Forbidden,
+                    title: "Role not selected",
+                    detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
+
+            return (await _maintenance.ListAsync(userId, query, activeRole, ct)).ToActionResult();
         }
 
         [HttpGet("{requestId:guid}")]
@@ -73,8 +79,13 @@ namespace modaar.api.Features.Maintenance.Controllers
         {
             if (User.GetUserId() is not { } userId)
                 return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+            if (User.GetActiveRole() is not { } activeRole)
+                return Problem(
+                    statusCode: StatusCodes.Status403Forbidden,
+                    title: "Role not selected",
+                    detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
 
-            return (await _maintenance.GetDetailsAsync(requestId, userId, ct)).ToActionResult();
+            return (await _maintenance.GetDetailsAsync(requestId, userId, activeRole, ct)).ToActionResult();
         }
 
         // Tenant only. The property is resolved from the caller's active lease.
@@ -88,8 +99,13 @@ namespace modaar.api.Features.Maintenance.Controllers
         {
             if (User.GetUserId() is not { } userId)
                 return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+            if (User.GetActiveRole() is not { } activeRole)
+                return Problem(
+                    statusCode: StatusCodes.Status403Forbidden,
+                    title: "Role not selected",
+                    detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
 
-            var result = await _maintenance.CreateAsync(userId, request, ct);
+            var result = await _maintenance.CreateAsync(userId, request, activeRole, ct);
             if (!result.Success)
                 return result.ToActionResult();
 

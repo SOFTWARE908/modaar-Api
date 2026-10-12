@@ -1,10 +1,11 @@
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Users.Entities;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace modaar.api.Common.Auth;
 
@@ -22,7 +23,38 @@ public sealed class JwtTokenService : IJwtTokenService
         _signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
     }
 
-    public string CreateAccessToken(User user)
+    //public string CreateAccessToken(User user)
+    //{
+    //    var now = _time.GetUtcNow().UtcDateTime;
+
+    //    var claims = new List<Claim>
+    //    {
+    //        new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+    //        new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+    //        new(JwtRegisteredClaimNames.PhoneNumber, user.CountryCode + user.PhoneNumber),
+    //        new("account_type", user.AccountType.ToString())
+    //    };
+
+    //    // Only present once the user has filled in their profile.
+    //    if (!string.IsNullOrEmpty(user.Email))
+    //        claims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
+
+    //    var descriptor = new SecurityTokenDescriptor
+    //    {
+    //        Issuer = _settings.Issuer,
+    //        Audience = _settings.Audience,
+    //        IssuedAt = now,
+    //        NotBefore = now,
+    //        Expires = now.AddMinutes(_settings.AccessTokenExpiresMinutes),
+    //        Subject = new ClaimsIdentity(claims),
+    //        SigningCredentials = _signingCredentials
+    //    };
+
+    //    return new JsonWebTokenHandler().CreateToken(descriptor);
+    //}
+
+
+    public string CreateAccessToken(User user, AccountType? activeRole)
     {
         var now = _time.GetUtcNow().UtcDateTime;
 
@@ -30,11 +62,18 @@ public sealed class JwtTokenService : IJwtTokenService
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(JwtRegisteredClaimNames.PhoneNumber, user.CountryCode + user.PhoneNumber),
-            new("account_type", user.AccountType.ToString())
+            new(JwtRegisteredClaimNames.PhoneNumber, user.CountryCode + user.PhoneNumber)
         };
 
-        // Only present once the user has filled in their profile.
+        // Absent until a role is chosen. Its absence is what makes the scoped endpoints refuse.
+        if (activeRole is { } role)
+            claims.Add(new Claim("active_role", role.ToString()));
+
+        // Everything the user could switch to, so a role switcher needs no round trip.
+        // Informational only: nothing authorizes off these.
+        foreach (var type in user.AccountTypes)
+            claims.Add(new Claim("account_type", type.ToString()));
+
         if (!string.IsNullOrEmpty(user.Email))
             claims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
 

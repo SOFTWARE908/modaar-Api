@@ -60,9 +60,14 @@ public class BrokersController : ControllerBase
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
+        if (User.GetActiveRole() is not { } activeRole)
+            return Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Role not selected",
+                detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
         // An empty body means the whole portfolio.
         var result = await _brokers.RequestManagementAsync(
-            brokerId, userId, request ?? new BrokerManagementRequestDto(), ct);
+            brokerId, userId, request ?? new BrokerManagementRequestDto(), activeRole, ct);
 
         return result.Success ? NoContent() : result.ToActionResult();
     }

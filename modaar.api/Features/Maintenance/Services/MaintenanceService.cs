@@ -33,12 +33,12 @@ public sealed class MaintenanceService : IMaintenanceService
     }
 
     public async Task<Result<PagedResultDto<MaintenanceRequestListItemDto>>> ListAsync(
-        Guid callerUserId, MaintenanceListQueryDto query, CancellationToken ct)
+        Guid callerUserId, MaintenanceListQueryDto query, AccountType activeRole, CancellationToken ct)
     {
         var caller = await _db.Users
             .AsNoTracking()
-            .Where(u => u.Id == callerUserId && !u.IsDeleted)
-            .Select(u => new { u.AccountType })
+            .Where(u => u.Id == callerUserId && !u.IsDeleted && u.AccountTypes.Contains(activeRole))
+            .Select(u => new { u.AccountTypes })
             .FirstOrDefaultAsync(ct);
 
         if (caller is null)
@@ -48,7 +48,7 @@ public sealed class MaintenanceService : IMaintenanceService
         var requests = _db.MaintenanceRequests.AsNoTracking();
 
         // The scoping rule is the authorization. Everything below it is just filtering.
-        requests = caller.AccountType switch
+        requests = activeRole switch
         {
             AccountType.Tenant => requests.Where(m => m.TenantUserId == callerUserId),
 
@@ -150,7 +150,7 @@ public sealed class MaintenanceService : IMaintenanceService
     }
 
     public async Task<Result<MaintenanceRequestDetailsDto>> GetDetailsAsync(
-        Guid requestId, Guid callerUserId, CancellationToken ct)
+        Guid requestId, Guid callerUserId, AccountType activeRole, CancellationToken ct)
     {
         var request = await _db.MaintenanceRequests
             .AsNoTracking()
@@ -168,11 +168,13 @@ public sealed class MaintenanceService : IMaintenanceService
         if (property is null)
             return Result<MaintenanceRequestDetailsDto>.Fail(AppErrorCode.NotFound, "Property not found.");
 
-        var isTenant = request.TenantUserId == callerUserId;
-        var isOwner = property.OwnerUserId == callerUserId;
-        var isBroker = property.BrokerId is { } brokerId &&
+        var isTenant = (request.TenantUserId == callerUserId && activeRole == AccountType.Tenant);
+        var isOwner = (property.OwnerUserId == callerUserId && activeRole == AccountType.Owner);
+
+        var isBroker = property.BrokerId is { } brokerId && activeRole == AccountType.Broker &&
             await _db.Brokers.AnyAsync(b => b.Id == brokerId && b.UserId == callerUserId, ct);
-        var isTechnician = request.AssignedTechnicianId is { } techId &&
+
+        var isTechnician = request.AssignedTechnicianId is { } techId && activeRole == AccountType.Technician &&
             await _db.Technicians.AnyAsync(t => t.Id == techId && t.UserId == callerUserId, ct);
 
         if (!isTenant && !isOwner && !isBroker && !isTechnician)
@@ -250,18 +252,20 @@ public sealed class MaintenanceService : IMaintenanceService
     }
 
     public async Task<Result<CreateMaintenanceRequestResponseDto>> CreateAsync(
-        Guid tenantUserId, CreateMaintenanceRequestDto request, CancellationToken ct)
+        Guid tenantUserId, CreateMaintenanceRequestDto request, AccountType activeRole, CancellationToken ct)
     {
+        
         var accountType = await _db.Users
-            .Where(u => u.Id == tenantUserId && !u.IsDeleted && u.IsActive)
-            .Select(u => (AccountType?)u.AccountType)
+            .AsNoTracking()
+            .Where(u => u.Id == tenantUserId && !u.IsDeleted)
+            .Select(u => u.AccountTypes)
             .FirstOrDefaultAsync(ct);
 
         if (accountType is null)
             return Result<CreateMaintenanceRequestResponseDto>.Fail(AppErrorCode.NotFound, "User not found.");
 
         // Only a tenant raises maintenance — the account-type matrix in the spec is explicit.
-        if (accountType != AccountType.Tenant)
+        if (!accountType.Contains(AccountType.Tenant) && activeRole != AccountType.Tenant)
             return Result<CreateMaintenanceRequestResponseDto>.Fail(
                 AppErrorCode.Forbidden, "Only a tenant can raise a maintenance request.");
 

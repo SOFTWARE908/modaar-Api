@@ -36,18 +36,22 @@ public sealed class ContractService : IContractService
     }
 
     public async Task<Result<PagedResultDto<ContractDto>>> ListAsync(
-        Guid callerUserId, ContractListQueryDto query, CancellationToken ct)
+        Guid callerUserId, AccountType activeRole, ContractListQueryDto query, CancellationToken ct)
     {
-        var accountType = await _db.Users
+        var types = await _db.Users
             .AsNoTracking()
             .Where(u => u.Id == callerUserId && !u.IsDeleted)
-            .Select(u => (AccountType?)u.AccountType)
+            .Select(u => u.AccountTypes)
             .FirstOrDefaultAsync(ct);
 
-        if (accountType is null)
-            return Result<PagedResultDto<ContractDto>>.Fail(AppErrorCode.NotFound, "User not found.");
 
-        var contracts = Scope(_db.Contracts.AsNoTracking(), callerUserId, accountType.Value);
+        if (types is null)
+            return Result<PagedResultDto<ContractDto>>.Fail(AppErrorCode.NotFound, "User not found.");
+        if (!types.Contains(activeRole))
+            return Result<PagedResultDto<ContractDto>>.Fail(
+                AppErrorCode.Forbidden, "That role is no longer available on this account.");
+
+        var contracts = Scope(_db.Contracts.AsNoTracking(), callerUserId, activeRole);
 
         if (query.Status is { } status)
             contracts = contracts.Where(c => c.Status == status);

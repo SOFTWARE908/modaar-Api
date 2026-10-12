@@ -27,8 +27,13 @@ public class ContractsController : ControllerBase
     {
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+        if (User.GetActiveRole() is not { } activeRole)
+            return Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Role not selected",
+                detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
 
-        return (await _contracts.ListAsync(userId, query, ct)).ToActionResult();
+        return (await _contracts.ListAsync(userId, activeRole, query, ct)).ToActionResult();
     }
 
     [HttpGet("{contractId:guid}")]

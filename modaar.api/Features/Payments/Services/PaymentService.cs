@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using modaar.api.Common.Dtos;
 using modaar.api.Common.Results;
 using modaar.api.Features.Authentication.Enums;
+using modaar.api.Features.Contracts.Dtos;
 using modaar.api.Features.Payments.Dtos;
 using modaar.api.Features.Payments.Entities;
 using modaar.api.Persistence;
@@ -15,18 +16,18 @@ public sealed class PaymentService : IPaymentService
     public PaymentService(ModaarDbContext db) => _db = db;
 
     public async Task<Result<PagedResultDto<PaymentDto>>> ListAsync(
-        Guid callerUserId, PaymentListQueryDto query, CancellationToken ct)
+        Guid callerUserId, PaymentListQueryDto query, AccountType activeRole, CancellationToken ct)
     {
-        var accountType = await _db.Users
+        var types = await _db.Users
             .AsNoTracking()
             .Where(u => u.Id == callerUserId && !u.IsDeleted)
-            .Select(u => (AccountType?)u.AccountType)
+            .Select(u => u.AccountTypes)
             .FirstOrDefaultAsync(ct);
 
-        if (accountType is null)
+        if (types is null)
             return Result<PagedResultDto<PaymentDto>>.Fail(AppErrorCode.NotFound, "User not found.");
 
-        var payments = Scope(_db.Payments.AsNoTracking(), callerUserId, accountType.Value);
+        var payments = Scope(_db.Payments.AsNoTracking(), callerUserId, activeRole);
 
         if (query.Type is { } type)
             payments = payments.Where(p => p.Type == type);
@@ -67,9 +68,9 @@ public sealed class PaymentService : IPaymentService
     }
 
     public async Task<Result<InvoiceDetailsDto>> GetInvoiceAsync(
-        Guid paymentId, Guid callerUserId, CancellationToken ct)
+        Guid paymentId, Guid callerUserId, AccountType activeRole, CancellationToken ct)
     {
-        var payment = await LoadAccessibleAsync(paymentId, callerUserId, ct);
+        var payment = await LoadAccessibleAsync(paymentId, callerUserId, activeRole, ct);
         if (payment.Failure is { } failure)
             return Result<InvoiceDetailsDto>.Fail(failure.ErrorCode!.Value, failure.Error!);
 
@@ -98,9 +99,9 @@ public sealed class PaymentService : IPaymentService
     }
 
     public async Task<Result<string>> GetInvoiceUrlAsync(
-        Guid paymentId, Guid callerUserId, CancellationToken ct)
+        Guid paymentId, Guid callerUserId, AccountType activeRole, CancellationToken ct)
     {
-        var payment = await LoadAccessibleAsync(paymentId, callerUserId, ct);
+        var payment = await LoadAccessibleAsync(paymentId, callerUserId, activeRole, ct);
         if (payment.Failure is { } failure)
             return Result<string>.Fail(failure.ErrorCode!.Value, failure.Error!);
 
@@ -130,18 +131,18 @@ public sealed class PaymentService : IPaymentService
     // Reuses the list scope so a caller can only open an invoice that would appear in their own
     // history — one rule rather than two that can drift apart.
     private async Task<PaymentAccess> LoadAccessibleAsync(
-        Guid paymentId, Guid callerUserId, CancellationToken ct)
+        Guid paymentId, Guid callerUserId, AccountType activeRole, CancellationToken ct)
     {
-        var accountType = await _db.Users
+        var types = await _db.Users
             .AsNoTracking()
             .Where(u => u.Id == callerUserId && !u.IsDeleted)
-            .Select(u => (AccountType?)u.AccountType)
+            .Select(u => u.AccountTypes)
             .FirstOrDefaultAsync(ct);
 
-        if (accountType is null)
+        if (types is null)
             return new PaymentAccess { Failure = Result<bool>.Fail(AppErrorCode.NotFound, "User not found.") };
 
-        var payment = await Scope(_db.Payments.AsNoTracking(), callerUserId, accountType.Value)
+        var payment = await Scope(_db.Payments.AsNoTracking(), callerUserId, activeRole)
             .FirstOrDefaultAsync(p => p.Id == paymentId, ct);
 
         // Deliberately 404 rather than 403 for someone else's payment: the caller has no

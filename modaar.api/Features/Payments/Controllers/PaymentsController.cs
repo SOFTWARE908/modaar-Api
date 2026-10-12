@@ -28,7 +28,12 @@ public class PaymentsController : ControllerBase
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
-        return (await _payments.ListAsync(userId, query, ct)).ToActionResult();
+        if (User.GetActiveRole() is not { } activeRole)
+            return Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Role not selected",
+                detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
+        return (await _payments.ListAsync(userId, query,activeRole, ct)).ToActionResult();
     }
 
     [HttpGet("{paymentId:guid}")]
@@ -40,7 +45,13 @@ public class PaymentsController : ControllerBase
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
-        return (await _payments.GetInvoiceAsync(paymentId, userId, ct)).ToActionResult();
+        if (User.GetActiveRole() is not { } activeRole)
+            return Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Role not selected",
+                detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
+
+        return (await _payments.GetInvoiceAsync(paymentId, userId, activeRole, ct)).ToActionResult();
     }
 
     // Redirects to the stored document. 404 until one has been uploaded — no generator exists.
@@ -53,7 +64,13 @@ public class PaymentsController : ControllerBase
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
-        var result = await _payments.GetInvoiceUrlAsync(paymentId, userId, ct);
+        if (User.GetActiveRole() is not { } activeRole)
+            return Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Role not selected",
+                detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
+
+        var result = await _payments.GetInvoiceUrlAsync(paymentId, userId, activeRole, ct);
         return result.Success ? Redirect(result.Value!) : result.ToActionResult();
     }
 }

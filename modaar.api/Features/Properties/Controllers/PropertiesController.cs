@@ -28,7 +28,12 @@ public class PropertiesController : ControllerBase
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
-        return (await _properties.ListForOwnerAsync(userId, query, ct)).ToActionResult();
+        if (User.GetActiveRole() is not { } activeRole)
+            return Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Role not selected",
+                detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
+        return (await _properties.ListForOwnerAsync(userId, query, activeRole, ct)).ToActionResult();
     }
 
     [HttpGet("{propertyId:guid}")]
@@ -40,8 +45,13 @@ public class PropertiesController : ControllerBase
     {
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+        if (User.GetActiveRole() is not { } activeRole)
+            return Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Role not selected",
+                detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
 
-        return (await _properties.GetDetailsAsync(propertyId, userId, ct)).ToActionResult();
+        return (await _properties.GetDetailsAsync(propertyId, userId, activeRole, ct)).ToActionResult();
     }
 
 
@@ -56,8 +66,13 @@ public class PropertiesController : ControllerBase
     {
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+        if (User.GetActiveRole() is not { } activeRole)
+            return Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Role not selected",
+                detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
 
-        var result = await _properties.CreateAsync(userId, request, ct);
+        var result = await _properties.CreateAsync(userId, request, activeRole, ct);
         if (!result.Success)
             return result.ToActionResult();
 
@@ -76,8 +91,13 @@ public class PropertiesController : ControllerBase
     {
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+        if (User.GetActiveRole() is not { } activeRole)
+            return Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Role not selected",
+                detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
 
-        return (await _properties.UpdateAsync(propertyId, userId, request, ct)).ToActionResult();
+        return (await _properties.UpdateAsync(propertyId, userId, request, activeRole, ct)).ToActionResult();
     }
 
     // Soft delete. Refused with 409 while a contract is active on the unit.
@@ -91,8 +111,13 @@ public class PropertiesController : ControllerBase
     {
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+        if (User.GetActiveRole() is not { } activeRole)
+            return Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Role not selected",
+                detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
 
-        var result = await _properties.DeleteAsync(propertyId, userId, ct);
+        var result = await _properties.DeleteAsync(propertyId, userId, activeRole, ct);
         return result.Success ? NoContent() : result.ToActionResult();
     }
 }

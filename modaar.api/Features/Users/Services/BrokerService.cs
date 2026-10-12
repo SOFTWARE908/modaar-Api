@@ -3,6 +3,7 @@ using modaar.api.Common.Dtos;
 using modaar.api.Common.Localization;
 using modaar.api.Common.Results;
 using modaar.api.Features.Authentication.Enums;
+using modaar.api.Features.Contracts.Dtos;
 using modaar.api.Features.Users.Dtos;
 using modaar.api.Features.Users.Entities;
 using modaar.api.Features.Users.Enums;
@@ -108,19 +109,26 @@ public sealed class BrokerService : IBrokerService
     }
 
     public async Task<Result<bool>> RequestManagementAsync(
-        Guid brokerId, Guid ownerUserId, BrokerManagementRequestDto request, CancellationToken ct)
+        Guid brokerId, Guid ownerUserId, BrokerManagementRequestDto request, AccountType activeRole, CancellationToken ct)
     {
-        var accountType = await _db.Users
+        var types = await _db.Users
             .AsNoTracking()
             .Where(u => u.Id == ownerUserId && !u.IsDeleted && u.IsActive)
-            .Select(u => (AccountType?)u.AccountType)
+            .Select(u =>u.AccountTypes)
             .FirstOrDefaultAsync(ct);
 
-        if (accountType is null)
+        if (types is null)
             return Result<bool>.Fail(AppErrorCode.NotFound, "User not found.");
 
+        // The token is signed, so the role cannot be forged — but it can be stale. This catches
+        // a role removed since selection, which a 60-minute token would otherwise honour.
+        if (!types.Contains(activeRole))
+            return Result<bool>.Fail(
+                AppErrorCode.Forbidden, "That role is no longer available on this account.");
+
+
         // Only an owner can hand over management of a property, because only an owner has one.
-        if (accountType != AccountType.Owner)
+        if (activeRole != AccountType.Owner)
             return Result<bool>.Fail(AppErrorCode.Forbidden,
                 "Only an owner account can request brokerage management.");
 

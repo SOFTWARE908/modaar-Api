@@ -1,6 +1,8 @@
+using Azure.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using modaar.api.Common.Auth;
+using modaar.api.Common.Dtos;
 using modaar.api.Common.Results;
 using modaar.api.Features.Authentication.Dtos;
 using modaar.api.Features.Authentication.Entities;
@@ -144,7 +146,7 @@ public sealed class AuthService : IAuthService
                     Id = Guid.NewGuid(),
                     PhoneNumber = nationalNumber,
                     CountryCode = otp.CountryCode,
-                    AccountType = AccountType.Tenant,
+                    AccountTypes = [AccountType.Tenant],
                     ProfileStatus = ProfileStatus.Incomplete,
                     IsPhoneVerified = true,
                     IsActive = true
@@ -188,6 +190,7 @@ public sealed class AuthService : IAuthService
             Id = Guid.NewGuid(),
             UserId = user.Id,
             TokenHash = _jwt.HashToken(newRaw),
+            ActiveRole = token.ActiveRole,
             ExpiresAt = now.AddDays(_jwtSettings.RefreshTokenExpiresDays)
         };
         _db.RefreshTokens.Add(newToken);
@@ -199,7 +202,7 @@ public sealed class AuthService : IAuthService
 
         return AuthResult<RefreshTokenResponseDto>.Ok(new RefreshTokenResponseDto
         {
-            AccessToken = _jwt.CreateAccessToken(user),
+            AccessToken = _jwt.CreateAccessToken(user, token.ActiveRole),
             RefreshToken = newRaw
         });
     }
@@ -289,7 +292,8 @@ public sealed class AuthService : IAuthService
 
     private async Task<AuthResult<AuthSuccessResponseDto>> SignInAsync(User user, bool isNewUser, CancellationToken ct)
     {
-        var access = _jwt.CreateAccessToken(user);
+        // No role yet: this token exists to reach the picker. Scoped endpoints refuse it.
+        var access = _jwt.CreateAccessToken(user, activeRole: null);
         var refresh = _jwt.CreateRefreshToken();
 
         _db.RefreshTokens.Add(new RefreshToken
@@ -297,6 +301,7 @@ public sealed class AuthService : IAuthService
             Id = Guid.NewGuid(),
             UserId = user.Id,
             TokenHash = _jwt.HashToken(refresh),
+            ActiveRole = null,
             ExpiresAt = _time.GetUtcNow().AddDays(_jwtSettings.RefreshTokenExpiresDays)
         });
         await _db.SaveChangesAsync(ct);
@@ -305,7 +310,9 @@ public sealed class AuthService : IAuthService
         {
             AccessToken = access,
             RefreshToken = refresh,
-            AccountType = user.AccountType,
+            AccountType = user.PrimaryAccountType,
+            ActiveRole = null,
+            AccountTypes = user.AccountTypes,
             IsNewUser = isNewUser,
             ProfileStatus = user.ProfileStatus
         });
@@ -335,6 +342,92 @@ public sealed class AuthService : IAuthService
             userId, liveTokens.Count);
 
         return Result<bool>.Ok(true);
+    }
+
+
+    public async Task<AuthResult<AccountTypesResponseDto>> GetAccountTypesAsync(
+        Guid userId, CancellationToken ct)
+    {
+        var user = await _db.Users
+            .AsNoTracking()
+            .Where(u => u.Id == userId && !u.IsDeleted)
+            .Select(u => new { u.AccountTypes, u.IsActive })
+            .FirstOrDefaultAsync(ct);
+
+        if (user is null)
+            return AuthResult<AccountTypesResponseDto>.Fail(AuthErrorCode.UserNotFound, "User not found.");
+
+        if (!user.IsActive)
+            return AuthResult<AccountTypesResponseDto>.Fail(AuthErrorCode.AccountInactive, "Account is inactive.");
+
+        // An account with no roles cannot reach anything, so say so here rather than letting
+        // the picker render empty and the user guess.
+        if (user.AccountTypes.Count == 0)
+            return AuthResult<AccountTypesResponseDto>.Fail(
+                AuthErrorCode.AccountTypeNotAllowed, "This account has no roles assigned.");
+
+        return AuthResult<AccountTypesResponseDto>.Ok(new AccountTypesResponseDto
+        {
+            AccountTypes = user.AccountTypes,
+            Suggested = user.AccountTypes[0]
+        });
+    }
+
+
+    public async Task<AuthResult<AuthSuccessResponseDto>> SelectRoleAsync(
+        Guid userId, AccountType accountType, CancellationToken ct)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, ct);
+
+        if (user is null)
+            return AuthResult<AuthSuccessResponseDto>.Fail(AuthErrorCode.UserNotFound, "User not found.");
+
+        if (!user.IsActive)
+            return AuthResult<AuthSuccessResponseDto>.Fail(AuthErrorCode.AccountInactive, "Account is inactive.");
+
+        // The caller can name any role, so this line is the whole guard: it is what stops a
+        // tenant asking for an owner token.
+        if (!user.AccountTypes.Contains(accountType))
+            return AuthResult<AuthSuccessResponseDto>.Fail(
+                AuthErrorCode.AccountTypeNotAllowed, "You do not hold that account type.");
+
+        var now = _time.GetUtcNow();
+
+        // Retire the live tokens, including the roleless one from verify-otp. Leaves exactly
+        // one session, so a switch cannot leave an old-role token working alongside the new.
+        var liveTokens = await _db.RefreshTokens
+            .Where(rt => rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > now)
+            .ToListAsync(ct);
+
+        foreach (var token in liveTokens)
+            token.RevokedAt = now;
+
+        var access = _jwt.CreateAccessToken(user, accountType);
+        var refresh = _jwt.CreateRefreshToken();
+
+        _db.RefreshTokens.Add(new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            TokenHash = _jwt.HashToken(refresh),
+            ActiveRole = accountType,
+            ExpiresAt = now.AddDays(_jwtSettings.RefreshTokenExpiresDays)
+        });
+
+        await _db.SaveChangesAsync(ct);
+
+        _logger.LogInformation("User {UserId} selected role {Role}.", userId, accountType);
+
+        return AuthResult<AuthSuccessResponseDto>.Ok(new AuthSuccessResponseDto
+        {
+            AccessToken = access,
+            RefreshToken = refresh,
+            AccountType = accountType,
+            ActiveRole = accountType,
+            AccountTypes = user.AccountTypes,
+            IsNewUser = false,
+            ProfileStatus = user.ProfileStatus
+        });
     }
 
     private static AuthResult<ResendOtpResponseDto> Map(AuthResult<SendOtpResponseDto> source, string successMessage)

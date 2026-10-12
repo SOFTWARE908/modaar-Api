@@ -33,9 +33,13 @@ public sealed class DashboardService : IDashboardService
         _language = language;
     }
 
-    public async Task<Result<OwnerDashboardDto>> GetOwnerAsync(Guid userId, CancellationToken ct)
+    public async Task<Result<OwnerDashboardDto>> GetOwnerAsync(Guid userId, AccountType activeRole, CancellationToken ct)
     {
-        var user = await LoadUserAsync(userId, ct);
+        if (activeRole != AccountType.Owner)
+            return Result<OwnerDashboardDto>.Fail(AppErrorCode.Forbidden,
+                "Switch to your owner account to open this dashboard.");
+
+        var user = await LoadUserAsync(userId, activeRole, ct);
         if (user is null)
             return Result<OwnerDashboardDto>.Fail(AppErrorCode.NotFound, "User not found.");
 
@@ -98,9 +102,13 @@ public sealed class DashboardService : IDashboardService
         });
     }
 
-    public async Task<Result<TenantDashboardDto>> GetTenantAsync(Guid userId, CancellationToken ct)
+    public async Task<Result<TenantDashboardDto>> GetTenantAsync(Guid userId, AccountType activeRole, CancellationToken ct)
     {
-        var user = await LoadUserAsync(userId, ct);
+        if (activeRole != AccountType.Tenant)
+            return Result<TenantDashboardDto>.Fail(AppErrorCode.Forbidden,
+                "Switch to your tenant account to open this dashboard.");
+
+        var user = await LoadUserAsync(userId, activeRole, ct);
         if (user is null)
             return Result<TenantDashboardDto>.Fail(AppErrorCode.NotFound, "User not found.");
 
@@ -190,9 +198,13 @@ public sealed class DashboardService : IDashboardService
         });
     }
 
-    public async Task<Result<BrokerDashboardDto>> GetBrokerAsync(Guid userId, CancellationToken ct)
+    public async Task<Result<BrokerDashboardDto>> GetBrokerAsync(Guid userId, AccountType activeRole, CancellationToken ct)
     {
-        var user = await LoadUserAsync(userId, ct);
+        if (activeRole != AccountType.Broker)
+            return Result<BrokerDashboardDto>.Fail(AppErrorCode.Forbidden,
+                "Switch to your broker account to open this dashboard.");
+
+        var user = await LoadUserAsync(userId, activeRole, ct);
         if (user is null)
             return Result<BrokerDashboardDto>.Fail(AppErrorCode.NotFound, "User not found.");
 
@@ -445,11 +457,11 @@ public sealed class DashboardService : IDashboardService
         };
     }
 
-    private async Task<UserSummary?> LoadUserAsync(Guid userId, CancellationToken ct) =>
+    private async Task<UserSummary?> LoadUserAsync(Guid userId, AccountType accountType, CancellationToken ct) =>
         await _db.Users
             .AsNoTracking()
             .Where(u => u.Id == userId && !u.IsDeleted)
-            .Select(u => new UserSummary(u.FullName, u.AccountType))
+            .Select(u => new UserSummary(u.FullName, accountType))
             .FirstOrDefaultAsync(ct);
 
     private sealed record UserSummary(string? FullName, AccountType AccountType);

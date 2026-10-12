@@ -1,4 +1,5 @@
 using FluentValidation;
+using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Users.Dtos;
 
 namespace modaar.api.Features.Users.Validation;
@@ -30,7 +31,17 @@ public sealed class UpdateProfileRequestValidator : AbstractValidator<UpdateProf
                 .NotEmpty().WithMessage("Profile image URL cannot be empty.")
                 .MaximumLength(500));
 
-        RuleFor(x => x.AccountType).IsInEnum();
+        When(x => x.AccountTypes is not null, () =>
+        {
+            RuleFor(x => x.AccountTypes!)
+                .NotEmpty().WithMessage("At least one account type is required.")
+                .Must(t => t.Distinct().Count() == t.Count).WithMessage("Account types must be unique.");
+
+            RuleForEach(x => x.AccountTypes!)
+                .IsInEnum()
+                // Assigned by whoever onboards the tradesperson, never chosen in the app.
+                .NotEqual(AccountType.Technician).WithMessage("That account type cannot be selected.");
+        });
 
         When(x => x.Language is not null, () =>
             RuleFor(x => x.Language!)

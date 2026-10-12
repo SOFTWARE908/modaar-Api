@@ -34,13 +34,8 @@ public sealed class ProfileService : IProfileService
         if (user is null)
             return AuthResult<UserProfileDto>.Fail(AuthErrorCode.UserNotFound, "User not found.");
 
-        if (request.AccountType is { } accountType)
-        {
-            if (accountType == AccountType.Technician)
-                return AuthResult<UserProfileDto>.Fail(AuthErrorCode.AccountTypeNotAllowed,
-                    "Technician accounts cannot be selected from the mobile app.");
-            user.AccountType = accountType;
-        }
+        if (request.AccountTypes is not null)
+            user.AccountTypes = request.AccountTypes.ToList();
 
         if (request.Email is not null)
         {
@@ -94,7 +89,8 @@ public sealed class ProfileService : IProfileService
     {
         PhoneNumber = user.PhoneNumber,
         CountryCode = user.CountryCode,
-        AccountType = user.AccountType,
+        AccountType = user.PrimaryAccountType,
+        AccountTypes = user.AccountTypes,
         ProfileStatus = user.ProfileStatus,
         FullName = user.FullName,
         Email = user.Email,
