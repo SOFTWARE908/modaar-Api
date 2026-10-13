@@ -296,12 +296,16 @@ public sealed class AuthService : IAuthService
         var access = _jwt.CreateAccessToken(user, activeRole: null);
         var refresh = _jwt.CreateRefreshToken();
 
+        var activeRole = user.AccountTypes.Count == 1
+            ? user.AccountTypes[0]
+            : (AccountType?)null;
+
         _db.RefreshTokens.Add(new RefreshToken
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
             TokenHash = _jwt.HashToken(refresh),
-            ActiveRole = null,
+            ActiveRole = activeRole,
             ExpiresAt = _time.GetUtcNow().AddDays(_jwtSettings.RefreshTokenExpiresDays)
         });
         await _db.SaveChangesAsync(ct);
@@ -311,7 +315,7 @@ public sealed class AuthService : IAuthService
             AccessToken = access,
             RefreshToken = refresh,
             AccountType = user.PrimaryAccountType,
-            ActiveRole = null,
+            ActiveRole = activeRole,
             AccountTypes = user.AccountTypes,
             IsNewUser = isNewUser,
             ProfileStatus = user.ProfileStatus
