@@ -298,7 +298,7 @@ public sealed class AuthService : IAuthService
             : (AccountType?)null;
 
         // No role yet: this token exists to reach the picker. Scoped endpoints refuse it.
-        var access = _jwt.CreateAccessToken(user, activeRole: null);
+        var access = _jwt.CreateAccessToken(user, activeRole);
         var refresh = _jwt.CreateRefreshToken();
 
         
