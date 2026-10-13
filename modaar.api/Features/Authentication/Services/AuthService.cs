@@ -292,13 +292,16 @@ public sealed class AuthService : IAuthService
 
     private async Task<AuthResult<AuthSuccessResponseDto>> SignInAsync(User user, bool isNewUser, CancellationToken ct)
     {
-        // No role yet: this token exists to reach the picker. Scoped endpoints refuse it.
-        var access = _jwt.CreateAccessToken(user, activeRole: null);
-        var refresh = _jwt.CreateRefreshToken();
 
         var activeRole = user.AccountTypes.Count == 1
             ? user.AccountTypes[0]
             : (AccountType?)null;
+
+        // No role yet: this token exists to reach the picker. Scoped endpoints refuse it.
+        var access = _jwt.CreateAccessToken(user, activeRole: null);
+        var refresh = _jwt.CreateRefreshToken();
+
+        
 
         _db.RefreshTokens.Add(new RefreshToken
         {

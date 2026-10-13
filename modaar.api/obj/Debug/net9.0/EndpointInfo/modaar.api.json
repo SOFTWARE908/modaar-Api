@@ -366,6 +366,123 @@
         }
       }
     },
+    "/api/Auth/account-types": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountTypesResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Auth/select-role": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectRoleRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectRoleRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectRoleRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccessResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/brokers/{brokerId}": {
       "get": {
         "tags": [
@@ -2792,6 +2909,26 @@
         ],
         "type": "string"
       },
+      "AccountTypesResponseDto": {
+        "required": [
+          "accountTypes",
+          "suggested"
+        ],
+        "type": "object",
+        "properties": {
+          "accountTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountType"
+            },
+            "nullable": true
+          },
+          "suggested": {
+            "$ref": "#/components/schemas/AccountType"
+          }
+        },
+        "additionalProperties": false
+      },
       "AttachmentDto": {
         "required": [
           "fileName",
@@ -2831,6 +2968,7 @@
         "required": [
           "accessToken",
           "accountType",
+          "accountTypes",
           "isNewUser",
           "profileStatus",
           "refreshToken"
@@ -2853,6 +2991,16 @@
           },
           "profileStatus": {
             "$ref": "#/components/schemas/ProfileStatus"
+          },
+          "activeRole": {
+            "$ref": "#/components/schemas/AccountType"
+          },
+          "accountTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountType"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -3304,6 +3452,7 @@
           "date",
           "id",
           "status",
+          "title",
           "type"
         ],
         "type": "object",
@@ -3319,6 +3468,10 @@
             "$ref": "#/components/schemas/ContractRequestStatus"
           },
           "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
             "type": "string",
             "nullable": true
           },
@@ -4647,6 +4800,18 @@
         },
         "additionalProperties": false
       },
+      "SelectRoleRequestDto": {
+        "required": [
+          "accountType"
+        ],
+        "type": "object",
+        "properties": {
+          "accountType": {
+            "$ref": "#/components/schemas/AccountType"
+          }
+        },
+        "additionalProperties": false
+      },
       "SubmitPropertyHandoverDto": {
         "required": [
           "images"
@@ -4858,8 +5023,12 @@
             "type": "string",
             "nullable": true
           },
-          "accountType": {
-            "$ref": "#/components/schemas/AccountType"
+          "accountTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountType"
+            },
+            "nullable": true
           },
           "email": {
             "type": "string",
@@ -4957,6 +5126,7 @@
       "UserProfileDto": {
         "required": [
           "accountType",
+          "accountTypes",
           "countryCode",
           "id",
           "language",
@@ -4983,6 +5153,13 @@
           },
           "accountType": {
             "$ref": "#/components/schemas/AccountType"
+          },
+          "accountTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountType"
+            },
+            "nullable": true
           },
           "profileStatus": {
             "$ref": "#/components/schemas/ProfileStatus"
