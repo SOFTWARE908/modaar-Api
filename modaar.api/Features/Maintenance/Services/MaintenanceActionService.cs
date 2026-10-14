@@ -39,9 +39,6 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
         if (!ctx.IsOwner && !ctx.IsManagingBroker)
             return Forbidden("Only the property owner or its managing broker can accept a request.");
 
-        // إعادة الترتيب أثناء الفرز: المستأجر يرفع ما يراه، والمالك يعرف ما يحتمل التأجيل.
-        if (request.Priority is { } priority)
-            ctx.Request.Priority = (MaintenancePriority)priority;
         // A technician must belong to the accepting brokerage, or be independent. Otherwise an
         // owner could assign someone else's staff to their job.
         if (request.TechnicianId is { } technicianId)
@@ -79,6 +76,9 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
             ctx.Request.ScheduledVisitDate = ctx.Request.PreferredVisitDate;
             ctx.Request.ScheduledTimeSlot = ctx.Request.PreferredTimeSlot;
         }
+        // إعادة الترتيب أثناء الفرز: المستأجر يرفع ما يراه، والمالك يعرف ما يحتمل التأجيل.
+        if (request.Priority is { } priority)
+            ctx.Request.Priority = (MaintenancePriority)priority;
 
         return await TransitionAsync(ctx, MaintenanceRequestStatus.Accepted, MaintenanceActionType.Accept, null, null, ct);
     }

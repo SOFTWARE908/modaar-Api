@@ -29,6 +29,7 @@ public record CreatePropertyRequestDto
 // the property.
 public record UpdatePropertyRequestDto
 {
+    public string? UnitNumber { get; init; }
     public string? Title { get; init; }
 
     public PropertyType? PropertyType { get; init; }

@@ -64,6 +64,10 @@ public sealed class UpdatePropertyRequestValidator : AbstractValidator<UpdatePro
         When(x => x.AnnualRent is not null, () =>
             RuleFor(x => x.AnnualRent!.Value).GreaterThan(0).LessThanOrEqualTo(100_000_000));
 
+        RuleFor(x => x.UnitNumber)
+            .MaximumLength(20)
+            .WithMessage("رقم الوحدة لا يجوز أن يزيد على 20 حرفاً.");
+
         RuleFor(x => x.AddressLine).MaximumLength(500);
         RuleFor(x => x.District).MaximumLength(150);
         RuleFor(x => x.City).MaximumLength(150);

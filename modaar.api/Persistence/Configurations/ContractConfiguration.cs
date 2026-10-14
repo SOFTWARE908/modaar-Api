@@ -50,8 +50,6 @@ public class ContractConfiguration : IEntityTypeConfiguration<Contract>
         // A tenant may hold several active leases (two units), so no equivalent index here.
         b.HasIndex(x => new { x.TenantUserId, x.Status });
         b.HasIndex(x => x.EndDate);
-        b.Property(c => c.SecurityDeposit)
-            .HasPrecision(18, 2);
         b.ToTable(t => t.HasCheckConstraint("CK_Contracts_Dates", "[EndDate] > [StartDate]"));
 
         // NoAction throughout: SQL Server rejects multiple cascade paths into this table, and a

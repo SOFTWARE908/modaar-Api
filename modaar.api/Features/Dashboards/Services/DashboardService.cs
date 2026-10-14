@@ -190,9 +190,9 @@ public sealed class DashboardService : IDashboardService
             {
                 ContractId = lease.Id,
                 PropertyId = lease.PropertyId,
-                UnitTitle = lease.Property.Title ?? string.Empty,
-                PropertyName = lease.Property.Title ?? string.Empty,
-                UnitNumber = lease.Property.UnitNumber,
+                UnitTitle = lease.Property?.Title ?? string.Empty,
+                PropertyName = lease.Property?.Title ?? string.Empty,
+                UnitNumber = lease.Property?.UnitNumber ?? string.Empty,
                 ContractEndDate = lease.EndDate,
                 InstallmentAmount = installment,
                 Currency = lease.Currency,

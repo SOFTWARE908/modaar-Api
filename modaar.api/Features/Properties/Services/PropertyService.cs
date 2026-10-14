@@ -378,7 +378,10 @@ public sealed class PropertyService : IPropertyService
         if (property.OwnerUserId != callerUserId)
             return Result<PropertyDetailsDto>.Fail(AppErrorCode.Forbidden,
                 "Only the owner can edit this property.");
-
+        if (request.UnitNumber is not null)
+            property.UnitNumber = string.IsNullOrWhiteSpace(request.UnitNumber)
+                ? null
+                : request.UnitNumber.Trim();
         if (request.Title is not null) property.Title = request.Title.Trim();
         if (request.PropertyType is { } type) property.PropertyType = type;
         if (request.RoomsCount is { } rooms) property.RoomsCount = rooms;

@@ -3,13 +3,10 @@ using modaar.api.Common.Dtos;
 using modaar.api.Common.Results;
 using modaar.api.Common.Time;
 using modaar.api.Features.Authentication.Enums;
-using modaar.api.Features.Contracts.Dtos;
 using modaar.api.Features.Payments.Dtos;
 using modaar.api.Features.Payments.Entities;
 using modaar.api.Features.Payments.Enums;
 using modaar.api.Persistence;
-using modaar.api.Common.Time;
-using modaar.api.Features.Payments.Enums;
 
 namespace modaar.api.Features.Payments.Services;
 
@@ -35,8 +32,11 @@ public sealed class PaymentService : IPaymentService
 
         if (types is null)
             return Result<PagedResultDto<PaymentDto>>.Fail(AppErrorCode.NotFound, "User not found.");
-
+        var today = SaudiTime.Today(_time);
         var payments = Scope(_db.Payments.AsNoTracking(), callerUserId, activeRole);
+
+        if (!query.IncludeUpcoming)
+            payments = payments.Where(p => p.DueDate == null || p.DueDate <= today);
 
         if (query.Type is { } type)
             payments = payments.Where(p => p.Type == type);
@@ -57,7 +57,7 @@ public sealed class PaymentService : IPaymentService
         
         var totalCount = await payments.CountAsync(ct);
 
-                var today = SaudiTime.Today(_time);
+               
 
         var items = await payments
             // الأقساط المستحقة أولاً، ثم التاريخ. SQL Server يرتّب NULL آخراً تنازلياً،
