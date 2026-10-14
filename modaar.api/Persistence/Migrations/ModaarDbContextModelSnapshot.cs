@@ -165,6 +165,10 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal?>("AnnualRent")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<Guid?>("BrokerId")
                         .HasColumnType("uniqueidentifier");
 
@@ -190,9 +194,16 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<DateOnly>("EndDate")
                         .HasColumnType("date");
 
-                    b.Property<decimal>("MonthlyAmount")
+                    b.Property<decimal>("InstallmentAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PaymentFrequency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Monthly");
 
                     b.Property<string>("PdfUrl")
                         .HasMaxLength(500)
@@ -200,6 +211,10 @@ namespace modaar.api.Persistence.Migrations
 
                     b.Property<Guid>("PropertyId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("SecurityDeposit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
@@ -487,6 +502,13 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<DateOnly>("PreferredVisitDate")
                         .HasColumnType("date");
 
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Normal");
+
                     b.Property<string>("ProblemDescription")
                         .IsRequired()
                         .HasMaxLength(2000)
@@ -696,6 +718,9 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<DateTimeOffset>("Date")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("date");
+
                     b.Property<string>("InvoiceUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -709,6 +734,12 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<string>("PaymentMethod")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateOnly?>("PeriodEnd")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("PeriodStart")
+                        .HasColumnType("date");
 
                     b.Property<Guid?>("PropertyId")
                         .HasColumnType("uniqueidentifier");
@@ -738,6 +769,8 @@ namespace modaar.api.Persistence.Migrations
                     b.HasIndex("ContractId");
 
                     b.HasIndex("MaintenanceRequestId");
+
+                    b.HasIndex("ContractId", "DueDate");
 
                     b.HasIndex("PayerUserId", "Date");
 
@@ -811,6 +844,10 @@ namespace modaar.api.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("UnitNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAdd()

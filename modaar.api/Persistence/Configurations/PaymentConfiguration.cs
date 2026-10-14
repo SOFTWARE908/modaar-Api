@@ -21,6 +21,10 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         b.Property(x => x.PaymentMethod).HasMaxLength(50);
         b.Property(x => x.InvoiceUrl).HasMaxLength(500);
 
+        b.Property(p => p.DueDate);
+        b.Property(p => p.PeriodStart);
+        b.Property(p => p.PeriodEnd);
+
         b.Property(x => x.Amount).HasPrecision(18, 2);
 
         b.Property(x => x.Type).HasConversion<string>().HasMaxLength(20).IsRequired();
@@ -33,7 +37,7 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         b.HasIndex(x => new { x.PayerUserId, x.Date });
         b.HasIndex(x => new { x.PropertyId, x.Date });
         b.HasIndex(x => x.ContractId);
-
+        b.HasIndex(p => new { p.ContractId, p.DueDate });
         // NoAction throughout: SQL Server rejects multiple cascade paths into this table, and a
         // payment must outlive a delisted property or a soft-deleted account regardless — it is
         // a financial record.

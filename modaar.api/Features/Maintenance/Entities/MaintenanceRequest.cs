@@ -19,6 +19,9 @@ public class MaintenanceRequest
 
     public MaintenanceServiceType ServiceType { get; set; }
     public string ProblemDescription { get; set; } = null!;
+    // Set by the tenant when raising the request; the owner may change it while triaging.
+    // Normal unless someone says otherwise, which is also what every existing row becomes.
+    public MaintenancePriority Priority { get; set; } = MaintenancePriority.Normal;
 
     public MaintenanceRequestStatus Status { get; set; } = MaintenanceRequestStatus.Pending;
 

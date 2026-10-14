@@ -7,6 +7,7 @@ namespace modaar.api.Features.Properties.Dtos;
 public record PropertyListItemDto
 {
     public required Guid Id { get; init; }
+    public string? UnitNumber { get; init; }
     public required string Title { get; init; }
     public string? ImageUrl { get; init; }
 
@@ -14,7 +15,7 @@ public record PropertyListItemDto
 
     // What the sitting tenant pays. For a vacant unit this is null and the card should fall back
     // to AnnualRent / 12 as the asking price.
-    public decimal? MonthlyRent { get; init; }
+    public decimal? InstallmentRent { get; init; }
     public required decimal AnnualRent { get; init; }
     public required string Currency { get; init; }
 

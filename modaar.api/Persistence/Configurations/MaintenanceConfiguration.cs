@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using modaar.api.Features.Contracts.Entities;
 using modaar.api.Features.Maintenance.Entities;
+using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Features.Properties.Entities;
 using modaar.api.Features.Users.Entities;
 
@@ -17,6 +18,11 @@ public class MaintenanceRequestConfiguration : IEntityTypeConfiguration<Maintena
 
         b.Property(x => x.RequestNumber).HasMaxLength(30).IsRequired();
         b.Property(x => x.ProblemDescription).HasMaxLength(2000).IsRequired();
+        b.Property(x => x.Priority)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(MaintenancePriority.Normal)
+            .IsRequired();
         b.Property(x => x.RejectionReason).HasMaxLength(1000);
 
         b.Property(x => x.ServiceType).HasConversion<string>().HasMaxLength(20).IsRequired();

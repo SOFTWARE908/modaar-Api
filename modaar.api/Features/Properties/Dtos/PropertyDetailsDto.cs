@@ -48,7 +48,7 @@ public record PropertyTenantContractDto
     // without doing date maths.
     public required int RemainingDays { get; init; }
 
-    public required decimal MonthlyAmount { get; init; }
+    public required decimal InstallmentAmount { get; init; }
     public required string Currency { get; init; }
 
     public required ContractRenewalAvailability RenewalAvailability { get; init; }

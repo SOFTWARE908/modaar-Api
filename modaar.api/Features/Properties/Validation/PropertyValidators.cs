@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using modaar.api.Features.Properties.Dtos;
 
 namespace modaar.api.Features.Properties.Validation;
@@ -16,6 +16,10 @@ public sealed class CreatePropertyRequestValidator : AbstractValidator<CreatePro
         RuleFor(x => x.AddressLine).MaximumLength(500);
         RuleFor(x => x.District).MaximumLength(150);
         RuleFor(x => x.City).MaximumLength(150);
+
+        RuleFor(x => x.UnitNumber)
+            .MaximumLength(20)
+            .WithMessage("رقم الوحدة لا يجوز أن يزيد على 20 حرفاً.");
 
         RuleFor(x => x.CoverImageUrl).MaximumLength(500);
 

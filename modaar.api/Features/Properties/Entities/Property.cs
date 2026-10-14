@@ -14,6 +14,8 @@ public class Property
     // The brokerage managing it, once the owner has authorised one.
     public Guid? BrokerId { get; set; }
 
+    public string? UnitNumber { get; set; }
+
     public string Title { get; set; } = null!;
 
     public string? AddressLine { get; set; }

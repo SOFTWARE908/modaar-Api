@@ -13,6 +13,7 @@ public class PropertyConfiguration : IEntityTypeConfiguration<Property>
         b.HasKey(x => x.Id);
         b.Property(x => x.Id).ValueGeneratedNever();
 
+        b.Property(p => p.UnitNumber).HasMaxLength(20);
         b.Property(x => x.Title).HasMaxLength(200).IsRequired();
 
         b.Property(x => x.AddressLine).HasMaxLength(500);

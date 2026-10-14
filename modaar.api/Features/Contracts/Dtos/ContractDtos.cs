@@ -9,10 +9,14 @@ namespace modaar.api.Features.Contracts.Dtos
     {
         public required Guid Id { get; init; }
         public required string ContractNumber { get; init; }
+        public required PaymentFrequency PaymentFrequency { get; init; }
+        public decimal? SecurityDeposit { get; init; }
 
         public required string Title { get; init; }
 
-        public required decimal MonthlyAmount { get; init; }
+        public required decimal InstallmentAmount { get; init; }
+        public decimal? AnnualRent { get; init; }
+
         public required string Currency { get; init; }
 
         public required DateOnly StartDate { get; init; }
@@ -28,11 +32,14 @@ namespace modaar.api.Features.Contracts.Dtos
 
         public required Guid PropertyId { get; init; }
         public required string PropertyTitle { get; init; }
+
+        public string? LandlordName { get; init; }
     }
 
     public record ContractDetailsDto
     {
         public required ContractDto Contract { get; init; }
+
 
         public string? Description { get; init; }
         public required IReadOnlyList<string> ImageUrls { get; init; }

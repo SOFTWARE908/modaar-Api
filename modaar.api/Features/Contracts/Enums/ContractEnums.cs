@@ -29,3 +29,12 @@ public enum ContractRequestStatus
     // The tenant withdrew it before anyone answered.
     Cancelled
 }
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum PaymentFrequency
+{
+    Monthly = 0,
+    Quarterly = 1,
+    SemiAnnual = 2,
+    Annual = 3
+}

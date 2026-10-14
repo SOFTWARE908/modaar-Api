@@ -23,14 +23,17 @@ public class Contract
 
     // What this tenant actually pays, which can differ from the property's asking rent after a
     // renegotiation or a renewal.
-    public decimal MonthlyAmount { get; set; }
+    public decimal InstallmentAmount { get; set; }
     public string Currency { get; set; } = "SAR";
 
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
 
     public ContractStatus Status { get; set; } = ContractStatus.Active;
+    public PaymentFrequency PaymentFrequency { get; set; } = PaymentFrequency.Monthly;
 
+    public decimal? SecurityDeposit { get; set; }
+    public decimal? AnnualRent { get; set; }
     // Set when a contract is ended before EndDate, via POST /contracts/{id}/end.
     public DateOnly? TerminatedOn { get; set; }
     public string? TerminationReason { get; set; }

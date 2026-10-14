@@ -72,3 +72,10 @@ public enum NeedHelpStatus
     Resolved,
     Closed
 }
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum MaintenancePriority
+{
+    Normal = 0,
+    Urgent = 1
+}

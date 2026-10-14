@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using modaar.api.Features.Contracts.Entities;
+using modaar.api.Features.Contracts.Enums;
 using modaar.api.Features.Properties.Entities;
 using modaar.api.Features.Users.Entities;
 
@@ -19,9 +20,16 @@ public class ContractConfiguration : IEntityTypeConfiguration<Contract>
         b.Property(x => x.Description).HasMaxLength(2000);
         b.Property(x => x.TerminationReason).HasMaxLength(1000);
         b.Property(x => x.PdfUrl).HasMaxLength(500);
-
-        b.Property(x => x.MonthlyAmount).HasPrecision(18, 2);
+        b.Property(x => x.InstallmentAmount).HasPrecision(18, 2);
+        b.Property(x => x.SecurityDeposit).HasPrecision(18, 2);
+        b.Property(x => x.AnnualRent).HasPrecision(18, 2);
         b.Property(x => x.Currency).HasMaxLength(3).IsRequired();
+
+        b.Property(c => c.PaymentFrequency)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(PaymentFrequency.Monthly)
+            .IsRequired();
 
         b.Property(x => x.Status)
             .HasConversion<string>()
@@ -42,7 +50,8 @@ public class ContractConfiguration : IEntityTypeConfiguration<Contract>
         // A tenant may hold several active leases (two units), so no equivalent index here.
         b.HasIndex(x => new { x.TenantUserId, x.Status });
         b.HasIndex(x => x.EndDate);
-
+        b.Property(c => c.SecurityDeposit)
+            .HasPrecision(18, 2);
         b.ToTable(t => t.HasCheckConstraint("CK_Contracts_Dates", "[EndDate] > [StartDate]"));
 
         // NoAction throughout: SQL Server rejects multiple cascade paths into this table, and a

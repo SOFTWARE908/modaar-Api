@@ -16,6 +16,16 @@ public class Payment
 
     public DateTimeOffset Date { get; set; }
 
+    // When the money was owed, as against Date, which is when it moved. Null on rows
+    // uploaded before the schedule existed.
+    public DateOnly? DueDate { get; set; }
+
+    // Which period this installment covers. Dates rather than a label, so the client can
+    // format "أكتوبر ٢٠٢٦" or "Oct 2026" from the same row.
+    public DateOnly? PeriodStart { get; set; }
+    public DateOnly? PeriodEnd { get; set; }
+
+
     public PaymentType Type { get; set; }
     public PaymentStatus Status { get; set; } = PaymentStatus.Paid;
 

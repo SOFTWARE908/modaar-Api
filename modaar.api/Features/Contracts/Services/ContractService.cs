@@ -69,9 +69,12 @@ public sealed class ContractService : IContractService
             {
                 Id = c.Id,
                 ContractNumber = c.ContractNumber,
+                PaymentFrequency = c.PaymentFrequency,
                 Title = c.Title ?? _db.Properties.Where(p => p.Id == c.PropertyId)
                     .Select(p => p.Title).FirstOrDefault() ?? string.Empty,
-                MonthlyAmount = c.MonthlyAmount,
+                InstallmentAmount = c.InstallmentAmount,
+                SecurityDeposit = c.SecurityDeposit,
+                AnnualRent = c.AnnualRent,
                 Currency = c.Currency,
                 StartDate = c.StartDate,
                 EndDate = c.EndDate,
@@ -97,12 +100,11 @@ public sealed class ContractService : IContractService
         var contract = access.Contract!;
         var today = SaudiTime.Today(_time);
 
-        var propertyTitle = await _db.Properties
+        var propertyInfo = await _db.Properties
             .AsNoTracking()
             .Where(p => p.Id == contract.PropertyId)
-            .Select(p => p.Title)
-            .FirstOrDefaultAsync(ct) ?? string.Empty;
-
+            .Select(p => new{Title=p.Title, LandlordName = _db.Users.Where(u => u.Id == p.OwnerUserId).Select(u => u.FullName).FirstOrDefault()})
+            .FirstOrDefaultAsync(ct);
         BrokerSummaryDto? broker = null;
         if (contract.BrokerId is { } brokerId)
         {
@@ -170,16 +172,21 @@ public sealed class ContractService : IContractService
             Contract = new ContractDto
             {
                 Id = contract.Id,
+
                 ContractNumber = contract.ContractNumber,
-                Title = contract.Title ?? propertyTitle,
-                MonthlyAmount = contract.MonthlyAmount,
+                Title = contract.Title ?? propertyInfo?.Title ?? string.Empty,
+                SecurityDeposit = contract.SecurityDeposit,
+                InstallmentAmount = contract.InstallmentAmount,
+                AnnualRent = contract.AnnualRent,
+                PaymentFrequency = contract.PaymentFrequency,
                 Currency = contract.Currency,
                 StartDate = contract.StartDate,
                 EndDate = contract.EndDate,
                 Status = contract.Status,
                 PdfUrl = contract.PdfUrl,
                 PropertyId = contract.PropertyId,
-                PropertyTitle = propertyTitle
+                PropertyTitle = propertyInfo?.Title ?? string.Empty,
+                LandlordName = propertyInfo?.LandlordName ?? string.Empty,
             },
             Description = contract.Description,
             ImageUrls = contract.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).ToList(),

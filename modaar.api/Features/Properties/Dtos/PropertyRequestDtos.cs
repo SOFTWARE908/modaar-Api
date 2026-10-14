@@ -4,6 +4,7 @@ namespace modaar.api.Features.Properties.Dtos;
 
 public record CreatePropertyRequestDto
 {
+    public string? UnitNumber { get; init; }
     public required string Title { get; init; }
 
     public required PropertyType PropertyType { get; init; }

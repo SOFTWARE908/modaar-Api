@@ -99,18 +99,26 @@ public sealed class MaintenanceService : IMaintenanceService
                 m.RequestNumber,
                 m.ServiceType,
                 m.Status,
+                m.Priority,
                 m.CreatedAt,
                 m.ScheduledVisitDate,
                 m.ScheduledTimeSlot,
                 m.PreferredVisitDate,
                 m.PreferredTimeSlot,
+                m.PropertyId,
+                PropertyTitle = _db.Properties.Where(p => p.Id == m.PropertyId)
+                    .Select(p => p.Title).FirstOrDefault(),
+                OwnerName = _db.Properties.Where(p => p.Id == m.PropertyId)
+                    .Select(p => _db.Users.Where(u => u.Id == p.OwnerUserId)
+                        .Select(u => u.FullName).FirstOrDefault())
+                    .FirstOrDefault(),
                 Technician = _db.Technicians
                     .Where(t => t.Id == m.AssignedTechnicianId)
                     .Select(t => new
                     {
                         t.Id,
-                        t.RoleEn,
                         t.RoleAr,
+                        t.RoleEn,
                         t.RatingAverage,
                         Name = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault(),
                         ImageUrl = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault()
@@ -128,12 +136,16 @@ public sealed class MaintenanceService : IMaintenanceService
             {
                 Id = m.Id,
                 RequestCode = m.RequestNumber,
+                Priority = m.Priority,
                 Title = MaintenanceServiceTypeNames.Title(m.ServiceType, _language),
                 ServiceType = m.ServiceType,
                 Status = m.Status,
                 CreatedAt = m.CreatedAt,
+                PropertyId = m.PropertyId,
+                PropertyTitle = m.PropertyTitle ?? string.Empty,
+                OwnerName = m.OwnerName,
                 VisitSummary = $"{date.ToString("d MMMM yyyy", _language.Culture)} · " +
-                   $"{MaintenanceTimeSlotNames.Label(slot, _language)}",
+                               $"{MaintenanceTimeSlotNames.Label(slot, _language)}",
                 AssignedTechnician = m.Technician is null ? null : new TechnicianDto
                 {
                     Id = m.Technician.Id,
@@ -233,6 +245,7 @@ public sealed class MaintenanceService : IMaintenanceService
         {
             Id = request.Id,
             RequestNumber = request.RequestNumber,
+            Priority = request.Priority,
             Status = request.Status,
             RejectedBy = request.RejectedBy,
             RejectionReason = request.RejectionReason,
@@ -322,6 +335,7 @@ public sealed class MaintenanceService : IMaintenanceService
             ServiceType = request.ServiceType,
             ProblemDescription = request.Description.Trim(),
             Status = MaintenanceRequestStatus.Pending,
+            Priority = request.Priority ?? MaintenancePriority.Normal,
             PreferredVisitDate = request.PreferredVisitDate,
             PreferredTimeSlot = request.VisitTimeSlot,
             CreatedAt = now,

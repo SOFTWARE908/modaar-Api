@@ -1,4 +1,4 @@
-using modaar.api.Features.Payments.Enums;
+﻿using modaar.api.Features.Payments.Enums;
 
 namespace modaar.api.Features.Payments.Dtos;
 
@@ -14,6 +14,23 @@ public record PaymentDto
     public required DateTimeOffset Date { get; init; }
     public required PaymentType Type { get; init; }
 
+    // Paid, Pending or Failed. 
+    public required PaymentStatus Status { get; init; }
+
+    public required PaymentDisplayStatus DisplayStatus { get; init; }
+
+    // Days past DueDate, or 0 when nothing is late.
+    public required int DaysOverdue { get; init; }
+
+    // When it was owed. Null on historical rows uploaded without a schedule.
+    public DateOnly? DueDate { get; init; }
+
+    // The period covered, for the "أكتوبر ٢٠٢٦" line under the title.
+    public DateOnly? PeriodStart { get; init; }
+    public DateOnly? PeriodEnd { get; init; }
+
+    // Masked display text, e.g. "**** 4679". Was on the invoice only.
+    public string? PaymentMethod { get; init; }
     // Present once an invoice has been generated for this payment.
     public string? InvoiceUrl { get; init; }
 }

@@ -20,6 +20,8 @@ public record MaintenanceRequestListItemDto
 {
     public required Guid Id { get; init; }
     public required string RequestCode { get; init; }
+    public MaintenancePriority Priority { get; init; }
+
 
     public required string Title { get; init; }
     public required MaintenanceServiceType ServiceType { get; init; }
@@ -31,12 +33,22 @@ public record MaintenanceRequestListItemDto
 
     public required MaintenanceRequestStatus Status { get; init; }
     public TechnicianDto? AssignedTechnician { get; init; }
+
+    public required Guid PropertyId { get; init; }
+
+    // The unit the request is against — the navy strip across the top of the card.
+    public required string PropertyTitle { get; init; }
+
+    // Who owns it. Null until that owner completes their profile, which is normal on an
+    // account created from a phone number and never filled in.
+    public string? OwnerName { get; init; }
 }
 
 public record MaintenanceRequestDetailsDto
 {
     public required Guid Id { get; init; }
     public required string RequestNumber { get; init; }
+    public MaintenancePriority Priority { get; init; }
 
     public required MaintenanceRequestStatus Status { get; init; }
     public MaintenanceRequestRejectedBy? RejectedBy { get; init; }
@@ -68,6 +80,7 @@ public record CreateMaintenanceRequestDto
 {
     public required MaintenanceServiceType ServiceType { get; init; }
     public required string Description { get; init; }
+    public MaintenancePriority? Priority { get; init; }
 
     public required DateOnly PreferredVisitDate { get; init; }
     public required MaintenanceTimeSlot VisitTimeSlot { get; init; }

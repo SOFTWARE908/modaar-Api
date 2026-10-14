@@ -79,7 +79,7 @@ public sealed class PropertyService : IPropertyService
                 .Where(c => c.PropertyId == p.Id && c.Status == ContractStatus.Active)
                 .Select(c => new
                 {
-                    c.MonthlyAmount,
+                    c.InstallmentAmount,
                     c.Currency,
                     c.StartDate,
                     c.EndDate,
@@ -89,6 +89,7 @@ public sealed class PropertyService : IPropertyService
                         .FirstOrDefault()
                 })
                 .FirstOrDefault(),
+            p.UnitNumber,
             p.CreatedAt
         });
 
@@ -113,11 +114,12 @@ public sealed class PropertyService : IPropertyService
         {
             Id = r.Id,
             Title = r.Title,
+            UnitNumber = r.UnitNumber,
             ImageUrl = r.CoverImageUrl,
             Status = r.Contract is null ? PropertyRentalStatus.NotRented : PropertyRentalStatus.Rented,
             AnnualRent = r.AnnualRent,
             Currency = r.Contract?.Currency ?? DefaultCurrency,
-            MonthlyRent = r.Contract?.MonthlyAmount,
+            InstallmentRent = r.Contract?.InstallmentAmount,
             TenantName = r.Contract?.TenantName,
             LeaseStart = r.Contract?.StartDate,
             LeaseEnd = r.Contract?.EndDate,
@@ -185,7 +187,7 @@ public sealed class PropertyService : IPropertyService
                 ContractStart = contract.StartDate,
                 ContractEnd = contract.EndDate,
                 RemainingDays = remainingDays,
-                MonthlyAmount = contract.MonthlyAmount,
+                InstallmentAmount = contract.InstallmentAmount,
                 Currency = contract.Currency,
                 RenewalAvailability = hasPendingRenewal
                     ? ContractRenewalAvailability.Pending
@@ -273,6 +275,7 @@ public sealed class PropertyService : IPropertyService
                 Title = property.Title,
                 ImageUrl = property.CoverImageUrl,
                 Address = ComposeAddress(property.AddressLine, property.District, property.City),
+                UnitNumber = property.UnitNumber,
                 PropertyType = property.PropertyType,
                 RoomsCount = property.RoomsCount,
                 AnnualRent = property.AnnualRent,
@@ -334,6 +337,9 @@ public sealed class PropertyService : IPropertyService
         {
             Id = Guid.NewGuid(),
             OwnerUserId = ownerUserId,
+            UnitNumber = string.IsNullOrWhiteSpace(request.UnitNumber)
+                ? null
+                : request.UnitNumber.Trim(),
             Title = request.Title.Trim(),
             PropertyType = request.PropertyType,
             RoomsCount = request.RoomsCount,

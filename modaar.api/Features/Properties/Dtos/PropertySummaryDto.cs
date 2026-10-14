@@ -7,6 +7,7 @@ namespace modaar.api.Features.Properties.Dtos;
 public record PropertySummaryDto
 {
     public required Guid Id { get; init; }
+    public string? UnitNumber { get; init; }
     public required string Title { get; init; }
     public string? ImageUrl { get; init; }
 

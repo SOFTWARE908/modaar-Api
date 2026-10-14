@@ -1,19 +1,28 @@
 using Microsoft.EntityFrameworkCore;
 using modaar.api.Common.Dtos;
 using modaar.api.Common.Results;
+using modaar.api.Common.Time;
 using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Contracts.Dtos;
 using modaar.api.Features.Payments.Dtos;
 using modaar.api.Features.Payments.Entities;
+using modaar.api.Features.Payments.Enums;
 using modaar.api.Persistence;
+using modaar.api.Common.Time;
+using modaar.api.Features.Payments.Enums;
 
 namespace modaar.api.Features.Payments.Services;
 
 public sealed class PaymentService : IPaymentService
 {
     private readonly ModaarDbContext _db;
+    private readonly TimeProvider _time;
 
-    public PaymentService(ModaarDbContext db) => _db = db;
+    public PaymentService(ModaarDbContext db, TimeProvider time)
+    {
+        _db = db;
+        _time = time;
+    }
 
     public async Task<Result<PagedResultDto<PaymentDto>>> ListAsync(
         Guid callerUserId, PaymentListQueryDto query, AccountType activeRole, CancellationToken ct)
@@ -45,10 +54,16 @@ public sealed class PaymentService : IPaymentService
             payments = payments.Where(p => p.Date < toUtc);
         }
 
+        
         var totalCount = await payments.CountAsync(ct);
 
+                var today = SaudiTime.Today(_time);
+
         var items = await payments
-            .OrderByDescending(p => p.Date)
+            // الأقساط المستحقة أولاً، ثم التاريخ. SQL Server يرتّب NULL آخراً تنازلياً،
+            // فالصفوف المرفوعة بلا جدول تنزل تحت المجدولة بدل أن تتصدّرها.
+            .OrderByDescending(p => p.DueDate)
+            .ThenByDescending(p => p.Date)
             .Skip(query.SkipCount)
             .Take(query.MaxResultCount)
             .Select(p => new PaymentDto
@@ -59,10 +74,22 @@ public sealed class PaymentService : IPaymentService
                 Currency = p.Currency,
                 Date = p.Date,
                 Type = p.Type,
+                Status = p.Status,
+                DisplayStatus =
+                    p.Status == PaymentStatus.Paid ? PaymentDisplayStatus.Paid
+                    : p.DueDate != null && p.DueDate < today ? PaymentDisplayStatus.Overdue
+                    : PaymentDisplayStatus.Due,
+                DaysOverdue =
+                    p.Status != PaymentStatus.Paid && p.DueDate != null && p.DueDate < today
+                        ? EF.Functions.DateDiffDay(p.DueDate.Value, today)
+                        : 0,
+                DueDate = p.DueDate,
+                PeriodStart = p.PeriodStart,
+                PeriodEnd = p.PeriodEnd,
+                PaymentMethod = p.PaymentMethod,
                 InvoiceUrl = p.InvoiceUrl
             })
             .ToListAsync(ct);
-
         return Result<PagedResultDto<PaymentDto>>.Ok(
             new PagedResultDto<PaymentDto> { Items = items, TotalCount = totalCount });
     }

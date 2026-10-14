@@ -14,6 +14,7 @@ namespace modaar.api.Features.Maintenance.Validation
         public CreateMaintenanceRequestValidator()
         {
             RuleFor(x => x.ServiceType).IsInEnum();
+            RuleFor(x => x.Priority).IsInEnum();
             RuleFor(x => x.VisitTimeSlot).IsInEnum();
 
             RuleFor(x => x.Description).NotEmpty().MaximumLength(2000);

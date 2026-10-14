@@ -125,49 +125,80 @@ public sealed class DashboardService : IDashboardService
             {
                 c.Id,
                 c.PropertyId,
-                c.MonthlyAmount,
+                c.InstallmentAmount,
                 c.Currency,
                 c.StartDate,
+                c.Title,
                 c.EndDate,
-                PropertyTitle = _db.Properties.Where(p => p.Id == c.PropertyId)
-                    .Select(p => p.Title).FirstOrDefault()
+                Property = _db.Properties.Where(p => p.Id == c.PropertyId)
+                    .Select(p => new { p.Title, p.UnitNumber }).FirstOrDefault()
             })
             .FirstOrDefaultAsync(ct);
+        var today = SaudiTime.Today(_time);
 
         TenantUnitCardDto? currentUnit = null;
         if (lease is not null)
         {
-            var today = SaudiTime.Today(_time);
 
-            // Derived from the lease's start day of month rather than read from a schedule:
-            // no rent-installment entity exists, and the spec never defines one. Good enough
-            // for a monthly lease, wrong for anything else — replace when the schedule lands.
-            var dueDate = NextDueDate(lease.StartDate, lease.EndDate, today);
-
-            var lastRentPaidOn = await _db.Payments
+            // The earliest unpaid installment is the one the card is about: an overdue one
+            // if any is overdue, otherwise the next one coming.
+            var owed = await _db.Payments
                 .AsNoTracking()
-                .Where(p => p.ContractId == lease.Id && p.Type == PaymentType.Rent
-                         && p.Status == PaymentStatus.Paid)
-                .OrderByDescending(p => p.Date)
-                .Select(p => (DateTimeOffset?)p.Date)
+                .Where(p => p.ContractId == lease.Id
+                         && p.Type == PaymentType.Rent
+                         && p.Status != PaymentStatus.Paid
+                         && p.DueDate != null)
+                .OrderBy(p => p.DueDate)
+                .Select(p => new { p.DueDate, p.Amount })
                 .FirstOrDefaultAsync(ct);
 
-            // Overdue when the due date has passed and no rent payment has landed since the
-            // start of that billing period.
-            var periodStart = dueDate.AddMonths(-1);
-            var isOverdue = dueDate < today &&
-                (lastRentPaidOn is null ||
-                 DateOnly.FromDateTime(lastRentPaidOn.Value.UtcDateTime) < periodStart);
+            DateOnly dueDate;
+            bool isOverdue;
+            decimal installment;
+
+            if (owed is not null)
+            {
+                dueDate = owed.DueDate!.Value;
+                isOverdue = dueDate < today;
+                installment = owed.Amount;
+            }
+            else
+            {
+                // No schedule uploaded for this contract. Fall back to deriving the date
+                // from the lease's start day of month — right for a plain monthly lease,
+                // wrong for anything else, which is why the schedule is preferred.
+                var lastDue = PreviousDueDate(lease.StartDate, lease.EndDate, today);
+                var nextDue = NextDueDate(lease.StartDate, lease.EndDate, today);
+
+                var lastRentPaidOn = await _db.Payments
+                    .AsNoTracking()
+                    .Where(p => p.ContractId == lease.Id && p.Type == PaymentType.Rent
+                             && p.Status == PaymentStatus.Paid)
+                    .OrderByDescending(p => p.Date)
+                    .Select(p => (DateTimeOffset?)p.Date)
+                    .FirstOrDefaultAsync(ct);
+
+                var settled = lastRentPaidOn is not null &&
+                    DateOnly.FromDateTime(lastRentPaidOn.Value.UtcDateTime) >= lastDue;
+
+                isOverdue = lastDue < today && !settled;
+                dueDate = isOverdue ? lastDue : nextDue;
+                installment = lease.InstallmentAmount;
+            }
 
             currentUnit = new TenantUnitCardDto
             {
                 ContractId = lease.Id,
                 PropertyId = lease.PropertyId,
-                UnitTitle = lease.PropertyTitle ?? string.Empty,
-                InstallmentAmount = lease.MonthlyAmount,
+                UnitTitle = lease.Property.Title ?? string.Empty,
+                PropertyName = lease.Property.Title ?? string.Empty,
+                UnitNumber = lease.Property.UnitNumber,
+                ContractEndDate = lease.EndDate,
+                InstallmentAmount = installment,
                 Currency = lease.Currency,
                 DueDate = dueDate,
-                IsOverdue = isOverdue
+                IsOverdue = isOverdue,
+                DaysOverdue = isOverdue ? today.DayNumber - dueDate.DayNumber : 0
             };
         }
 
@@ -182,8 +213,19 @@ public sealed class DashboardService : IDashboardService
                 Title = p.Title,
                 Amount = p.Amount,
                 Currency = p.Currency,
+                DisplayStatus =
+                    p.Status == PaymentStatus.Paid ? PaymentDisplayStatus.Paid
+                    : p.DueDate != null && p.DueDate < today ? PaymentDisplayStatus.Overdue
+                    : PaymentDisplayStatus.Due,
+                DaysOverdue =
+                    p.Status != PaymentStatus.Paid && p.DueDate != null && p.DueDate < today
+                        ? EF.Functions.DateDiffDay(p.DueDate.Value, today)
+                        : 0,
                 Date = p.Date,
                 Type = p.Type,
+                Status = p.Status,
+
+                PaymentMethod = p.PaymentMethod,
                 InvoiceUrl = p.InvoiceUrl
             })
             .ToListAsync(ct);
@@ -351,6 +393,7 @@ public sealed class DashboardService : IDashboardService
     // The next monthly anniversary of the lease start on or after today, clamped to the lease
     // end. Clamps the day for short months, so a lease starting on the 31st bills on the 28th
     // in February rather than skipping.
+
     private static DateOnly NextDueDate(DateOnly start, DateOnly end, DateOnly today)
     {
         var candidate = BuildDue(today.Year, today.Month, start.Day);
@@ -362,9 +405,25 @@ public sealed class DashboardService : IDashboardService
                 start.Day);
 
         return candidate > end ? end : candidate;
+    }
+    private static DateOnly BuildDue(int year, int month, int day) =>
+        new(year, month, Math.Min(day, DateTime.DaysInMonth(year, month)));
 
-        static DateOnly BuildDue(int year, int month, int day) =>
-            new(year, month, Math.Min(day, DateTime.DaysInMonth(year, month)));
+
+    private static DateOnly PreviousDueDate(DateOnly start, DateOnly end, DateOnly today)
+    {
+        var candidate = BuildDue(today.Year, today.Month, start.Day);
+
+        if (candidate > today)
+            candidate = BuildDue(
+                today.Month == 1 ? today.Year - 1 : today.Year,
+                today.Month == 1 ? 12 : today.Month - 1,
+                start.Day);
+
+        // Never before the lease began: nothing is owed for a month the tenant was not in.
+        if (candidate < start) return start;
+
+        return candidate > end ? end : candidate;
     }
 
     // Same projection for both dashboards so their maintenance cards cannot drift apart.
@@ -379,25 +438,33 @@ public sealed class DashboardService : IDashboardService
                 m.Id,
                 m.RequestNumber,
                 m.ServiceType,
+                m.Priority,
                 m.Status,
                 m.CreatedAt,
                 m.ScheduledVisitDate,
                 m.ScheduledTimeSlot,
                 m.PreferredVisitDate,
                 m.PreferredTimeSlot,
-                Technician = _db.Technicians
+                m.PropertyId,
+                PropertyTitle = _db.Properties.Where(p => p.Id == m.PropertyId)
+                    .Select(p => p.Title).FirstOrDefault(),
+                            OwnerName = _db.Properties.Where(p => p.Id == m.PropertyId)
+                    .Select(p => _db.Users.Where(u => u.Id == p.OwnerUserId)
+                        .Select(u => u.FullName).FirstOrDefault())
+                    .FirstOrDefault(),
+                            Technician = _db.Technicians
                     .Where(t => t.Id == m.AssignedTechnicianId)
                     .Select(t => new
                     {
                         t.Id,
-                        t.RoleEn,
                         t.RoleAr,
+                        t.RoleEn,
                         t.RatingAverage,
                         Name = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault(),
                         ImageUrl = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault()
                     })
                     .FirstOrDefault()
-            })
+                        })
             .ToListAsync(ct);
 
         return rows.Select(m =>
@@ -409,12 +476,16 @@ public sealed class DashboardService : IDashboardService
             {
                 Id = m.Id,
                 RequestCode = m.RequestNumber,
+                Priority = m.Priority,
                 Title = MaintenanceServiceTypeNames.Title(m.ServiceType, _language),
                 ServiceType = m.ServiceType,
                 Status = m.Status,
                 CreatedAt = m.CreatedAt,
+                PropertyId = m.PropertyId,
+                PropertyTitle = m.PropertyTitle ?? string.Empty,
+                OwnerName = m.OwnerName,
                 VisitSummary = $"{date.ToString("d MMMM yyyy", _language.Culture)} · " +
-                               $"{MaintenanceTimeSlotNames.Label(slot, _language)}",
+                   $"{MaintenanceTimeSlotNames.Label(slot, _language)}",
                 AssignedTechnician = m.Technician is null ? null : new TechnicianDto
                 {
                     Id = m.Technician.Id,

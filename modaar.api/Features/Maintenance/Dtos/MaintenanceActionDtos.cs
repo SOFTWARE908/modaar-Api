@@ -27,10 +27,12 @@ namespace modaar.api.Features.Maintenance.Dtos
         public DateOnly? ScheduledVisitDate { get; init; }
         public MaintenanceTimeSlotDto? ScheduledTimeSlot { get; init; }
         public Guid? TechnicianId { get; init; }
+        public MaintenancePriorityDto? Priority { get; init; }
     }
 
     // Alias so the DTO file doesn't pull the Enums namespace into every consumer.
     public enum MaintenanceTimeSlotDto { Morning, Afternoon, Evening }
+    public enum MaintenancePriorityDto { Normal, Urgent }
 }
 
 namespace modaar.api.Features.Maintenance.Validation
@@ -61,6 +63,10 @@ namespace modaar.api.Features.Maintenance.Validation
             RuleFor(x => x.ScheduledTimeSlot!.Value)
                 .IsInEnum()
                 .When(x => x.ScheduledTimeSlot is not null);
+
+            RuleFor(x => x.Priority!.Value)
+                .IsInEnum()
+                .When(x => x.Priority is not null);
 
             // A date without a slot is ambiguous and a slot without a date is meaningless.
             RuleFor(x => x.ScheduledTimeSlot)
