@@ -58,6 +58,9 @@ public static class ServiceRegistrationExtensions
 
         services.AddScoped<IMaintenanceFeedbackService, MaintenanceFeedbackService>();
 
+        services.AddScoped<IMaintenanceServiceTypeService, MaintenanceServiceTypeService>();
+
+
         services.AddScoped<IContractService, ContractService>();
         //////////////Properties//////////////////////
         services.AddScoped<IPropertyService, PropertyService>();

@@ -1,17 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 using modaar.api.Common.Dtos;
+using modaar.api.Common.Localization;
 using modaar.api.Common.Results;
 using modaar.api.Common.Time;
 using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Contracts.Enums;
+using modaar.api.Features.Maintenance;
+using modaar.api.Features.Maintenance.Dtos;
 using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Features.Properties.Dtos;
 using modaar.api.Features.Properties.Entities;
 using modaar.api.Features.Properties.Enums;
 using modaar.api.Features.Users.Dtos;
 using modaar.api.Persistence;
-using modaar.api.Common.Localization;
-using modaar.api.Features.Maintenance;
+using System.Drawing.Design;
 
 namespace modaar.api.Features.Properties.Services;
 
@@ -248,24 +250,39 @@ public sealed class PropertyService : IPropertyService
         m.Id,
         m.RequestNumber,
         m.ProblemDescription,
-        m.ServiceType,
+        ServiceType = _db.MaintenanceServiceTypes
+                    .Where(t => t.Id == m.ServiceTypeId)
+                    .Select(t => new { t.Id, t.Code, t.NameAr, t.NameEn, t.IconUrl, t.SortOrder })
+                    .FirstOrDefault(),
         m.Status,
         m.CreatedAt
     })
     .ToListAsync(ct);
-
-        var history = historyRows.Select(m => new PropertyMaintenanceHistoryItemDto
+        var history = historyRows.Select(m =>
         {
-            RequestId = m.Id,
-            RequestNumber = m.RequestNumber,
-            Title = MaintenanceServiceTypeNames.Title(m.ServiceType, _language),
-            Description = m.ProblemDescription,
-            ServiceType = m.ServiceType,
-            Status = m.Status,
-            Date = m.CreatedAt,
-            CostAmount = null,
-            Currency = null
-        }).ToList();
+            var categoryName = _language.Pick(m.ServiceType.NameAr, m.ServiceType.NameEn);
+            return new PropertyMaintenanceHistoryItemDto
+            {
+                RequestId = m.Id,
+                RequestNumber = m.RequestNumber,
+                Title = categoryName,
+                ServiceType = new MaintenanceServiceTypeDto
+                {
+                    Id = m.ServiceType.Id,
+                    Code = m.ServiceType.Code,
+                    Name = categoryName,
+                    IconUrl = m.ServiceType.IconUrl,
+                    SortOrder = m.ServiceType.SortOrder
+                },
+                Description = m.ProblemDescription,
+                Status = m.Status,
+                Date = m.CreatedAt,
+                CostAmount = null,
+                Currency = null
+            };
+
+        }
+        ).ToList();
 
         return Result<PropertyDetailsDto>.Ok(new PropertyDetailsDto
         {

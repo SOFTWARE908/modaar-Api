@@ -38,7 +38,10 @@ public enum MaintenanceActionType
     Accept,
     Reject,
     Inquiry,
-    Delegate
+    Delegate,
+    // Recorded alongside Accept when a technician is named, so the status history can date it.
+    AssignTechnician,
+    Quote
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -78,4 +81,47 @@ public enum MaintenancePriority
 {
     Normal = 0,
     Urgent = 1
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum MaintenanceCostBearer
+{
+    Owner,
+    Tenant
+}
+
+// Finer than Status, for the client's card label and next-step strip. Derived on read and never
+// stored, so it cannot drift from the facts it is computed from. Kept apart from Status so
+// nothing that already switches on Status breaks.
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum MaintenanceStage
+{
+    Pending,
+    WithOwner,
+    AwaitingQuote,
+    Accepted,
+    OnTheWay,
+    InProgress,
+    Completed,
+    Rejected,
+    Cancelled
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum MaintenanceHandledBy
+{
+    Broker,
+    Owner
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum MaintenanceHistoryStep
+{
+    Sent,
+    Approved,
+    Rejected,
+    // The owner handed the request to the property's broker.
+    Delegated,
+    TechnicianAssigned,
+    Completed
 }

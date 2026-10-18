@@ -17,17 +17,27 @@ public class MaintenanceRequest
     // right tenancy after the tenant moves out and a new lease starts on the unit.
     public Guid? ContractId { get; set; }
 
-    public MaintenanceServiceType ServiceType { get; set; }
+    public Guid ServiceTypeId { get; set; }
+
+    // Short headline the tenant gives the problem, e.g. "تسرّب مياه أسفل مغسلة المطبخ". Null on
+    // requests raised before it existed; readers fall back to the category name.
+    public string? Title { get; set; }
+
     public string ProblemDescription { get; set; } = null!;
+
+    // Where in the unit the problem is — "المطبخ". Free text; the design has no fixed list.
+    public string? Location { get; set; }
+
     // Set by the tenant when raising the request; the owner may change it while triaging.
     // Normal unless someone says otherwise, which is also what every existing row becomes.
     public MaintenancePriority Priority { get; set; } = MaintenancePriority.Normal;
 
     public MaintenanceRequestStatus Status { get; set; } = MaintenanceRequestStatus.Pending;
 
-    // What the tenant asked for at creation.
-    public DateOnly PreferredVisitDate { get; set; }
-    public MaintenanceTimeSlot PreferredTimeSlot { get; set; }
+    // What the tenant asked for at creation. Optional: the new-request sheet has no date picker,
+    // so the owner or broker proposes the visit when accepting. Set together or not at all.
+    public DateOnly? PreferredVisitDate { get; set; }
+    public MaintenanceTimeSlot? PreferredTimeSlot { get; set; }
 
     // What was actually agreed once someone accepted. Null while pending, and may differ from
     // what the tenant asked for.
@@ -35,6 +45,17 @@ public class MaintenanceRequest
     public MaintenanceTimeSlot? ScheduledTimeSlot { get; set; }
 
     public Guid? AssignedTechnicianId { get; set; }
+
+    // Set on accept when the job needs pricing before work starts. The request then sits at the
+    // awaitingQuote stage until a quote is submitted.
+    public bool QuoteRequired { get; set; }
+
+    // The price for the work, once someone has submitted one. All set together.
+    public decimal? QuotePartsCost { get; set; }
+    public decimal? QuoteLaborCost { get; set; }
+    public MaintenanceCostBearer? QuoteCostBearer { get; set; }
+    public string? QuoteDescription { get; set; }
+    public DateTimeOffset? QuotedAt { get; set; }
 
     // Set together when the request is rejected; the client shows who turned it down.
     public MaintenanceRequestRejectedBy? RejectedBy { get; set; }

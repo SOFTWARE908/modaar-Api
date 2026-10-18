@@ -32,7 +32,16 @@ public class MaintenanceRating
     // Snapshot: who was actually rated. The request's assignment could change afterwards.
     public Guid? TechnicianId { get; set; }
 
+    // The overall score. With the four-part rating it is their rounded average; older ratings
+    // only ever had this.
     public int Stars { get; set; }
+
+    // The four criteria the app asks for. Null on ratings submitted with stars alone.
+    public int? TechnicianRating { get; set; }
+    public int? RepairQualityRating { get; set; }
+    public int? ResponseSpeedRating { get; set; }
+    public int? BrokerCommunicationRating { get; set; }
+
     public string? Comment { get; set; }
 
     // Fixed set of translation keys from the client, stored as JSON: never queried, always read
@@ -80,9 +89,8 @@ public class Technician
     public string RoleAr { get; set; } = null!;
     public string RoleEn { get; set; } = null!;
 
-    // Which categories they can be assigned to. Display and filtering are both small-scale here,
-    // so JSON is enough until assignment is automated.
-    public List<MaintenanceServiceType> Skills { get; set; } = [];
+    // Which categories they can be assigned to lives in TechnicianServiceTypes. (A Skills
+    // collection here made EF invent a TechnicianId column on MaintenanceServiceTypes.)
 
     // Rollup over ratings, recalculated on write like the broker's.
     public decimal RatingAverage { get; set; }

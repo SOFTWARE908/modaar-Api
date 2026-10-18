@@ -8,6 +8,7 @@ using modaar.api.Features.Dashboards.Dtos;
 using modaar.api.Features.Maintenance;
 using modaar.api.Features.Maintenance.Dtos;
 using modaar.api.Features.Maintenance.Enums;
+using modaar.api.Features.Maintenance.Services;
 using modaar.api.Features.Payments.Dtos;
 using modaar.api.Features.Payments.Entities;
 using modaar.api.Features.Payments.Enums;
@@ -230,12 +231,28 @@ public sealed class DashboardService : IDashboardService
             })
             .ToListAsync(ct);
 
+        var categoryRows = await _db.MaintenanceServiceTypes
+            .AsNoTracking()
+            .Where(t => t.IsActive)
+            .OrderBy(t => t.SortOrder)
+            .Select(t => new { t.Id, t.Code, t.NameAr, t.NameEn, t.IconUrl, t.SortOrder })
+            .ToListAsync(ct);
+
+        var categories = categoryRows.Select(t => new MaintenanceServiceTypeDto
+        {
+            Id = t.Id,
+            Code = t.Code,
+            Name = _language.Pick(t.NameAr, t.NameEn),
+            IconUrl = t.IconUrl,
+            SortOrder = t.SortOrder
+        }).ToList();
+
         return Result<TenantDashboardDto>.Ok(new TenantDashboardDto
         {
             UserName = user.FullName,
             CurrentUnit = currentUnit,
             // Server-driven so a category can be switched off without shipping a new build.
-            MaintenanceCategories = Enum.GetValues<MaintenanceServiceType>(),
+            MaintenanceCategories = categories,
             PaymentsPreview = paymentsPreview
         });
     }
@@ -428,75 +445,9 @@ public sealed class DashboardService : IDashboardService
 
     // Same projection for both dashboards so their maintenance cards cannot drift apart.
     private async Task<List<MaintenanceRequestListItemDto>> MaintenancePreviewAsync(
-        IQueryable<Features.Maintenance.Entities.MaintenanceRequest> scoped, CancellationToken ct)
-    {
-        var rows = await scoped
-            .OrderByDescending(m => m.CreatedAt)
-            .Take(PreviewCount)
-            .Select(m => new
-            {
-                m.Id,
-                m.RequestNumber,
-                m.ServiceType,
-                m.Priority,
-                m.Status,
-                m.CreatedAt,
-                m.ScheduledVisitDate,
-                m.ScheduledTimeSlot,
-                m.PreferredVisitDate,
-                m.PreferredTimeSlot,
-                m.PropertyId,
-                PropertyTitle = _db.Properties.Where(p => p.Id == m.PropertyId)
-                    .Select(p => p.Title).FirstOrDefault(),
-                            OwnerName = _db.Properties.Where(p => p.Id == m.PropertyId)
-                    .Select(p => _db.Users.Where(u => u.Id == p.OwnerUserId)
-                        .Select(u => u.FullName).FirstOrDefault())
-                    .FirstOrDefault(),
-                            Technician = _db.Technicians
-                    .Where(t => t.Id == m.AssignedTechnicianId)
-                    .Select(t => new
-                    {
-                        t.Id,
-                        t.RoleAr,
-                        t.RoleEn,
-                        t.RatingAverage,
-                        Name = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault(),
-                        ImageUrl = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault()
-                    })
-                    .FirstOrDefault()
-                        })
-            .ToListAsync(ct);
-
-        return rows.Select(m =>
-        {
-            var date = m.ScheduledVisitDate ?? m.PreferredVisitDate;
-            var slot = m.ScheduledTimeSlot ?? m.PreferredTimeSlot;
-
-            return new MaintenanceRequestListItemDto
-            {
-                Id = m.Id,
-                RequestCode = m.RequestNumber,
-                Priority = m.Priority,
-                Title = MaintenanceServiceTypeNames.Title(m.ServiceType, _language),
-                ServiceType = m.ServiceType,
-                Status = m.Status,
-                CreatedAt = m.CreatedAt,
-                PropertyId = m.PropertyId,
-                PropertyTitle = m.PropertyTitle ?? string.Empty,
-                OwnerName = m.OwnerName,
-                VisitSummary = $"{date.ToString("d MMMM yyyy", _language.Culture)} · " +
-                   $"{MaintenanceTimeSlotNames.Label(slot, _language)}",
-                AssignedTechnician = m.Technician is null ? null : new TechnicianDto
-                {
-                    Id = m.Technician.Id,
-                    Name = m.Technician.Name ?? string.Empty,
-                    Role = _language.Pick(m.Technician.RoleAr, m.Technician.RoleEn),
-                    ImageUrl = m.Technician.ImageUrl,
-                    AverageRating = m.Technician.RatingAverage
-                }
-            };
-        }).ToList();
-    }
+        IQueryable<Features.Maintenance.Entities.MaintenanceRequest> scoped, CancellationToken ct) =>
+        await MaintenanceListProjection.ToListItemsAsync(
+            scoped.OrderByDescending(m => m.CreatedAt).Take(PreviewCount), _db, _language, ct);
 
     private async Task<BrokerSummaryDto?> BrokerSummaryAsync(Guid brokerId, CancellationToken ct)
     {

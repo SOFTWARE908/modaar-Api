@@ -13,15 +13,25 @@ namespace modaar.api.Features.Maintenance.Validation
     {
         public CreateMaintenanceRequestValidator()
         {
-            RuleFor(x => x.ServiceType).IsInEnum();
             RuleFor(x => x.Priority).IsInEnum();
             RuleFor(x => x.VisitTimeSlot).IsInEnum();
 
+            RuleFor(x => x.Title).MaximumLength(150);
             RuleFor(x => x.Description).NotEmpty().MaximumLength(2000);
+            RuleFor(x => x.Location).MaximumLength(200);
 
             // No date check against "today" here — the validator has no clock and no time zone,
             // and a Riyadh-local comparison belongs in the service.
-            RuleFor(x => x.PreferredVisitDate).NotEqual(default(DateOnly));
+            RuleFor(x => x.PreferredVisitDate)
+                .NotEqual(default(DateOnly)).When(x => x.PreferredVisitDate is not null);
+
+            RuleFor(x => x.PreferredVisitDate)
+                .NotNull().When(x => x.VisitTimeSlot is not null)
+                .WithMessage("A visit date is required when a time slot is supplied.");
+
+            RuleFor(x => x.VisitTimeSlot)
+                .NotNull().When(x => x.PreferredVisitDate is not null)
+                .WithMessage("A time slot is required when a visit date is supplied.");
 
             RuleFor(x => x.AttachmentIds!)
                 .Must(ids => ids.Count <= VisitSlots.MaxAttachments)

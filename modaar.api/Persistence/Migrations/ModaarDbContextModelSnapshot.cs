@@ -17,7 +17,7 @@ namespace modaar.api.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.20")
+                .HasAnnotation("ProductVersion", "9.0.21")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -430,6 +430,9 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("BrokerCommunicationRating")
+                        .HasColumnType("int");
+
                     b.Property<string>("Comment")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -439,8 +442,14 @@ namespace modaar.api.Persistence.Migrations
                         .HasColumnType("datetimeoffset")
                         .HasDefaultValueSql("SYSDATETIMEOFFSET()");
 
+                    b.Property<int?>("RepairQualityRating")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("RequestId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("ResponseSpeedRating")
+                        .HasColumnType("int");
 
                     b.Property<int>("Stars")
                         .HasColumnType("int");
@@ -452,6 +461,9 @@ namespace modaar.api.Persistence.Migrations
 
                     b.Property<Guid?>("TechnicianId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("TechnicianRating")
+                        .HasColumnType("int");
 
                     b.Property<decimal?>("TipAmount")
                         .HasPrecision(18, 2)
@@ -471,8 +483,62 @@ namespace modaar.api.Persistence.Migrations
 
                     b.ToTable("MaintenanceRatings", null, t =>
                         {
+                            t.HasCheckConstraint("CK_MaintenanceRatings_BrokerCommunicationRating", "[BrokerCommunicationRating] BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("CK_MaintenanceRatings_RepairQualityRating", "[RepairQualityRating] BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("CK_MaintenanceRatings_ResponseSpeedRating", "[ResponseSpeedRating] BETWEEN 1 AND 5");
+
                             t.HasCheckConstraint("CK_MaintenanceRatings_Stars", "[Stars] BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("CK_MaintenanceRatings_TechnicianRating", "[TechnicianRating] BETWEEN 1 AND 5");
                         });
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.MaintenanceRatingTag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("LabelAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("LabelEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "SortOrder");
+
+                    b.ToTable("MaintenanceRatingTags", (string)null);
                 });
 
             modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.MaintenanceRequest", b =>
@@ -494,12 +560,15 @@ namespace modaar.api.Persistence.Migrations
                         .HasColumnType("datetimeoffset")
                         .HasDefaultValueSql("SYSDATETIMEOFFSET()");
 
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("PreferredTimeSlot")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<DateOnly>("PreferredVisitDate")
+                    b.Property<DateOnly?>("PreferredVisitDate")
                         .HasColumnType("date");
 
                     b.Property<string>("Priority")
@@ -516,6 +585,28 @@ namespace modaar.api.Persistence.Migrations
 
                     b.Property<Guid>("PropertyId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("QuoteCostBearer")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("QuoteDescription")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<decimal?>("QuoteLaborCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("QuotePartsCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("QuoteRequired")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("QuotedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("RejectedBy")
                         .HasMaxLength(20)
@@ -537,10 +628,8 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<DateOnly?>("ScheduledVisitDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("ServiceType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                    b.Property<Guid>("ServiceTypeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -549,6 +638,10 @@ namespace modaar.api.Persistence.Migrations
 
                     b.Property<Guid>("TenantUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -565,6 +658,8 @@ namespace modaar.api.Persistence.Migrations
                     b.HasIndex("AssignedTechnicianId", "Status");
 
                     b.HasIndex("PropertyId", "Status");
+
+                    b.HasIndex("ServiceTypeId", "CreatedAt");
 
                     b.HasIndex("TenantUserId", "CreatedAt");
 
@@ -610,6 +705,52 @@ namespace modaar.api.Persistence.Migrations
                     b.ToTable("MaintenanceRequestActions", (string)null);
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.MaintenanceServiceType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("IconUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "SortOrder");
+
+                    b.ToTable("MaintenanceServiceTypes", (string)null);
+                });
+
             modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.Technician", b =>
                 {
                     b.Property<Guid>("Id")
@@ -643,11 +784,6 @@ namespace modaar.api.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.PrimitiveCollection<string>("Skills")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetimeoffset")
@@ -664,6 +800,21 @@ namespace modaar.api.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Technicians", (string)null);
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.TechnicianServiceType", b =>
+                {
+                    b.Property<Guid>("TechnicianId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ServiceTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("TechnicianId", "ServiceTypeId");
+
+                    b.HasIndex("ServiceTypeId");
+
+                    b.ToTable("TechnicianServiceTypes", (string)null);
                 });
 
             modelBuilder.Entity("modaar.api.Features.Payments.Entities.InvoiceItem", b =>
@@ -1282,6 +1433,12 @@ namespace modaar.api.Persistence.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("modaar.api.Features.Maintenance.Entities.MaintenanceServiceType", null)
+                        .WithMany()
+                        .HasForeignKey("ServiceTypeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("modaar.api.Features.Users.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("TenantUserId")
@@ -1320,6 +1477,21 @@ namespace modaar.api.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.TechnicianServiceType", b =>
+                {
+                    b.HasOne("modaar.api.Features.Maintenance.Entities.MaintenanceServiceType", null)
+                        .WithMany()
+                        .HasForeignKey("ServiceTypeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("modaar.api.Features.Maintenance.Entities.Technician", null)
+                        .WithMany()
+                        .HasForeignKey("TechnicianId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

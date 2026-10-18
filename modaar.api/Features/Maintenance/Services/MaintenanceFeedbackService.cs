@@ -14,6 +14,8 @@ public interface IMaintenanceFeedbackService
 
     Task<Result<bool>> SubmitNeedHelpAsync(
         Guid requestId, Guid tenantUserId, NeedHelpRequestDto request, CancellationToken ct);
+
+    Task<Result<IReadOnlyList<MaintenanceRatingTagDto>>> ListRatingTagsAsync(CancellationToken ct);
 }
 
 public sealed class MaintenanceFeedbackService : IMaintenanceFeedbackService
@@ -70,7 +72,47 @@ public sealed class MaintenanceFeedbackService : IMaintenanceFeedbackService
             _db.MaintenanceRatings.Add(rating);
         }
 
-        rating.Stars = request.Stars;
+        // An unknown key would render as raw text in the app, so reject rather than store it.
+        // A tag retired after this rating was made stays allowed on an edit of the same rating,
+        // so re-saving it doesn't fail on a chip the tenant never touched.
+        var tagKeys = request.TagKeys ?? [];
+        if (tagKeys.Count > 0)
+        {
+            var known = await _db.MaintenanceRatingTags
+                .AsNoTracking()
+                .Where(t => tagKeys.Contains(t.Key) && (t.IsActive || rating.TagKeys.Contains(t.Key)))
+                .Select(t => t.Key)
+                .ToListAsync(ct);
+
+            if (known.Count != tagKeys.Count)
+                return Result<bool>.Fail(AppErrorCode.ValidationFailed, "One or more tags are not recognised.");
+        }
+
+        if (request.HasCriteria)
+        {
+            // The validator guarantees all four are present together.
+            rating.TechnicianRating = request.TechnicianRating!.Value;
+            rating.RepairQualityRating = request.RepairQualityRating!.Value;
+            rating.ResponseSpeedRating = request.ResponseSpeedRating!.Value;
+            rating.BrokerCommunicationRating = request.BrokerCommunicationRating!.Value;
+
+            // Kept so anything that reads one overall score still works.
+            rating.Stars = (int)Math.Round(
+                (rating.TechnicianRating.Value + rating.RepairQualityRating.Value +
+                 rating.ResponseSpeedRating.Value + rating.BrokerCommunicationRating.Value) / 4m,
+                MidpointRounding.AwayFromZero);
+        }
+        else
+        {
+            // Stars alone: drop any criteria from an earlier submission, or the details screen
+            // would show breakdowns that no longer add up to the overall score.
+            rating.TechnicianRating = null;
+            rating.RepairQualityRating = null;
+            rating.ResponseSpeedRating = null;
+            rating.BrokerCommunicationRating = null;
+            rating.Stars = request.Stars!.Value;
+        }
+
         rating.Comment = request.Comment?.Trim();
         rating.TagKeys = request.TagKeys?.ToList() ?? [];
         rating.TipAmount = request.PresetTipSar ?? request.CustomTipSar;
@@ -83,7 +125,7 @@ public sealed class MaintenanceFeedbackService : IMaintenanceFeedbackService
         await tx.CommitAsync(ct);
 
         _logger.LogInformation("Maintenance {Number} rated {Stars} by {UserId}.",
-            maintenanceRequest.RequestNumber, request.Stars, tenantUserId);
+            maintenanceRequest.RequestNumber, rating.Stars, tenantUserId);
 
         return Result<bool>.Ok(true);
     }
@@ -141,6 +183,19 @@ public sealed class MaintenanceFeedbackService : IMaintenanceFeedbackService
         return Result<bool>.Ok(true);
     }
 
+    // Active tags in screen order, with both labels so the app can switch language offline.
+    public async Task<Result<IReadOnlyList<MaintenanceRatingTagDto>>> ListRatingTagsAsync(CancellationToken ct)
+    {
+        IReadOnlyList<MaintenanceRatingTagDto> tags = await _db.MaintenanceRatingTags
+            .AsNoTracking()
+            .Where(t => t.IsActive)
+            .OrderBy(t => t.SortOrder)
+            .Select(t => new MaintenanceRatingTagDto { Key = t.Key, LabelAr = t.LabelAr, LabelEn = t.LabelEn })
+            .ToListAsync(ct);
+
+        return Result<IReadOnlyList<MaintenanceRatingTagDto>>.Ok(tags);
+    }
+
     // Re-derived from the ratings themselves rather than nudged, so an edited rating lands on the
     // same number a fresh count would. Mirrors the broker review rollup.
     private Task RecalculateTechnicianRollupAsync(Guid technicianId, CancellationToken ct) =>
@@ -153,8 +208,9 @@ public sealed class MaintenanceFeedbackService : IMaintenanceFeedbackService
              CROSS APPLY (
                    SELECT COUNT(*) AS RatingsCount,
                           -- AVG over an int column does integer division in SQL Server; without
-                          -- the cast, 4 and 5 average to 4.
-                          ISNULL(AVG(CAST(r.Stars AS decimal(3,2))), 0) AS RatingAverage
+                          -- the cast, 4 and 5 average to 4. The technician criterion is what
+                          -- rates the technician; the overall stars stand in on older ratings.
+                          ISNULL(AVG(CAST(COALESCE(r.TechnicianRating, r.Stars) AS decimal(3,2))), 0) AS RatingAverage
                      FROM MaintenanceRatings r
                     WHERE r.TechnicianId = t.Id
                    ) x

@@ -373,10 +373,8 @@ C:\Users\Compumarts\Source\Repos\modaar-Api\modaar.api\obj\Debug\net9.0\staticwe
 C:\Users\Compumarts\Source\Repos\modaar-Api\modaar.api\obj\Debug\net9.0\staticwebassets.build.endpoints.json
 C:\Users\Compumarts\Source\Repos\modaar-Api\modaar.api\obj\Debug\net9.0\modaar.api.csproj.Up2Date
 C:\Users\Compumarts\Source\Repos\modaar-Api\modaar.api\obj\Debug\net9.0\modaar.api.dll
-C:\Users\Compumarts\Source\Repos\modaar-Api\modaar.api\obj\Debug\net9.0\refint\modaar.api.dll
 C:\Users\Compumarts\Source\Repos\modaar-Api\modaar.api\obj\Debug\net9.0\modaar.api.pdb
 C:\Users\Compumarts\Source\Repos\modaar-Api\modaar.api\obj\Debug\net9.0\modaar.api.genruntimeconfig.cache
-C:\Users\Compumarts\Source\Repos\modaar-Api\modaar.api\obj\Debug\net9.0\ref\modaar.api.dll
 D:\modaar1\modaar-Api\modaar.api\bin\Debug\net9.0\appsettings.Development.json
 D:\modaar1\modaar-Api\modaar.api\bin\Debug\net9.0\appsettings.json
 D:\modaar1\modaar-Api\modaar.api\bin\Debug\net9.0\modaar.api.staticwebassets.endpoints.json
@@ -568,4 +566,14 @@ D:\modaar1\modaar-Api\modaar.api\obj\Debug\net9.0\refint\modaar.api.dll
 D:\modaar1\modaar-Api\modaar.api\obj\Debug\net9.0\modaar.api.pdb
 D:\modaar1\modaar-Api\modaar.api\obj\Debug\net9.0\modaar.api.genruntimeconfig.cache
 D:\modaar1\modaar-Api\modaar.api\obj\Debug\net9.0\ref\modaar.api.dll
+C:\Users\Compumarts\AppData\Local\Temp\modaar-build\appsettings.Development.json
+C:\Users\Compumarts\AppData\Local\Temp\modaar-build\appsettings.json
+C:\Users\Compumarts\AppData\Local\Temp\modaar-build\modaar.api.staticwebassets.endpoints.json
+C:\Users\Compumarts\AppData\Local\Temp\modaar-build\modaar.api.exe
+C:\Users\Compumarts\AppData\Local\Temp\modaar-build\modaar.api.deps.json
+C:\Users\Compumarts\AppData\Local\Temp\modaar-build\modaar.api.runtimeconfig.json
+C:\Users\Compumarts\AppData\Local\Temp\modaar-build\modaar.api.dll
+C:\Users\Compumarts\AppData\Local\Temp\modaar-build\modaar.api.pdb
+C:\Users\Compumarts\source\repos\modaar-Api\modaar.api\obj\Debug\net9.0\refint\modaar.api.dll
+C:\Users\Compumarts\source\repos\modaar-Api\modaar.api\obj\Debug\net9.0\ref\modaar.api.dll
 C:\Users\Compumarts\Source\Repos\modaar-Api\modaar.api\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt

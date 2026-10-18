@@ -9,5 +9,6 @@ public enum AccountType
     Tenant,
     Broker,
     // Reserved for future use; must not be selectable from the mobile app today.
-    Technician
+    Technician,
+    Admin
 }

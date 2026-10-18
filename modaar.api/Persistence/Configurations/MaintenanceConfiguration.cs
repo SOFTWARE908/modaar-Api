@@ -25,11 +25,30 @@ public class MaintenanceRequestConfiguration : IEntityTypeConfiguration<Maintena
             .IsRequired();
         b.Property(x => x.RejectionReason).HasMaxLength(1000);
 
-        b.Property(x => x.ServiceType).HasConversion<string>().HasMaxLength(20).IsRequired();
+        b.Property(x => x.ServiceTypeId).IsRequired();
+
+        // NoAction like everything else into this table, and the point here is stronger: a
+        // category that has ever been used must not be deletable at all. Deactivate it instead.
+        b.HasOne<MaintenanceServiceType>()
+            .WithMany()
+            .HasForeignKey(x => x.ServiceTypeId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // The tenant's list filters by category within their own requests.
+        b.HasIndex(x => new { x.ServiceTypeId, x.CreatedAt });
+
+        b.Property(x => x.Title).HasMaxLength(150);
+        b.Property(x => x.Location).HasMaxLength(200);
+
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
-        b.Property(x => x.PreferredTimeSlot).HasConversion<string>().HasMaxLength(20).IsRequired();
+        b.Property(x => x.PreferredTimeSlot).HasConversion<string>().HasMaxLength(20);
         b.Property(x => x.ScheduledTimeSlot).HasConversion<string>().HasMaxLength(20);
         b.Property(x => x.RejectedBy).HasConversion<string>().HasMaxLength(20);
+
+        b.Property(x => x.QuotePartsCost).HasPrecision(18, 2);
+        b.Property(x => x.QuoteLaborCost).HasPrecision(18, 2);
+        b.Property(x => x.QuoteCostBearer).HasConversion<string>().HasMaxLength(10);
+        b.Property(x => x.QuoteDescription).HasMaxLength(1000);
 
         b.Property(x => x.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
         b.Property(x => x.UpdatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
@@ -111,7 +130,14 @@ public class MaintenanceRatingConfiguration : IEntityTypeConfiguration<Maintenan
         b.Property(x => x.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
         b.Property(x => x.UpdatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
 
-        b.ToTable(t => t.HasCheckConstraint("CK_MaintenanceRatings_Stars", "[Stars] BETWEEN 1 AND 5"));
+        b.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_MaintenanceRatings_Stars", "[Stars] BETWEEN 1 AND 5");
+            t.HasCheckConstraint("CK_MaintenanceRatings_TechnicianRating", "[TechnicianRating] BETWEEN 1 AND 5");
+            t.HasCheckConstraint("CK_MaintenanceRatings_RepairQualityRating", "[RepairQualityRating] BETWEEN 1 AND 5");
+            t.HasCheckConstraint("CK_MaintenanceRatings_ResponseSpeedRating", "[ResponseSpeedRating] BETWEEN 1 AND 5");
+            t.HasCheckConstraint("CK_MaintenanceRatings_BrokerCommunicationRating", "[BrokerCommunicationRating] BETWEEN 1 AND 5");
+        });
 
         // One rating per request.
         b.HasIndex(x => x.RequestId).IsUnique();
@@ -170,7 +196,5 @@ public class TechnicianConfiguration : IEntityTypeConfiguration<Technician>
 
         b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.NoAction);
         b.HasOne<Broker>().WithMany().HasForeignKey(x => x.BrokerId).OnDelete(DeleteBehavior.SetNull);
-
-        b.PrimitiveCollection(x => x.Skills).HasMaxLength(200);
     }
 }

@@ -68,8 +68,8 @@ public sealed class MaintenanceService : IMaintenanceService
         if (query.Status is { Count: > 0 })
             requests = requests.Where(m => query.Status.Contains(m.Status));
 
-        if (query.ServiceType is { } serviceType)
-            requests = requests.Where(m => m.ServiceType == serviceType);
+        if (query.ServiceTypeId is { } serviceType)
+            requests = requests.Where(m => m.ServiceTypeId == serviceType);
 
         if (query.PropertyId is { } propertyId)
             requests = requests.Where(m => m.PropertyId == propertyId);
@@ -89,73 +89,12 @@ public sealed class MaintenanceService : IMaintenanceService
 
         var totalCount = await requests.CountAsync(ct);
 
-        var rows = await requests
-            .OrderByDescending(m => m.CreatedAt)
-            .Skip(query.SkipCount)
-            .Take(query.MaxResultCount)
-            .Select(m => new
-            {
-                m.Id,
-                m.RequestNumber,
-                m.ServiceType,
-                m.Status,
-                m.Priority,
-                m.CreatedAt,
-                m.ScheduledVisitDate,
-                m.ScheduledTimeSlot,
-                m.PreferredVisitDate,
-                m.PreferredTimeSlot,
-                m.PropertyId,
-                PropertyTitle = _db.Properties.Where(p => p.Id == m.PropertyId)
-                    .Select(p => p.Title).FirstOrDefault(),
-                OwnerName = _db.Properties.Where(p => p.Id == m.PropertyId)
-                    .Select(p => _db.Users.Where(u => u.Id == p.OwnerUserId)
-                        .Select(u => u.FullName).FirstOrDefault())
-                    .FirstOrDefault(),
-                Technician = _db.Technicians
-                    .Where(t => t.Id == m.AssignedTechnicianId)
-                    .Select(t => new
-                    {
-                        t.Id,
-                        t.RoleAr,
-                        t.RoleEn,
-                        t.RatingAverage,
-                        Name = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault(),
-                        ImageUrl = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault()
-                    })
-                    .FirstOrDefault()
-            })
-            .ToListAsync(ct);
-
-        var items = rows.Select(m =>
-        {
-            var date = m.ScheduledVisitDate ?? m.PreferredVisitDate;
-            var slot = m.ScheduledTimeSlot ?? m.PreferredTimeSlot;
-
-            return new MaintenanceRequestListItemDto
-            {
-                Id = m.Id,
-                RequestCode = m.RequestNumber,
-                Priority = m.Priority,
-                Title = MaintenanceServiceTypeNames.Title(m.ServiceType, _language),
-                ServiceType = m.ServiceType,
-                Status = m.Status,
-                CreatedAt = m.CreatedAt,
-                PropertyId = m.PropertyId,
-                PropertyTitle = m.PropertyTitle ?? string.Empty,
-                OwnerName = m.OwnerName,
-                VisitSummary = $"{date.ToString("d MMMM yyyy", _language.Culture)} · " +
-                               $"{MaintenanceTimeSlotNames.Label(slot, _language)}",
-                AssignedTechnician = m.Technician is null ? null : new TechnicianDto
-                {
-                    Id = m.Technician.Id,
-                    Name = m.Technician.Name ?? string.Empty,
-                    Role = _language.Pick(m.Technician.RoleAr, m.Technician.RoleEn),
-                    ImageUrl = m.Technician.ImageUrl,
-                    AverageRating = m.Technician.RatingAverage
-                }
-            };
-        }).ToList();
+        var items = await MaintenanceListProjection.ToListItemsAsync(
+            requests
+                .OrderByDescending(m => m.CreatedAt)
+                .Skip(query.SkipCount)
+                .Take(query.MaxResultCount),
+            _db, _language, ct);
 
         return Result<PagedResultDto<MaintenanceRequestListItemDto>>.Ok(
             new PagedResultDto<MaintenanceRequestListItemDto> { Items = items, TotalCount = totalCount });
@@ -196,13 +135,15 @@ public sealed class MaintenanceService : IMaintenanceService
         var technician = request.AssignedTechnicianId is null ? null : await _db.Technicians
             .AsNoTracking()
             .Where(t => t.Id == request.AssignedTechnicianId)
-            .Select(t => new TechnicianDto
+            .Select(t => new
             {
-                Id = t.Id,
-                Name = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault() ?? string.Empty,
-                Role = _language.Pick(t.RoleAr, t.RoleEn),
-                ImageUrl = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault(),
-                AverageRating = t.RatingAverage
+                t.Id,
+                t.RoleAr,
+                t.RoleEn,
+                t.RatingAverage,
+                User = _db.Users.Where(u => u.Id == t.UserId)
+                    .Select(u => new { u.FullName, u.ProfileImageUrl, u.CountryCode, u.PhoneNumber })
+                    .FirstOrDefault()
             })
             .FirstOrDefaultAsync(ct);
 
@@ -213,10 +154,26 @@ public sealed class MaintenanceService : IMaintenanceService
             .Select(a => a.Url)
             .ToListAsync(ct);
 
-        var stars = await _db.MaintenanceRatings
+        var rating = await _db.MaintenanceRatings
             .AsNoTracking()
-            .Where(r => r.RequestId == requestId)
-            .Select(r => (int?)r.Stars)
+            .FirstOrDefaultAsync(r => r.RequestId == requestId, ct);
+
+        var actions = await _db.MaintenanceRequestActions
+            .AsNoTracking()
+            .Where(a => a.RequestId == requestId)
+            .OrderBy(a => a.CreatedAt)
+            .Select(a => new ActionRow(
+                a.Type,
+                a.ActorUserId,
+                _db.Users.Where(u => u.Id == a.ActorUserId).Select(u => u.FullName).FirstOrDefault(),
+                a.Message,
+                a.CreatedAt))
+            .ToListAsync(ct);
+
+        var serviceType = await _db.MaintenanceServiceTypes
+            .AsNoTracking()
+            .Where(t => t.Id == request.ServiceTypeId)
+            .Select(t => new { t.Id, t.Code, t.NameAr, t.NameEn, t.IconUrl, t.SortOrder })
             .FirstOrDefaultAsync(ct);
 
         // The tenant block is for whoever is looking at someone else's request; showing a tenant
@@ -237,26 +194,68 @@ public sealed class MaintenanceService : IMaintenanceService
                 .FirstOrDefaultAsync(ct);
         }
 
+        var (handledBy, handledByName) = await ResolveHandlerAsync(
+            actions, property.OwnerUserId, property.BrokerId, ct);
+
         var visitDate = request.ScheduledVisitDate ?? request.PreferredVisitDate;
         var visitSlot = request.ScheduledTimeSlot ?? request.PreferredTimeSlot;
         var today = SaudiTime.Today(_time);
+
+        var categoryName = serviceType is null ? string.Empty : _language.Pick(serviceType.NameAr, serviceType.NameEn);
+        var stage = MaintenanceStages.Derive(
+            request.Status, property.BrokerId is not null, request.QuoteRequired, request.QuotedAt is not null);
 
         return Result<MaintenanceRequestDetailsDto>.Ok(new MaintenanceRequestDetailsDto
         {
             Id = request.Id,
             RequestNumber = request.RequestNumber,
             Priority = request.Priority,
+            Title = string.IsNullOrWhiteSpace(request.Title) ? categoryName : request.Title,
+            CreatedAt = request.CreatedAt,
+            Location = request.Location,
             Status = request.Status,
+            Stage = stage,
+            NextActionLabel = MaintenanceStages.NextActionLabel(
+                stage, technician is not null, visitDate, rating is not null, _language),
             RejectedBy = request.RejectedBy,
             RejectionReason = request.RejectionReason,
+            HandledBy = handledBy,
+            HandledByName = handledByName,
+            StatusHistory = BuildHistory(request, actions),
             VisitDate = visitDate,
-            VisitDayIsTomorrow = visitDate.DayNumber == today.DayNumber + 1,
-            VisitTimeRange = VisitSlots.Format(visitSlot),
+            VisitDayIsTomorrow = visitDate is { } d && d.DayNumber == today.DayNumber + 1,
+            VisitTimeRange = visitSlot is { } slot ? VisitSlots.Format(slot) : null,
             VisitTimePeriod = visitSlot,
-            AssignedTechnician = technician,
-            TenantRatingStars = stars,
+            AssignedTechnician = technician is null ? null : new TechnicianDto
+            {
+                Id = technician.Id,
+                Name = technician.User?.FullName ?? string.Empty,
+                Role = _language.Pick(technician.RoleAr, technician.RoleEn),
+                ImageUrl = technician.User?.ProfileImageUrl,
+                AverageRating = technician.RatingAverage,
+                PhoneNumber = technician.User is null ? null : technician.User.CountryCode + technician.User.PhoneNumber
+            },
+            Quote = request.QuotedAt is null ? null : new MaintenanceQuoteDto
+            {
+                PartsCost = request.QuotePartsCost ?? 0,
+                LaborCost = request.QuoteLaborCost ?? 0,
+                Total = (request.QuotePartsCost ?? 0) + (request.QuoteLaborCost ?? 0),
+                CostBearer = request.QuoteCostBearer ?? MaintenanceCostBearer.Owner,
+                Description = request.QuoteDescription
+            },
+            TenantRatingStars = rating?.Stars,
+            Rating = rating is null ? null : ToRatingDto(rating),
             ProblemDescription = request.ProblemDescription,
-            ServiceType = request.ServiceType,
+            ServiceType = serviceType is null
+                ? null!
+                : new MaintenanceServiceTypeDto
+                {
+                    Id = serviceType.Id,
+                    Code = serviceType.Code,
+                    Name = categoryName,
+                    IconUrl = serviceType.IconUrl,
+                    SortOrder = serviceType.SortOrder
+                },
             AttachmentImageUrls = attachments,
             PropertyId = property.Id,
             PropertyTitle = property.Title,
@@ -267,7 +266,7 @@ public sealed class MaintenanceService : IMaintenanceService
     public async Task<Result<CreateMaintenanceRequestResponseDto>> CreateAsync(
         Guid tenantUserId, CreateMaintenanceRequestDto request, AccountType activeRole, CancellationToken ct)
     {
-        
+
         var accountType = await _db.Users
             .AsNoTracking()
             .Where(u => u.Id == tenantUserId && !u.IsDeleted)
@@ -281,6 +280,23 @@ public sealed class MaintenanceService : IMaintenanceService
         if (!accountType.Contains(AccountType.Tenant) && activeRole != AccountType.Tenant)
             return Result<CreateMaintenanceRequestResponseDto>.Fail(
                 AppErrorCode.Forbidden, "Only a tenant can raise a maintenance request.");
+        var serviceType = await _db.MaintenanceServiceTypes
+            .AsNoTracking()
+            .Where(t => t.Id == request.ServiceTypeId)
+            .Select(t => new { t.Id, t.IsActive })
+            .FirstOrDefaultAsync(ct);
+
+        if (serviceType is null)
+            return Result<CreateMaintenanceRequestResponseDto>.Fail(
+                AppErrorCode.NotFound, "Service type not found.");
+
+        if (!serviceType.IsActive)
+            return Result<CreateMaintenanceRequestResponseDto>.Fail(
+                AppErrorCode.Conflict, "That service type is no longer available.");
+
+        if (request.PreferredVisitDate is { } preferred && preferred < SaudiTime.Today(_time))
+            return Result<CreateMaintenanceRequestResponseDto>.Fail(
+                AppErrorCode.ValidationFailed, "The preferred visit date is in the past.");
 
         // The lease is what grants access to the unit, so the request is anchored to it rather
         // than to a property id the caller chose.
@@ -332,8 +348,10 @@ public sealed class MaintenanceService : IMaintenanceService
             PropertyId = lease.PropertyId,
             ContractId = lease.Id,
             TenantUserId = tenantUserId,
-            ServiceType = request.ServiceType,
+            ServiceTypeId = request.ServiceTypeId,
+            Title = string.IsNullOrWhiteSpace(request.Title) ? null : request.Title.Trim(),
             ProblemDescription = request.Description.Trim(),
+            Location = string.IsNullOrWhiteSpace(request.Location) ? null : request.Location.Trim(),
             Status = MaintenanceRequestStatus.Pending,
             Priority = request.Priority ?? MaintenancePriority.Normal,
             PreferredVisitDate = request.PreferredVisitDate,
@@ -357,6 +375,110 @@ public sealed class MaintenanceService : IMaintenanceService
             Id = maintenanceRequest.Id,
             RequestCode = maintenanceRequest.RequestNumber
         });
+    }
+
+    public static MaintenanceRatingDto ToRatingDto(MaintenanceRating rating)
+    {
+        int?[] criteria =
+        [
+            rating.TechnicianRating, rating.RepairQualityRating,
+            rating.ResponseSpeedRating, rating.BrokerCommunicationRating
+        ];
+        var given = criteria.Where(c => c is not null).Select(c => c!.Value).ToList();
+
+        return new MaintenanceRatingDto
+        {
+            TechnicianRating = rating.TechnicianRating,
+            RepairQualityRating = rating.RepairQualityRating,
+            ResponseSpeedRating = rating.ResponseSpeedRating,
+            BrokerCommunicationRating = rating.BrokerCommunicationRating,
+            Average = given.Count > 0 ? Math.Round((decimal)given.Sum() / given.Count, 1) : rating.Stars,
+            Stars = rating.Stars,
+            TagKeys = rating.TagKeys,
+            Comment = rating.Comment,
+            RatedAt = rating.UpdatedAt
+        };
+    }
+
+    private sealed record ActionRow(
+        MaintenanceActionType Type, Guid ActorUserId, string? ActorName, string? Message, DateTimeOffset At);
+
+    // Whoever made the decision handles it. Before anyone has, it is the managing broker if the
+    // property has one, otherwise the owner.
+    private async Task<(MaintenanceHandledBy, string?)> ResolveHandlerAsync(
+        List<ActionRow> actions, Guid ownerUserId, Guid? brokerId, CancellationToken ct)
+    {
+        var decision = actions.LastOrDefault(a =>
+            a.Type is MaintenanceActionType.Accept or MaintenanceActionType.Reject or MaintenanceActionType.Delegate);
+
+        var handledBy = decision switch
+        {
+            { Type: MaintenanceActionType.Delegate } => MaintenanceHandledBy.Broker,
+            not null => decision.ActorUserId == ownerUserId ? MaintenanceHandledBy.Owner : MaintenanceHandledBy.Broker,
+            null => brokerId is null ? MaintenanceHandledBy.Owner : MaintenanceHandledBy.Broker
+        };
+
+        // A broker that has since been unlinked from the property falls back to the owner's name
+        // rather than showing nothing.
+        if (handledBy == MaintenanceHandledBy.Broker && brokerId is not null)
+        {
+            var brokerName = await _db.Brokers
+                .AsNoTracking()
+                .Where(b => b.Id == brokerId)
+                .Select(b => b.User.FullName)
+                .FirstOrDefaultAsync(ct);
+
+            return (handledBy, brokerName);
+        }
+
+        var ownerName = await _db.Users
+            .AsNoTracking()
+            .Where(u => u.Id == ownerUserId)
+            .Select(u => u.FullName)
+            .FirstOrDefaultAsync(ct);
+
+        return (MaintenanceHandledBy.Owner, ownerName);
+    }
+
+    // One step per recorded action, oldest first. Inquiries and quotes are not steps on the
+    // tenant's timeline: an inquiry leaves the request pending, so showing it would make the
+    // progress look like it went backwards.
+    private static List<MaintenanceStatusHistoryItemDto> BuildHistory(MaintenanceRequest request, List<ActionRow> actions)
+    {
+        var history = new List<MaintenanceStatusHistoryItemDto>
+        {
+            new() { Step = MaintenanceHistoryStep.Sent, At = request.CreatedAt }
+        };
+
+        foreach (var action in actions)
+        {
+            MaintenanceHistoryStep? step = action.Type switch
+            {
+                MaintenanceActionType.Accept => MaintenanceHistoryStep.Approved,
+                MaintenanceActionType.Reject => MaintenanceHistoryStep.Rejected,
+                MaintenanceActionType.Delegate => MaintenanceHistoryStep.Delegated,
+                MaintenanceActionType.AssignTechnician => MaintenanceHistoryStep.TechnicianAssigned,
+                _ => null
+            };
+
+            if (step is not null)
+                history.Add(new()
+                {
+                    Step = step.Value, At = action.At,
+                    ActorName = action.ActorName, Note = action.Message
+                });
+        }
+
+        // Requests accepted before assignments were recorded: the technician came with the accept.
+        var accept = actions.FirstOrDefault(a => a.Type == MaintenanceActionType.Accept);
+        if (request.AssignedTechnicianId is not null && accept is not null &&
+            !actions.Any(a => a.Type == MaintenanceActionType.AssignTechnician))
+            history.Add(new() { Step = MaintenanceHistoryStep.TechnicianAssigned, At = accept.At, ActorName = accept.ActorName });
+
+        if (request.CompletedAt is { } completedAt)
+            history.Add(new() { Step = MaintenanceHistoryStep.Completed, At = completedAt });
+
+        return history.OrderBy(h => h.At).ToList();
     }
 
     // "D-654321" to match the client. Random rather than sequential so the code doesn't leak how

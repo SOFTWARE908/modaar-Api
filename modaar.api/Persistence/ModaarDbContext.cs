@@ -32,12 +32,15 @@ public class ModaarDbContext : DbContext
 
     // Maintenance
     public DbSet<Technician> Technicians => Set<Technician>();
+    public DbSet<TechnicianServiceType> TechnicianServiceTypes => Set<TechnicianServiceType>();
+
     public DbSet<MaintenanceRequest> MaintenanceRequests => Set<MaintenanceRequest>();
     public DbSet<MaintenanceAttachment> MaintenanceAttachments => Set<MaintenanceAttachment>();
     public DbSet<MaintenanceRequestAction> MaintenanceRequestActions => Set<MaintenanceRequestAction>();
     public DbSet<MaintenanceRating> MaintenanceRatings => Set<MaintenanceRating>();
+    public DbSet<MaintenanceRatingTag> MaintenanceRatingTags => Set<MaintenanceRatingTag>();
     public DbSet<MaintenanceNeedHelp> MaintenanceNeedHelpTickets => Set<MaintenanceNeedHelp>();
-
+    public DbSet<MaintenanceServiceType> MaintenanceServiceTypes => Set<MaintenanceServiceType>();
 
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();

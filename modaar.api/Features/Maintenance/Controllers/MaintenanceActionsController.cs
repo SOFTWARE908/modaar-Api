@@ -95,4 +95,22 @@ public class MaintenanceActionsController : ControllerBase
 
         return result.Success ? NoContent() : result.ToActionResult();
     }
+
+    // Owner or managing broker prices the work once accepted. Resubmitting replaces the quote.
+    [HttpPut("quote")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> SubmitQuote(
+        Guid requestId, [FromBody] SubmitMaintenanceQuoteDto request, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        var result = await _actions.SubmitQuoteAsync(requestId, userId, request, ct);
+        return result.Success ? NoContent() : result.ToActionResult();
+    }
 }

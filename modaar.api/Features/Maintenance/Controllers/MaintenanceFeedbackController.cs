@@ -20,9 +20,17 @@ public class MaintenanceFeedbackController : ControllerBase
 
     public MaintenanceFeedbackController(IMaintenanceFeedbackService feedback) => _feedback = feedback;
 
-    // Available once the request is Completed and a technician was assigned. Resubmitting edits
-    // the existing rating rather than failing.
+    // The "what did you like?" chips, with both labels so the app can switch language offline.
+    [HttpGet("~/api/maintenance-requests/rating-tags")]
+    [ProducesResponseType(typeof(IReadOnlyList<MaintenanceRatingTagDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> RatingTags(CancellationToken ct) =>
+        (await _feedback.ListRatingTagsAsync(ct)).ToActionResult();
+
+    // Available once the request is Completed and a technician was assigned. POST and PUT do the
+    // same thing — create or replace the one rating — so "edit rating" can use either.
     [HttpPost("rating")]
+    [HttpPut("rating")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

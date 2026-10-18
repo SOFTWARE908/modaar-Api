@@ -1,3 +1,4 @@
+using modaar.api.Features.Maintenance.Dtos;
 using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Features.Payments.Dtos;
 
@@ -16,7 +17,7 @@ public record TenantDashboardDto
 
     // Which maintenance tiles to offer. Server-driven so a category can be switched off without
     // shipping a new build.
-    public required IReadOnlyList<MaintenanceServiceType> MaintenanceCategories { get; init; }
+    public required IReadOnlyList<MaintenanceServiceTypeDto> MaintenanceCategories { get; init; }
 
     // Most recent payments only. The full history is GET /payments.
     public required IReadOnlyList<PaymentDto> PaymentsPreview { get; init; }

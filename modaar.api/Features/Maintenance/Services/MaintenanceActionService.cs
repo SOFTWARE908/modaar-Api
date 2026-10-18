@@ -15,6 +15,7 @@ public interface IMaintenanceActionService
     Task<Result<bool>> RejectAsync(Guid requestId, Guid callerUserId, RejectMaintenanceRequestDto request, CancellationToken ct);
     Task<Result<bool>> InquiryAsync(Guid requestId, Guid callerUserId, MaintenanceInquiryDto request, CancellationToken ct);
     Task<Result<bool>> DelegateAsync(Guid requestId, Guid callerUserId, DelegateMaintenanceRequestDto request, CancellationToken ct);
+    Task<Result<bool>> SubmitQuoteAsync(Guid requestId, Guid callerUserId, SubmitMaintenanceQuoteDto request, CancellationToken ct);
 }
 
 public sealed class MaintenanceActionService : IMaintenanceActionService
@@ -59,7 +60,25 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
                 return Forbidden("That technician belongs to a different brokerage.");
 
             ctx.Request.AssignedTechnicianId = technicianId;
+
+            // Its own audit row so the tenant's status history can date the assignment.
+            var technicianName = await _db.Technicians
+                .Where(t => t.Id == technicianId)
+                .Select(t => _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault())
+                .FirstOrDefaultAsync(ct);
+
+            _db.MaintenanceRequestActions.Add(new MaintenanceRequestAction
+            {
+                Id = Guid.NewGuid(),
+                RequestId = ctx.Request.Id,
+                ActorUserId = callerUserId,
+                Type = MaintenanceActionType.AssignTechnician,
+                Message = technicianName,
+                CreatedAt = _time.GetUtcNow()
+            });
         }
+
+        ctx.Request.QuoteRequired = request.RequiresQuote;
 
         if (request.ScheduledVisitDate is { } date && request.ScheduledTimeSlot is { } slot)
         {
@@ -72,7 +91,8 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
         }
         else
         {
-            // No counter-offer: what the tenant asked for becomes what was agreed.
+            // No counter-offer: what the tenant asked for becomes what was agreed. If they asked
+            // for nothing, the visit stays unscheduled until someone sets one.
             ctx.Request.ScheduledVisitDate = ctx.Request.PreferredVisitDate;
             ctx.Request.ScheduledTimeSlot = ctx.Request.PreferredTimeSlot;
         }
@@ -144,9 +164,37 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
             null, brokerId, ct);
     }
 
+    public async Task<Result<bool>> SubmitQuoteAsync(
+        Guid requestId, Guid callerUserId, SubmitMaintenanceQuoteDto request, CancellationToken ct)
+    {
+        var ctx = await ResolveAsync(requestId, callerUserId, ct, requirePending: false);
+        if (ctx.Failure is { } failure) return failure;
+
+        if (!ctx.IsOwner && !ctx.IsManagingBroker)
+            return Forbidden("Only the property owner or its managing broker can submit a quote.");
+
+        // Pricing happens between accepting and finishing the work. A quote on a pending request
+        // skips the decision; one on a closed request changes nothing anyone will act on.
+        if (ctx.Request.Status is not (MaintenanceRequestStatus.Accepted
+                                    or MaintenanceRequestStatus.OnTheWay
+                                    or MaintenanceRequestStatus.InProgress))
+            return Result<bool>.Fail(AppErrorCode.Conflict,
+                $"This request is {ctx.Request.Status}; a quote can only be added once it is accepted and before it is completed.");
+
+        ctx.Request.QuotePartsCost = request.PartsCost;
+        ctx.Request.QuoteLaborCost = request.LaborCost;
+        ctx.Request.QuoteCostBearer = (MaintenanceCostBearer)request.CostBearer;
+        ctx.Request.QuoteDescription = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
+        ctx.Request.QuotedAt = _time.GetUtcNow();
+
+        return await TransitionAsync(ctx, null, MaintenanceActionType.Quote,
+            $"{request.PartsCost + request.LaborCost:0.##} ({request.CostBearer})", null, ct);
+    }
+
     // Loads the request and works out who the caller is to it. Every action starts here, so the
     // pending-only rule and the not-found/forbidden shapes are decided in one place.
-    private async Task<ActionContext> ResolveAsync(Guid requestId, Guid callerUserId, CancellationToken ct)
+    private async Task<ActionContext> ResolveAsync(
+        Guid requestId, Guid callerUserId, CancellationToken ct, bool requirePending = true)
     {
         var request = await _db.MaintenanceRequests.FirstOrDefaultAsync(m => m.Id == requestId, ct);
         if (request is null)
@@ -163,7 +211,7 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
 
         // Actions are only available while the request is awaiting a decision. Without this, a
         // completed job could be rejected months later.
-        if (request.Status != MaintenanceRequestStatus.Pending)
+        if (requirePending && request.Status != MaintenanceRequestStatus.Pending)
             return ActionContext.Failed(Result<bool>.Fail(AppErrorCode.Conflict,
                 $"This request is {request.Status} and can no longer be actioned."));
 

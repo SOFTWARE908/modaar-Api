@@ -28,11 +28,25 @@ namespace modaar.api.Features.Maintenance.Dtos
         public MaintenanceTimeSlotDto? ScheduledTimeSlot { get; init; }
         public Guid? TechnicianId { get; init; }
         public MaintenancePriorityDto? Priority { get; init; }
+
+        // The job needs pricing before work starts; the tenant sees "awaiting quote" until one
+        // is submitted.
+        public bool RequiresQuote { get; init; }
+    }
+
+    // Owner or managing broker prices the work. Resubmitting replaces the previous quote.
+    public record SubmitMaintenanceQuoteDto
+    {
+        public required decimal PartsCost { get; init; }
+        public required decimal LaborCost { get; init; }
+        public required MaintenanceCostBearerDto CostBearer { get; init; }
+        public string? Description { get; init; }
     }
 
     // Alias so the DTO file doesn't pull the Enums namespace into every consumer.
     public enum MaintenanceTimeSlotDto { Morning, Afternoon, Evening }
     public enum MaintenancePriorityDto { Normal, Urgent }
+    public enum MaintenanceCostBearerDto { Owner, Tenant }
 }
 
 namespace modaar.api.Features.Maintenance.Validation
@@ -56,7 +70,20 @@ namespace modaar.api.Features.Maintenance.Validation
         }
     }
 
-    public sealed class AcceptMaintenanceRequestValidator : AbstractValidator<AcceptMaintenanceRequestDto>
+    public sealed class SubmitMaintenanceQuoteValidator : AbstractValidator<SubmitMaintenanceQuoteDto>
+    {
+        public SubmitMaintenanceQuoteValidator()
+        {
+            RuleFor(x => x.PartsCost).GreaterThanOrEqualTo(0).LessThan(1_000_000);
+            RuleFor(x => x.LaborCost).GreaterThanOrEqualTo(0).LessThan(1_000_000);
+            RuleFor(x => x).Must(x => x.PartsCost + x.LaborCost > 0)
+                .WithMessage("A quote must have a non-zero total.");
+            RuleFor(x => x.CostBearer).IsInEnum();
+            RuleFor(x => x.Description).MaximumLength(1000);
+        }
+    }
+
+    public sealed class AcceptMaintenanceRequestValidator: AbstractValidator<AcceptMaintenanceRequestDto>
     {
         public AcceptMaintenanceRequestValidator()
         {

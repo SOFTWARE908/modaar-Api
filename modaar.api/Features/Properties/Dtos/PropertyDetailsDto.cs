@@ -1,4 +1,5 @@
 using modaar.api.Features.Contracts.Enums;
+using modaar.api.Features.Maintenance.Dtos;
 using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Features.Users.Dtos;
 
@@ -63,7 +64,7 @@ public record PropertyMaintenanceHistoryItemDto
     public required string Title { get; init; }
     public string? Description { get; init; }
 
-    public required MaintenanceServiceType ServiceType { get; init; }
+    public required MaintenanceServiceTypeDto ServiceType { get; init; }
     public required MaintenanceRequestStatus Status { get; init; }
 
     public required DateTimeOffset Date { get; init; }
