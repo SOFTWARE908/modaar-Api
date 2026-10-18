@@ -16,6 +16,11 @@ public class User
     public string? Email { get; set; }
     public string? NationalId { get; set; }
 
+    // Identity details imported from Nafath, never typed by the user. Null until that import
+    // exists.
+    public DateOnly? DateOfBirth { get; set; }
+    public string? Nationality { get; set; }
+
     // Defaulted on creation; the user can change it while completing their profile.
     public List<AccountType> AccountTypes { get; set; } = [];
 

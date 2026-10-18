@@ -40,7 +40,10 @@ public sealed class UpdateProfileRequestValidator : AbstractValidator<UpdateProf
             RuleForEach(x => x.AccountTypes!)
                 .IsInEnum()
                 // Assigned by whoever onboards the tradesperson, never chosen in the app.
-                .NotEqual(AccountType.Technician).WithMessage("That account type cannot be selected.");
+                .NotEqual(AccountType.Technician).WithMessage("That account type cannot be selected.")
+                // Granted only by a manual UPDATE on the database. Selectable here, any user could
+                // make themselves admin and then pick it with select-role.
+                .NotEqual(AccountType.Admin).WithMessage("That account type cannot be selected.");
         });
 
         When(x => x.Language is not null, () =>

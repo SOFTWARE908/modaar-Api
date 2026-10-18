@@ -39,6 +39,9 @@ public static class AuthResultExtensions
         AuthErrorCode.OtpResendCooldown        => (StatusCodes.Status429TooManyRequests, "OTP resend cooldown"),
         AuthErrorCode.InvalidRefreshToken      => (StatusCodes.Status401Unauthorized,  "Invalid refresh token"),
         AuthErrorCode.UnsupportedLoginMethod   => (StatusCodes.Status400BadRequest,    "Unsupported login method"),
+        AuthErrorCode.BiometricKeyInvalid      => (StatusCodes.Status400BadRequest,    "Invalid biometric key"),
+        AuthErrorCode.BiometricNotRegistered   => (StatusCodes.Status404NotFound,      "Biometric login not set up"),
+        AuthErrorCode.BiometricChallengeFailed => (StatusCodes.Status401Unauthorized,  "Biometric verification failed"),
         _                                      => (StatusCodes.Status500InternalServerError, "Authentication error")
     };
 }

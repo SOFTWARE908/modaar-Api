@@ -18,6 +18,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(u => u.FullName).HasMaxLength(150);
         b.Property(u => u.Email).HasMaxLength(256);
         b.Property(u => u.NationalId).HasMaxLength(50);
+        b.Property(u => u.Nationality).HasMaxLength(100);
         b.Property(u => u.PasswordHash).HasMaxLength(500);
         b.Property(u => u.ProfileImageUrl).HasMaxLength(500);
 

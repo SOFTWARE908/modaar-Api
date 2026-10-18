@@ -21,4 +21,8 @@ public record UserProfileDto
     public string? Email { get; init; }
     public string? NationalId { get; init; }
     public string? ProfileImageUrl { get; init; }
+
+    // From Nafath; read-only, and null until that import exists.
+    public DateOnly? DateOfBirth { get; init; }
+    public string? Nationality { get; init; }
 }

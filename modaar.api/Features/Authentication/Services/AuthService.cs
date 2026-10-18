@@ -207,6 +207,184 @@ public sealed class AuthService : IAuthService
         });
     }
 
+    // ---- biometric login ----
+
+    private static readonly TimeSpan BiometricChallengeLifetime = TimeSpan.FromSeconds(60);
+
+    public async Task<AuthResult<bool>> RegisterBiometricDeviceAsync(
+        Guid userId, RegisterBiometricDeviceDto request, CancellationToken ct)
+    {
+        // Refuse a key we couldn't verify with later, rather than store it and fail every login.
+        if (!TryImportPublicKey(request.PublicKey, out var key))
+            return AuthResult<bool>.Fail(AuthErrorCode.BiometricKeyInvalid,
+                "PublicKey must be a base64 SubjectPublicKeyInfo of an ECDSA P-256 key.");
+        key.Dispose();
+
+        var deviceId = request.DeviceId.Trim();
+        var now = _time.GetUtcNow();
+
+        // One biometric account per phone: whoever registered it before loses it, so a
+        // fingerprint on a shared phone can never sign in as the previous owner.
+        var others = await _db.UserDevices
+            .Where(d => d.DeviceId == deviceId && d.UserId != userId && d.BiometricPublicKey != null)
+            .ToListAsync(ct);
+        foreach (var other in others)
+            ClearBiometric(other, now);
+
+        var device = await _db.UserDevices
+            .FirstOrDefaultAsync(d => d.UserId == userId && d.DeviceId == deviceId, ct);
+
+        if (device is null)
+        {
+            device = new UserDevice { Id = Guid.NewGuid(), UserId = userId, DeviceId = deviceId, CreatedAt = now };
+            _db.UserDevices.Add(device);
+        }
+
+        // Registering a key is turning biometric login on. Without this, the next settings save
+        // with both switches still off would wipe the key it just registered.
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, ct);
+        if (user is null)
+            return AuthResult<bool>.Fail(AuthErrorCode.UserNotFound, "User not found.");
+        if (!user.FaceIdEnabled && !user.BiometricEnabled)
+            user.BiometricEnabled = true;
+
+        device.Platform = request.Platform?.Trim().ToLowerInvariant();
+        device.BiometricPublicKey = request.PublicKey.Trim();
+        device.BiometricChallenge = null;
+        device.BiometricChallengeExpiresAt = null;
+        device.UpdatedAt = now;
+
+        await _db.SaveChangesAsync(ct);
+
+        _logger.LogInformation("Biometric login registered for user {UserId} on device {DeviceId}.", userId, deviceId);
+        return AuthResult<bool>.Ok(true);
+    }
+
+    public async Task<AuthResult<BiometricChallengeResponseDto>> CreateBiometricChallengeAsync(
+        BiometricChallengeRequestDto request, CancellationToken ct)
+    {
+        var device = await _db.UserDevices
+            .FirstOrDefaultAsync(d => d.DeviceId == request.DeviceId.Trim() && d.BiometricPublicKey != null, ct);
+
+        if (device is null)
+            return AuthResult<BiometricChallengeResponseDto>.Fail(AuthErrorCode.BiometricNotRegistered,
+                "Biometric login is not set up on this device. Sign in with a code first.");
+
+        // A new request replaces any outstanding challenge, so only the latest one can be used.
+        var challenge = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+        var now = _time.GetUtcNow();
+
+        device.BiometricChallenge = challenge;
+        device.BiometricChallengeExpiresAt = now.Add(BiometricChallengeLifetime);
+        device.UpdatedAt = now;
+        await _db.SaveChangesAsync(ct);
+
+        return AuthResult<BiometricChallengeResponseDto>.Ok(new BiometricChallengeResponseDto
+        {
+            Challenge = challenge,
+            ExpiresInSeconds = (int)BiometricChallengeLifetime.TotalSeconds
+        });
+    }
+
+    public async Task<AuthResult<AuthSuccessResponseDto>> BiometricLoginAsync(
+        BiometricLoginRequestDto request, CancellationToken ct)
+    {
+        var device = await _db.UserDevices
+            .FirstOrDefaultAsync(d => d.DeviceId == request.DeviceId.Trim() && d.BiometricPublicKey != null, ct);
+
+        if (device is null)
+            return AuthResult<AuthSuccessResponseDto>.Fail(AuthErrorCode.BiometricNotRegistered,
+                "Biometric login is not set up on this device. Sign in with a code first.");
+
+        var now = _time.GetUtcNow();
+        var challenge = device.BiometricChallenge;
+        var expiresAt = device.BiometricChallengeExpiresAt;
+
+        // Single use: burn it before checking, so a wrong signature can't be retried against the
+        // same challenge.
+        device.BiometricChallenge = null;
+        device.BiometricChallengeExpiresAt = null;
+        device.UpdatedAt = now;
+        await _db.SaveChangesAsync(ct);
+
+        if (challenge is null || expiresAt is null || expiresAt < now)
+            return AuthResult<AuthSuccessResponseDto>.Fail(AuthErrorCode.BiometricChallengeFailed,
+                "The challenge has expired or was already used. Request a new one.");
+
+        if (!VerifyBiometricSignature(device.BiometricPublicKey!, challenge, request.Signature))
+        {
+            _logger.LogWarning("Biometric signature rejected for device {DeviceId}.", device.DeviceId);
+            return AuthResult<AuthSuccessResponseDto>.Fail(AuthErrorCode.BiometricChallengeFailed,
+                "Biometric verification failed.");
+        }
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == device.UserId && !u.IsDeleted, ct);
+        if (user is null)
+            return AuthResult<AuthSuccessResponseDto>.Fail(AuthErrorCode.UserNotFound, "User not found.");
+
+        if (!user.IsActive)
+            return AuthResult<AuthSuccessResponseDto>.Fail(AuthErrorCode.AccountInactive, "Account is inactive.");
+
+        device.LastUsedAt = now;
+        user.LastLoginAt = now;
+
+        // Same exit as a code login, so role selection behaves exactly the same way.
+        return await SignInAsync(user, isNewUser: false, ct);
+    }
+
+    private static void ClearBiometric(UserDevice device, DateTimeOffset now)
+    {
+        device.BiometricPublicKey = null;
+        device.BiometricChallenge = null;
+        device.BiometricChallengeExpiresAt = null;
+        device.UpdatedAt = now;
+    }
+
+    private static bool TryImportPublicKey(string base64, out System.Security.Cryptography.ECDsa key)
+    {
+        key = System.Security.Cryptography.ECDsa.Create();
+        try
+        {
+            key.ImportSubjectPublicKeyInfo(Convert.FromBase64String(base64.Trim()), out _);
+            // P-256 only: it is what both phones' secure hardware generates, and pinning the curve
+            // keeps a weaker key from being registered.
+            return key.KeySize == 256;
+        }
+        catch (Exception e) when (e is FormatException or System.Security.Cryptography.CryptographicException)
+        {
+            return false;
+        }
+    }
+
+    private static bool VerifyBiometricSignature(string publicKey, string challenge, string signatureBase64)
+    {
+        if (!TryImportPublicKey(publicKey, out var key))
+            return false;
+
+        using (key)
+        {
+            byte[] signature;
+            try { signature = Convert.FromBase64String(signatureBase64.Trim()); }
+            catch (FormatException) { return false; }
+
+            var data = System.Text.Encoding.UTF8.GetBytes(challenge);
+
+            // iOS and Android emit DER by default; some libraries emit raw r||s. Accept either.
+            // A malformed signature is a failed login, not a 500.
+            try
+            {
+                return key.VerifyData(data, signature, System.Security.Cryptography.HashAlgorithmName.SHA256,
+                           System.Security.Cryptography.DSASignatureFormat.Rfc3279DerSequence)
+                    || key.VerifyData(data, signature, System.Security.Cryptography.HashAlgorithmName.SHA256,
+                           System.Security.Cryptography.DSASignatureFormat.IeeeP1363FixedFieldConcatenation);
+            }
+            catch (System.Security.Cryptography.CryptographicException)
+            {
+                return false;
+            }
+        }
+    }
+
     // ---- private helpers ----
 
     private async Task<AuthResult<SendOtpResponseDto>> IssueOtpAsync(

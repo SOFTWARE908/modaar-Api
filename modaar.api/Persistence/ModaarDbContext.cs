@@ -17,6 +17,7 @@ public class ModaarDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<UserDevice> UserDevices => Set<UserDevice>();
     // Brokers
     public DbSet<Broker> Brokers => Set<Broker>();
     public DbSet<BrokerReview> BrokerReviews => Set<BrokerReview>();

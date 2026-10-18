@@ -574,5 +574,3 @@ C:\Users\Compumarts\AppData\Local\Temp\modaar-build\modaar.api.deps.json
 C:\Users\Compumarts\AppData\Local\Temp\modaar-build\modaar.api.runtimeconfig.json
 C:\Users\Compumarts\AppData\Local\Temp\modaar-build\modaar.api.dll
 C:\Users\Compumarts\AppData\Local\Temp\modaar-build\modaar.api.pdb
-C:\Users\Compumarts\source\repos\modaar-Api\modaar.api\obj\Debug\net9.0\refint\modaar.api.dll
-C:\Users\Compumarts\source\repos\modaar-Api\modaar.api\obj\Debug\net9.0\ref\modaar.api.dll

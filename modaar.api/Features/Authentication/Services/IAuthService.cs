@@ -30,4 +30,15 @@ public interface IAuthService
     // in-app role switcher — same call either way.
     Task<AuthResult<AuthSuccessResponseDto>> SelectRoleAsync(
         Guid userId, AccountType accountType, CancellationToken ct);
+
+    // Biometric login: register the phone's public key while signed in, then later ask for a
+    // challenge and sign it to get tokens without an OTP.
+    Task<AuthResult<bool>> RegisterBiometricDeviceAsync(
+        Guid userId, RegisterBiometricDeviceDto request, CancellationToken ct);
+
+    Task<AuthResult<BiometricChallengeResponseDto>> CreateBiometricChallengeAsync(
+        BiometricChallengeRequestDto request, CancellationToken ct);
+
+    Task<AuthResult<AuthSuccessResponseDto>> BiometricLoginAsync(
+        BiometricLoginRequestDto request, CancellationToken ct);
 }

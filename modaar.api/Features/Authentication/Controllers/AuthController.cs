@@ -134,6 +134,28 @@ public class AuthController : ControllerBase
         return result.Success ? NoContent() : result.ToActionResult();
     }
 
+    // Step 1 of biometric login: a one-time challenge for a device registered through
+    // POST /api/devices/biometric. Valid for 60 seconds; asking again replaces it.
+    [HttpPost("biometric/challenge")]
+    [ProducesResponseType(typeof(BiometricChallengeResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> BiometricChallenge(
+        [FromBody] BiometricChallengeRequestDto request, CancellationToken ct) =>
+        (await _auth.CreateBiometricChallengeAsync(request, ct)).ToActionResult();
+
+    // Step 2: the challenge signed with the device key after Face ID / fingerprint. Returns the
+    // same tokens as verify-otp, including the role-selection step for multi-role accounts.
+    [HttpPost("biometric")]
+    [ProducesResponseType(typeof(AuthSuccessResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> BiometricLogin(
+        [FromBody] BiometricLoginRequestDto request, CancellationToken ct) =>
+        (await _auth.BiometricLoginAsync(request, ct)).ToActionResult();
+
     // The picker's data. Authenticated by the token verify-otp returned, which is why this
     // works before a role exists.
     [Authorize]

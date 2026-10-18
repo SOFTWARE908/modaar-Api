@@ -46,7 +46,26 @@ namespace modaar.api.Features.Users.Services
             if (request.FaceIdEnabled is { } faceId) user.FaceIdEnabled = faceId;
             if (request.BiometricEnabled is { } biometric) user.BiometricEnabled = biometric;
 
-            user.UpdatedAt = _time.GetUtcNow();
+            var now = _time.GetUtcNow();
+
+            // Both off means biometric login is off: drop the device keys so a phone that still
+            // has one can't keep signing in with it.
+            if (!user.FaceIdEnabled && !user.BiometricEnabled)
+            {
+                var devices = await _db.UserDevices
+                    .Where(d => d.UserId == userId && d.BiometricPublicKey != null)
+                    .ToListAsync(ct);
+
+                foreach (var device in devices)
+                {
+                    device.BiometricPublicKey = null;
+                    device.BiometricChallenge = null;
+                    device.BiometricChallengeExpiresAt = null;
+                    device.UpdatedAt = now;
+                }
+            }
+
+            user.UpdatedAt = now;
             await _db.SaveChangesAsync(ct);
 
             return Result<SecuritySettingsDto>.Ok(new SecuritySettingsDto

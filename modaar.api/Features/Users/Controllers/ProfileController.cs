@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using modaar.api.Common.Auth;
 using modaar.api.Common.Errors;
+using modaar.api.Common.Results;
 using modaar.api.Features.Users.Dtos;
 using modaar.api.Features.Users.Services;
 
@@ -44,5 +45,24 @@ public class ProfileController : ControllerBase
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
         return (await _profiles.UpdateAsync(userId, request, ct)).ToActionResult();
+    }
+
+    // multipart/form-data with one "file" field. Replaces the current picture and returns the
+    // updated profile with the new profileImageUrl.
+    [HttpPost("avatar")]
+    [RequestSizeLimit(6 * 1024 * 1024)]
+    [ProducesResponseType(typeof(UserProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UploadAvatar(IFormFile file, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        if (file is null)
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "No file was supplied.");
+
+        return (await _profiles.UploadAvatarAsync(userId, file, ct)).ToActionResult();
     }
 }

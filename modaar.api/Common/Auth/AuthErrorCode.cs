@@ -13,5 +13,8 @@ public enum AuthErrorCode
     OtpResendCooldown,
     InvalidRefreshToken,
     UnsupportedLoginMethod,
-    RoleNotSelected
+    RoleNotSelected,
+    BiometricKeyInvalid,
+    BiometricNotRegistered,
+    BiometricChallengeFailed
 }
