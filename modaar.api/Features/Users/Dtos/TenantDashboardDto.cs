@@ -15,6 +15,10 @@ public record TenantDashboardDto
     // before anyone has put them in a unit. The app shows an empty state.
     public TenantUnitCardDto? CurrentUnit { get; init; }
 
+    // Every active unit, one swipeable card each, most recently started first — so Units[0] is
+    // CurrentUnit. Empty when the tenant has no active contract.
+    public required IReadOnlyList<TenantUnitCardDto> Units { get; init; }
+
     // Which maintenance tiles to offer. Server-driven so a category can be switched off without
     // shipping a new build.
     public required IReadOnlyList<MaintenanceServiceTypeDto> MaintenanceCategories { get; init; }

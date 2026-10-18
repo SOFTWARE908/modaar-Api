@@ -3,6 +3,7 @@ using modaar.api.Common.Dtos;
 using modaar.api.Common.Results;
 using modaar.api.Common.Time;
 using modaar.api.Features.Authentication.Enums;
+using modaar.api.Features.Contracts.Enums;
 using modaar.api.Features.Payments.Dtos;
 using modaar.api.Features.Payments.Entities;
 using modaar.api.Features.Payments.Enums;
@@ -86,12 +87,50 @@ public sealed class PaymentService : IPaymentService
                 DueDate = p.DueDate,
                 PeriodStart = p.PeriodStart,
                 PeriodEnd = p.PeriodEnd,
+                ServiceFee = p.ServiceFee,
+                SadadBillNumber = p.SadadBillNumber,
                 PaymentMethod = p.PaymentMethod,
                 InvoiceUrl = p.InvoiceUrl
             })
             .ToListAsync(ct);
         return Result<PagedResultDto<PaymentDto>>.Ok(
             new PagedResultDto<PaymentDto> { Items = items, TotalCount = totalCount });
+    }
+
+    public async Task<Result<PaymentSummaryDto>> GetSummaryAsync(
+        Guid callerUserId, AccountType activeRole, CancellationToken ct)
+    {
+        var exists = await _db.Users.AnyAsync(u => u.Id == callerUserId && !u.IsDeleted, ct);
+        if (!exists)
+            return Result<PaymentSummaryDto>.Fail(AppErrorCode.NotFound, "User not found.");
+
+        var payments = Scope(_db.Payments.AsNoTracking(), callerUserId, activeRole);
+
+        // 1 January in Riyadh, not in UTC: a payment made at 01:00 on 1 January local time
+        // belongs to the new year.
+        var year = SaudiTime.Today(_time).Year;
+        var yearStart = new DateTimeOffset(new DateTime(year, 1, 1),
+            SaudiTime.Zone.GetUtcOffset(new DateTime(year, 1, 1)));
+
+        var paidThisYear = await payments
+            .Where(p => p.Status == PaymentStatus.Paid && p.Date >= yearStart)
+            .SumAsync(p => (decimal?)p.Amount, ct) ?? 0;
+
+        var remaining = await payments
+            .Where(p => p.Type == PaymentType.Rent
+                     && p.Status != PaymentStatus.Paid
+                     && _db.Contracts.Any(c => c.Id == p.ContractId && c.Status == ContractStatus.Active))
+            .SumAsync(p => (decimal?)p.Amount, ct) ?? 0;
+
+        // Every row is SAR today; read it off the data rather than hardcode it twice.
+        var currency = await payments.Select(p => p.Currency).FirstOrDefaultAsync(ct) ?? "SAR";
+
+        return Result<PaymentSummaryDto>.Ok(new PaymentSummaryDto
+        {
+            PaidThisYear = paidThisYear,
+            RemainingOnContract = remaining,
+            Currency = currency
+        });
     }
 
     public async Task<Result<InvoiceDetailsDto>> GetInvoiceAsync(
@@ -110,6 +149,24 @@ public sealed class PaymentService : IPaymentService
             .Select(i => new InvoiceBreakdownItemDto { Label = i.Label, Amount = i.Amount })
             .ToListAsync(ct);
 
+        var tenantName = await _db.Users
+            .AsNoTracking()
+            .Where(u => u.Id == p.PayerUserId)
+            .Select(u => u.FullName)
+            .FirstOrDefaultAsync(ct);
+
+        var unit = p.PropertyId is null ? null : await _db.Properties
+            .AsNoTracking()
+            .Where(prop => prop.Id == p.PropertyId)
+            .Select(prop => new { prop.Title, prop.UnitNumber })
+            .FirstOrDefaultAsync(ct);
+
+        var contractNumber = p.ContractId is null ? null : await _db.Contracts
+            .AsNoTracking()
+            .Where(c => c.Id == p.ContractId)
+            .Select(c => c.ContractNumber)
+            .FirstOrDefaultAsync(ct);
+
         return Result<InvoiceDetailsDto>.Ok(new InvoiceDetailsDto
         {
             Id = p.Id,
@@ -120,6 +177,19 @@ public sealed class PaymentService : IPaymentService
             Currency = p.Currency,
             Date = p.Date,
             PaymentMethod = p.PaymentMethod,
+            ReceiptNumber = p.ReceiptNumber,
+            TransactionId = p.TransactionId,
+            PeriodStart = p.PeriodStart,
+            PeriodEnd = p.PeriodEnd,
+            ServiceFee = p.ServiceFee,
+            IsVatExempt = p.IsVatExempt,
+            VatAmount = p.VatAmount,
+            TenantName = tenantName,
+            // "برج النخيل · 402", the same shape the home card uses.
+            UnitLabel = unit is null ? null
+                : string.IsNullOrWhiteSpace(unit.UnitNumber) ? unit.Title
+                : $"{unit.Title} · {unit.UnitNumber}",
+            ContractNumber = contractNumber,
             Items = items,
             InvoiceUrl = p.InvoiceUrl
         });

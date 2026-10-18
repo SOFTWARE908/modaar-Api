@@ -12,6 +12,10 @@ public interface IPaymentService
     Task<Result<PagedResultDto<PaymentDto>>> ListAsync(
         Guid callerUserId, PaymentListQueryDto query, AccountType activeRole, CancellationToken ct);
 
+    // Same scope as the list.
+    Task<Result<PaymentSummaryDto>> GetSummaryAsync(
+        Guid callerUserId, AccountType activeRole, CancellationToken ct);
+
     Task<Result<InvoiceDetailsDto>> GetInvoiceAsync(
         Guid paymentId, Guid callerUserId, AccountType activeRole, CancellationToken ct);
 

@@ -20,12 +20,17 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         b.Property(x => x.Currency).HasMaxLength(3).IsRequired();
         b.Property(x => x.PaymentMethod).HasMaxLength(50);
         b.Property(x => x.InvoiceUrl).HasMaxLength(500);
+        b.Property(x => x.ReceiptNumber).HasMaxLength(40);
+        b.Property(x => x.TransactionId).HasMaxLength(100);
+        b.Property(x => x.SadadBillNumber).HasMaxLength(30);
 
         b.Property(p => p.DueDate);
         b.Property(p => p.PeriodStart);
         b.Property(p => p.PeriodEnd);
 
         b.Property(x => x.Amount).HasPrecision(18, 2);
+        b.Property(x => x.ServiceFee).HasPrecision(18, 2);
+        b.Property(x => x.VatAmount).HasPrecision(18, 2);
 
         b.Property(x => x.Type).HasConversion<string>().HasMaxLength(20).IsRequired();
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();

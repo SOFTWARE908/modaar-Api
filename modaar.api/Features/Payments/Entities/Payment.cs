@@ -45,6 +45,24 @@ public class Payment
 
     public string? InvoiceUrl { get; set; }
 
+    // Receipt and processor references shown on the receipt screen, e.g. "RCPT-88214503" and
+    // "TXN-88214503". Both arrive with the uploaded row; null until then.
+    public string? ReceiptNumber { get; set; }
+    public string? TransactionId { get; set; }
+
+    // SADAD bill number the tenant pays this installment with from their bank app. Issued by
+    // the biller (the uploading system or the payment provider), never generated here.
+    public string? SadadBillNumber { get; set; }
+
+    // Platform service fee on top of Amount. Null when the upload didn't say, which is not the
+    // same as zero.
+    public decimal? ServiceFee { get; set; }
+
+    // Residential rent is VAT-exempt in Saudi Arabia, but that is the upload's call to make, not
+    // ours: null means "not stated".
+    public bool? IsVatExempt { get; set; }
+    public decimal? VatAmount { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 }

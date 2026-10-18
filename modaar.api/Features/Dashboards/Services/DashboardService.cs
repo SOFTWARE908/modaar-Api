@@ -116,9 +116,9 @@ public sealed class DashboardService : IDashboardService
         if (user.AccountType != AccountType.Tenant)
             return Result<TenantDashboardDto>.Fail(AppErrorCode.Forbidden, "This dashboard is for tenant accounts.");
 
-        // A tenant may hold more than one active lease; the card has one slot, so the most
-        // recently started wins.
-        var lease = await _db.Contracts
+        // A tenant may hold more than one active lease, and each gets a card. The most recently
+        // started one is also CurrentUnit, which older builds read.
+        var leases = await _db.Contracts
             .AsNoTracking()
             .Where(c => c.TenantUserId == userId && c.Status == ContractStatus.Active)
             .OrderByDescending(c => c.StartDate)
@@ -132,13 +132,13 @@ public sealed class DashboardService : IDashboardService
                 c.Title,
                 c.EndDate,
                 Property = _db.Properties.Where(p => p.Id == c.PropertyId)
-                    .Select(p => new { p.Title, p.UnitNumber }).FirstOrDefault()
+                    .Select(p => new { p.Title, p.UnitNumber, p.District, p.City, p.Floor }).FirstOrDefault()
             })
-            .FirstOrDefaultAsync(ct);
+            .ToListAsync(ct);
         var today = SaudiTime.Today(_time);
 
-        TenantUnitCardDto? currentUnit = null;
-        if (lease is not null)
+        var units = new List<TenantUnitCardDto>();
+        foreach (var lease in leases)
         {
 
             // The earliest unpaid installment is the one the card is about: an overdue one
@@ -150,18 +150,20 @@ public sealed class DashboardService : IDashboardService
                          && p.Status != PaymentStatus.Paid
                          && p.DueDate != null)
                 .OrderBy(p => p.DueDate)
-                .Select(p => new { p.DueDate, p.Amount })
+                .Select(p => new { p.DueDate, p.Amount, p.SadadBillNumber })
                 .FirstOrDefaultAsync(ct);
 
             DateOnly dueDate;
             bool isOverdue;
             decimal installment;
+            string? sadadBillNumber = null;
 
             if (owed is not null)
             {
                 dueDate = owed.DueDate!.Value;
                 isOverdue = dueDate < today;
                 installment = owed.Amount;
+                sadadBillNumber = owed.SadadBillNumber;
             }
             else
             {
@@ -187,20 +189,24 @@ public sealed class DashboardService : IDashboardService
                 installment = lease.InstallmentAmount;
             }
 
-            currentUnit = new TenantUnitCardDto
+            units.Add(new TenantUnitCardDto
             {
                 ContractId = lease.Id,
                 PropertyId = lease.PropertyId,
                 UnitTitle = lease.Property?.Title ?? string.Empty,
                 PropertyName = lease.Property?.Title ?? string.Empty,
                 UnitNumber = lease.Property?.UnitNumber,
+                District = lease.Property?.District,
+                City = lease.Property?.City,
+                Floor = lease.Property?.Floor,
                 ContractEndDate = lease.EndDate,
                 InstallmentAmount = installment,
                 Currency = lease.Currency,
                 DueDate = dueDate,
+                SadadBillNumber = sadadBillNumber,
                 IsOverdue = isOverdue,
                 DaysOverdue = isOverdue ? today.DayNumber - dueDate.DayNumber : 0
-            };
+            });
         }
 
         var paymentsPreview = await _db.Payments
@@ -226,6 +232,8 @@ public sealed class DashboardService : IDashboardService
                 Type = p.Type,
                 Status = p.Status,
 
+                ServiceFee = p.ServiceFee,
+                SadadBillNumber = p.SadadBillNumber,
                 PaymentMethod = p.PaymentMethod,
                 InvoiceUrl = p.InvoiceUrl
             })
@@ -250,7 +258,8 @@ public sealed class DashboardService : IDashboardService
         return Result<TenantDashboardDto>.Ok(new TenantDashboardDto
         {
             UserName = user.FullName,
-            CurrentUnit = currentUnit,
+            CurrentUnit = units.FirstOrDefault(),
+            Units = units,
             // Server-driven so a category can be switched off without shipping a new build.
             MaintenanceCategories = categories,
             PaymentsPreview = paymentsPreview

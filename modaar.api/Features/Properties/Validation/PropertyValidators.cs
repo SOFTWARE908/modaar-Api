@@ -21,6 +21,8 @@ public sealed class CreatePropertyRequestValidator : AbstractValidator<CreatePro
             .MaximumLength(20)
             .WithMessage("رقم الوحدة لا يجوز أن يزيد على 20 حرفاً.");
 
+        RuleFor(x => x.Floor).MaximumLength(20);
+
         RuleFor(x => x.CoverImageUrl).MaximumLength(500);
 
         // Coordinates are all-or-nothing: one without the other is unusable on a map.
@@ -67,6 +69,8 @@ public sealed class UpdatePropertyRequestValidator : AbstractValidator<UpdatePro
         RuleFor(x => x.UnitNumber)
             .MaximumLength(20)
             .WithMessage("رقم الوحدة لا يجوز أن يزيد على 20 حرفاً.");
+
+        RuleFor(x => x.Floor).MaximumLength(20);
 
         RuleFor(x => x.AddressLine).MaximumLength(500);
         RuleFor(x => x.District).MaximumLength(150);

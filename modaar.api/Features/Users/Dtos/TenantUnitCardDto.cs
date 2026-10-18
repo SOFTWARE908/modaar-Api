@@ -14,9 +14,18 @@ public record TenantUnitCardDto
 
     public required DateOnly DueDate { get; init; }
 
+    // SADAD bill number of the installment shown on the card, for the copy button. Null when
+    // none was issued, or when there is no uploaded schedule and DueDate was derived.
+    public string? SadadBillNumber { get; init; }
+
     public required DateOnly ContractEndDate { get; init; }
 
     public required string PropertyName { get; init; }
+
+    // The "حي النخيل، الرياض · الدور 4" line under the unit name. Any of them may be missing.
+    public string? District { get; init; }
+    public string? City { get; init; }
+    public string? Floor { get; init; }
 
     public required int DaysOverdue { get; init; }
     // True once DueDate has passed with the installment unpaid, so the card can go red without

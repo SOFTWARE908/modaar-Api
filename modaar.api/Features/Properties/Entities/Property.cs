@@ -16,6 +16,9 @@ public class Property
 
     public string? UnitNumber { get; set; }
 
+    // Text, not a number: "4", "G", "الأرضي", "M" all occur.
+    public string? Floor { get; set; }
+
     public string Title { get; set; } = null!;
 
     public string? AddressLine { get; set; }

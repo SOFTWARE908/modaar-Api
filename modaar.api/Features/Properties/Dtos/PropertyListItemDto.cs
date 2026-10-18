@@ -1,3 +1,4 @@
+using modaar.api.Features.Contracts.Enums;
 using modaar.api.Features.Properties.Enums;
 
 namespace modaar.api.Features.Properties.Dtos;
@@ -16,6 +17,10 @@ public record PropertyListItemDto
     // What the sitting tenant pays. For a vacant unit this is null and the card should fall back
     // to AnnualRent / 12 as the asking price.
     public decimal? InstallmentRent { get; init; }
+
+    // How often InstallmentRent is due, so the card can say "/quarterly" instead of a fixed
+    // "/monthly". Null for a vacant unit, like InstallmentRent.
+    public PaymentFrequency? PaymentFrequency { get; init; }
     public required decimal AnnualRent { get; init; }
     public required string Currency { get; init; }
 

@@ -5,6 +5,9 @@ namespace modaar.api.Features.Properties.Dtos;
 public record CreatePropertyRequestDto
 {
     public string? UnitNumber { get; init; }
+
+    // Text, not a number: "4", "G", "الأرضي".
+    public string? Floor { get; init; }
     public required string Title { get; init; }
 
     public required PropertyType PropertyType { get; init; }
@@ -30,6 +33,9 @@ public record CreatePropertyRequestDto
 public record UpdatePropertyRequestDto
 {
     public string? UnitNumber { get; init; }
+
+    // Text, not a number: "4", "G", "الأرضي".
+    public string? Floor { get; init; }
     public string? Title { get; init; }
 
     public PropertyType? PropertyType { get; init; }

@@ -29,6 +29,14 @@ public record PaymentDto
     public DateOnly? PeriodStart { get; init; }
     public DateOnly? PeriodEnd { get; init; }
 
+    // Platform fee on top of Amount, shown on the pay screen for an unpaid installment. Null
+    // when the upload didn't state it.
+    public decimal? ServiceFee { get; init; }
+
+    // SADAD bill number for paying this installment from a bank app. Null until the biller
+    // has issued one.
+    public string? SadadBillNumber { get; init; }
+
     // Masked display text, e.g. "**** 4679". Was on the invoice only.
     public string? PaymentMethod { get; init; }
     // Present once an invoice has been generated for this payment.

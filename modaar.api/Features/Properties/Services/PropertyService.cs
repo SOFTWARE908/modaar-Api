@@ -82,6 +82,7 @@ public sealed class PropertyService : IPropertyService
                 .Select(c => new
                 {
                     c.InstallmentAmount,
+                    c.PaymentFrequency,
                     c.Currency,
                     c.StartDate,
                     c.EndDate,
@@ -122,6 +123,7 @@ public sealed class PropertyService : IPropertyService
             AnnualRent = r.AnnualRent,
             Currency = r.Contract?.Currency ?? DefaultCurrency,
             InstallmentRent = r.Contract?.InstallmentAmount,
+            PaymentFrequency = r.Contract?.PaymentFrequency,
             TenantName = r.Contract?.TenantName,
             LeaseStart = r.Contract?.StartDate,
             LeaseEnd = r.Contract?.EndDate,
@@ -293,6 +295,7 @@ public sealed class PropertyService : IPropertyService
                 ImageUrl = property.CoverImageUrl,
                 Address = ComposeAddress(property.AddressLine, property.District, property.City),
                 UnitNumber = property.UnitNumber,
+                Floor = property.Floor,
                 PropertyType = property.PropertyType,
                 RoomsCount = property.RoomsCount,
                 AnnualRent = property.AnnualRent,
@@ -357,6 +360,7 @@ public sealed class PropertyService : IPropertyService
             UnitNumber = string.IsNullOrWhiteSpace(request.UnitNumber)
                 ? null
                 : request.UnitNumber.Trim(),
+            Floor = string.IsNullOrWhiteSpace(request.Floor) ? null : request.Floor.Trim(),
             Title = request.Title.Trim(),
             PropertyType = request.PropertyType,
             RoomsCount = request.RoomsCount,
@@ -399,6 +403,9 @@ public sealed class PropertyService : IPropertyService
             property.UnitNumber = string.IsNullOrWhiteSpace(request.UnitNumber)
                 ? null
                 : request.UnitNumber.Trim();
+        // Same rule as UnitNumber: omitted leaves it, "" clears it.
+        if (request.Floor is not null)
+            property.Floor = string.IsNullOrWhiteSpace(request.Floor) ? null : request.Floor.Trim();
         if (request.Title is not null) property.Title = request.Title.Trim();
         if (request.PropertyType is { } type) property.PropertyType = type;
         if (request.RoomsCount is { } rooms) property.RoomsCount = rooms;
