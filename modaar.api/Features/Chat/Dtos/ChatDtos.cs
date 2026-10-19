@@ -79,7 +79,18 @@ public record SendMessageDto
     public IReadOnlyList<Guid>? AttachmentIds { get; init; }
 }
 
-public record MessageListQueryDto : PagedRequestDto;
+public record MessageListQueryDto : PagedRequestDto
+{
+    // Load older messages: the page of messages sent before this one. Unlike SkipCount it doesn't
+    // shift when new messages arrive while the user is scrolling back, so nothing repeats.
+    public Guid? Before { get; init; }
+}
+
+public record ChatUnreadCountDto
+{
+    // Unread messages across all of the user's conversations — the messages tab badge.
+    public required int Count { get; init; }
+}
 
 // What the hub sends with messageReceived: the message as this recipient should see it, plus
 // their unread count in that conversation for the badge.

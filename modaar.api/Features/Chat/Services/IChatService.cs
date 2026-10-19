@@ -22,5 +22,11 @@ public interface IChatService
     Task<Result<ChatMessageDto>> SendAsync(
         Guid senderUserId, Guid conversationId, SendMessageDto request, CancellationToken ct);
 
+    // Marks everything in the conversation read up to now. The app calls it while the
+    // conversation is open, when a new message arrives over the hub.
+    Task<Result<bool>> MarkReadAsync(Guid userId, Guid conversationId, CancellationToken ct);
+
+    Task<Result<ChatUnreadCountDto>> GetUnreadCountAsync(Guid userId, CancellationToken ct);
+
     Task<Result<ChatAttachmentDto>> UploadAttachmentAsync(Guid uploaderUserId, IFormFile file, CancellationToken ct);
 }

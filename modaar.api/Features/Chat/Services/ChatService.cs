@@ -175,9 +175,22 @@ public sealed class ChatService : IChatService
         var messages = _db.ChatMessages.AsNoTracking().Where(m => m.ConversationId == conversationId);
         var total = await messages.CountAsync(ct);
 
-        var page = await messages
+        var window = messages;
+        if (query.Before is { } beforeId)
+        {
+            // The cursor must be a message of this same conversation.
+            var cursor = await messages.Where(m => m.Id == beforeId).Select(m => (DateTimeOffset?)m.CreatedAt).FirstOrDefaultAsync(ct);
+            if (cursor is null)
+                return Result<PagedResultDto<ChatMessageDto>>.Fail(AppErrorCode.ValidationFailed, "before is not a message in this conversation.");
+
+            // CreatedAt is stored to the tenth of a microsecond, so two messages sharing one is not
+            // a case worth an extra tie-breaker.
+            window = window.Where(m => m.CreatedAt < cursor.Value);
+        }
+
+        var page = await window
             .OrderByDescending(m => m.CreatedAt)
-            .Skip(query.SkipCount)
+            .Skip(query.Before is null ? query.SkipCount : 0)
             .Take(query.MaxResultCount)
             .ToListAsync(ct);
 
@@ -185,7 +198,7 @@ public sealed class ChatService : IChatService
 
         // Opening the conversation (its newest page) is reading it. Scrolling back through older
         // pages changes nothing.
-        if (query.SkipCount == 0)
+        if (query.SkipCount == 0 && query.Before is null)
         {
             me.LastReadAt = _time.GetUtcNow();
             await _db.SaveChangesAsync(ct);
@@ -274,6 +287,33 @@ public sealed class ChatService : IChatService
             ct);
 
         return Result<ChatMessageDto>.Ok(ToDto(message, senderUserId, attachmentMap));
+    }
+
+    // ---- read state ----
+
+    public async Task<Result<bool>> MarkReadAsync(Guid userId, Guid conversationId, CancellationToken ct)
+    {
+        var me = await _db.ConversationParticipants
+            .FirstOrDefaultAsync(p => p.ConversationId == conversationId && p.UserId == userId, ct);
+
+        if (me is null)
+            return Result<bool>.Fail(AppErrorCode.NotFound, "Conversation not found.");
+
+        me.LastReadAt = _time.GetUtcNow();
+        await _db.SaveChangesAsync(ct);
+        return Result<bool>.Ok(true);
+    }
+
+    public async Task<Result<ChatUnreadCountDto>> GetUnreadCountAsync(Guid userId, CancellationToken ct)
+    {
+        // Same rule as each row's UnreadCount, summed over every conversation the user is in.
+        var count = await _db.ConversationParticipants
+            .Where(p => p.UserId == userId)
+            .SumAsync(p => _db.ChatMessages.Count(m => m.ConversationId == p.ConversationId
+                && m.SenderUserId != userId
+                && (p.LastReadAt == null || m.CreatedAt > p.LastReadAt)), ct);
+
+        return Result<ChatUnreadCountDto>.Ok(new ChatUnreadCountDto { Count = count });
     }
 
     // ---- attachments ----
