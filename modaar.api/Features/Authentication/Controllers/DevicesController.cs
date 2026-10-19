@@ -16,8 +16,28 @@ namespace modaar.api.Features.Authentication.Controllers;
 public class DevicesController : ControllerBase
 {
     private readonly IAuthService _auth;
+    private readonly IDeviceService _devices;
 
-    public DevicesController(IAuthService auth) => _auth = auth;
+    public DevicesController(IAuthService auth, IDeviceService devices)
+    {
+        _auth = auth;
+        _devices = devices;
+    }
+
+    // Registers this phone for push notifications. Call after login and whenever Firebase
+    // rotates the token (onTokenRefresh). Safe to call repeatedly.
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Register([FromBody] RegisterDeviceDto request, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        var result = await _devices.RegisterPushTokenAsync(userId, request, ct);
+        return result.Success ? NoContent() : Common.Results.ResultExtensions.ToActionResult(result);
+    }
 
     // Called once when the user turns on Face ID / fingerprint login. Re-registering the same
     // device replaces its key.

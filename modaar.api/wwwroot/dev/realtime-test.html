@@ -1,0 +1,87 @@
+<!doctype html>
+<!-- Development-only page for trying the SignalR hub by hand. Served only when
+     ASPNETCORE_ENVIRONMENT=Development (see Program.cs). Open it from the API itself, e.g.
+     https://localhost:7055/dev/realtime-test.html, so no CORS is involved. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Realtime test</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 760px; margin: 24px auto; padding: 0 16px; }
+    textarea, input { width: 100%; box-sizing: border-box; font-family: monospace; }
+    button { margin: 8px 8px 8px 0; padding: 6px 14px; }
+    #log { background: #111; color: #9f9; padding: 12px; height: 320px; overflow: auto; font-family: monospace; font-size: 13px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>SignalR hub test — /hubs/app</h2>
+
+  <label>Access token (from verify-otp or select-role):</label>
+  <textarea id="token" rows="4" placeholder="eyJhbGciOi..."></textarea>
+
+  <button id="connect">Connect</button>
+  <button id="disconnect">Disconnect</button>
+
+  <label>Ping message:</label>
+  <input id="message" value="hello">
+  <button id="ping">Send Ping</button>
+
+  <div id="log"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+  <script>
+    const log = (...parts) => {
+      const el = document.getElementById("log");
+      el.textContent += `[${new Date().toLocaleTimeString()}] ${parts.map(p => typeof p === "string" ? p : JSON.stringify(p)).join(" ")}\n`;
+      el.scrollTop = el.scrollHeight;
+    };
+
+    let connection = null;
+
+    document.getElementById("connect").onclick = async () => {
+      const token = document.getElementById("token").value.trim();
+
+      // 1. Build the connection. accessTokenFactory is how the client attaches the JWT; for a
+      //    WebSocket it ends up as ?access_token= on the URL.
+      connection = new signalR.HubConnectionBuilder()
+        .withUrl("/hubs/app", { accessTokenFactory: () => token })
+        .withAutomaticReconnect()
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+      // 2. Register listeners BEFORE start(), by event name — the same names as HubEvents.cs.
+      connection.on("pong", payload => log("← pong", payload));
+      connection.on("notificationReceived", payload => log("← notificationReceived", payload));
+      connection.on("messageReceived", payload => log("← messageReceived", payload));
+      connection.on("unreadCountChanged", payload => log("← unreadCountChanged", payload));
+
+      connection.onreconnecting(() => log("… reconnecting"));
+      connection.onreconnected(() => log("✓ reconnected"));
+      connection.onclose(err => log("✗ closed", err ? err.message : ""));
+
+      // 3. Open it. A bad or missing token fails here with 401.
+      try {
+        await connection.start();
+        log("✓ connected, transport:", connection.connection.transport.name || "");
+      } catch (err) {
+        log("✗ connect failed:", err.message);
+      }
+    };
+
+    document.getElementById("disconnect").onclick = async () => {
+      if (connection) await connection.stop();
+    };
+
+    // 4. Call a hub method. The server replies with "pong" to every connection of this user, so
+    //    open this page in two tabs with the same token and both receive it.
+    document.getElementById("ping").onclick = async () => {
+      if (!connection) return log("connect first");
+      const message = document.getElementById("message").value;
+      log("→ Ping", message);
+      try { await connection.invoke("Ping", message); }
+      catch (err) { log("✗ invoke failed:", err.message); }
+    };
+  </script>
+</body>
+</html>

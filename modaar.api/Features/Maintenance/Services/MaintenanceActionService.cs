@@ -5,6 +5,7 @@ using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Maintenance.Dtos;
 using modaar.api.Features.Maintenance.Entities;
 using modaar.api.Features.Maintenance.Enums;
+using modaar.api.Features.Notifications.Services;
 using modaar.api.Persistence;
 
 namespace modaar.api.Features.Maintenance.Services;
@@ -22,12 +23,15 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
 {
     private readonly ModaarDbContext _db;
     private readonly TimeProvider _time;
+    private readonly INotificationService _notifications;
     private readonly ILogger<MaintenanceActionService> _logger;
 
-    public MaintenanceActionService(ModaarDbContext db, TimeProvider time, ILogger<MaintenanceActionService> logger)
+    public MaintenanceActionService(
+        ModaarDbContext db, TimeProvider time, INotificationService notifications, ILogger<MaintenanceActionService> logger)
     {
         _db = db;
         _time = time;
+        _notifications = notifications;
         _logger = logger;
     }
 
@@ -262,7 +266,76 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
         _logger.LogInformation("Maintenance {Number}: {Action} by {UserId}; status now {Status}.",
             ctx.Request.RequestNumber, actionType, ctx.CallerUserId, ctx.Request.Status);
 
+        // After the save, never before: a notification about an action that then failed to save
+        // would announce something that didn't happen.
+        await NotifyAsync(ctx, actionType, message, delegatedToBrokerId, ct);
+
         return Result<bool>.Ok(true);
+    }
+
+    // Every action's notification is decided here, because every action passes through
+    // TransitionAsync. Who gets what:
+    //   accept / reject / inquiry / quote → the tenant
+    //   delegate                          → the tenant, and the broker it was handed to
+    private async Task NotifyAsync(
+        ActionContext ctx, MaintenanceActionType actionType, string? message, Guid? delegatedToBrokerId, CancellationToken ct)
+    {
+        var subject = await LoadSubjectAsync(ctx.Request, ct);
+        var tenant = new[] { ctx.Request.TenantUserId };
+
+        switch (actionType)
+        {
+            case MaintenanceActionType.Accept:
+                var technicianName = ctx.Request.AssignedTechnicianId is { } technicianId
+                    ? await _db.Technicians
+                        .Where(t => t.Id == technicianId)
+                        .Select(t => _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault())
+                        .FirstOrDefaultAsync(ct)
+                    : null;
+                await _notifications.NotifyAsync(tenant, MaintenanceNotifications.Accepted(subject, technicianName), ct);
+                break;
+
+            case MaintenanceActionType.Reject:
+                await _notifications.NotifyAsync(tenant, MaintenanceNotifications.Rejected(subject, message), ct);
+                break;
+
+            case MaintenanceActionType.Inquiry:
+                await _notifications.NotifyAsync(tenant, MaintenanceNotifications.Inquiry(subject, message), ct);
+                break;
+
+            case MaintenanceActionType.Quote:
+                var total = (ctx.Request.QuotePartsCost ?? 0) + (ctx.Request.QuoteLaborCost ?? 0);
+                await _notifications.NotifyAsync(tenant, MaintenanceNotifications.Quoted(subject, total), ct);
+                break;
+
+            case MaintenanceActionType.Delegate:
+                await _notifications.NotifyAsync(tenant, MaintenanceNotifications.DelegatedToTenant(subject), ct);
+
+                var brokerUserId = await _db.Brokers
+                    .Where(b => b.Id == delegatedToBrokerId)
+                    .Select(b => (Guid?)b.UserId)
+                    .FirstOrDefaultAsync(ct);
+                if (brokerUserId is { } brokerUser)
+                    await _notifications.NotifyAsync([brokerUser], MaintenanceNotifications.DelegatedToBroker(subject), ct);
+                break;
+        }
+    }
+
+    private async Task<MaintenanceNotifications.Subject> LoadSubjectAsync(MaintenanceRequest request, CancellationToken ct)
+    {
+        var row = await _db.MaintenanceRequests
+            .AsNoTracking()
+            .Where(m => m.Id == request.Id)
+            .Select(m => new
+            {
+                PropertyTitle = _db.Properties.Where(p => p.Id == m.PropertyId).Select(p => p.Title).FirstOrDefault(),
+                Category = _db.MaintenanceServiceTypes.Where(t => t.Id == m.ServiceTypeId)
+                    .Select(t => new { t.NameAr, t.NameEn }).FirstOrDefault()
+            })
+            .FirstAsync(ct);
+
+        return new MaintenanceNotifications.Subject(
+            request.Id, row.PropertyTitle ?? string.Empty, row.Category?.NameAr ?? string.Empty, row.Category?.NameEn ?? string.Empty);
     }
 
     private static Result<bool> Forbidden(string message) =>

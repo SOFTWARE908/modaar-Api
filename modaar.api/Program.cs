@@ -1,6 +1,7 @@
 using Microsoft.Extensions.FileProviders;
 using modaar.api.Common.Errors;
 using modaar.api.Common.Extensions;
+using modaar.api.Common.Realtime;
 using modaar.api.Common.Responses;
 using modaar.api.Features.App;
 using Serilog;
@@ -38,6 +39,7 @@ try
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddModaarPersistence(builder.Configuration);
     builder.Services.AddModaarAuth(builder.Configuration);
+    builder.Services.AddModaarRealtime(builder.Configuration);
     builder.Services.AddModaarValidation();
     builder.Services.AddModaarSwagger();
 
@@ -51,6 +53,10 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+    // wwwroot holds dev tools only (dev/realtime-test.html). Not served in production.
+    if (app.Environment.IsDevelopment())
+        app.UseStaticFiles();
+
     var uploadsRoot = builder.Configuration["Uploads:Root"] ?? @"E:\modaar-uploads";
     Directory.CreateDirectory(uploadsRoot);
 
@@ -65,6 +71,7 @@ try
     app.UseMiddleware<AuthChallengeEnvelopeMiddleware>();
 
     app.MapControllers();
+    app.MapHub<AppHub>(RealtimeRoutes.AppHub);
 
     app.Run();
 }

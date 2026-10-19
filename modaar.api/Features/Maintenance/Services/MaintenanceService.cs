@@ -7,6 +7,7 @@ using modaar.api.Features.Contracts.Enums;
 using modaar.api.Features.Maintenance.Dtos;
 using modaar.api.Features.Maintenance.Entities;
 using modaar.api.Features.Maintenance.Enums;
+using modaar.api.Features.Notifications.Services;
 using modaar.api.Features.Users.Dtos;
 using modaar.api.Persistence;
 using modaar.api.Common.Localization;
@@ -18,17 +19,20 @@ public sealed class MaintenanceService : IMaintenanceService
     private readonly ModaarDbContext _db;
     private readonly TimeProvider _time;
     private readonly IRequestLanguage _language;
+    private readonly INotificationService _notifications;
     private readonly ILogger<MaintenanceService> _logger;
 
     public MaintenanceService(
         ModaarDbContext db,
         TimeProvider time,
         IRequestLanguage language,
+        INotificationService notifications,
         ILogger<MaintenanceService> logger)
     {
         _db = db;
         _time = time;
         _language = language;
+        _notifications = notifications;
         _logger = logger;
     }
 
@@ -369,6 +373,27 @@ public sealed class MaintenanceService : IMaintenanceService
 
         _logger.LogInformation("Maintenance request {Number} created by {UserId} on property {PropertyId}.",
             maintenanceRequest.RequestNumber, tenantUserId, lease.PropertyId);
+
+        // Whoever decides on it hears about it: the owner, and the managing broker if there is one.
+        var deciders = await _db.Properties
+            .AsNoTracking()
+            .Where(p => p.Id == lease.PropertyId)
+            .Select(p => new
+            {
+                p.Title,
+                p.OwnerUserId,
+                BrokerUserId = _db.Brokers.Where(b => b.Id == p.BrokerId).Select(b => (Guid?)b.UserId).FirstOrDefault(),
+                Category = _db.MaintenanceServiceTypes.Where(t => t.Id == request.ServiceTypeId)
+                    .Select(t => new { t.NameAr, t.NameEn }).FirstOrDefault()
+            })
+            .FirstAsync(ct);
+
+        var recipients = new List<Guid> { deciders.OwnerUserId };
+        if (deciders.BrokerUserId is { } brokerUserId)
+            recipients.Add(brokerUserId);
+
+        await _notifications.NotifyAsync(recipients, MaintenanceNotifications.Created(new MaintenanceNotifications.Subject(
+            maintenanceRequest.Id, deciders.Title, deciders.Category?.NameAr ?? string.Empty, deciders.Category?.NameEn ?? string.Empty)), ct);
 
         return Result<CreateMaintenanceRequestResponseDto>.Ok(new CreateMaintenanceRequestResponseDto
         {

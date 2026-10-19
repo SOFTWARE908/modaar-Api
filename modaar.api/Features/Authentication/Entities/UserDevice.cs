@@ -24,6 +24,12 @@ public class UserDevice
     public string? BiometricChallenge { get; set; }
     public DateTimeOffset? BiometricChallengeExpiresAt { get; set; }
 
+    // Firebase Cloud Messaging token: the address push notifications are sent to. Firebase
+    // rotates it now and then and the app re-registers it; null once the user logs out on this
+    // phone or Firebase reports it dead.
+    public string? FcmToken { get; set; }
+    public DateTimeOffset? FcmTokenUpdatedAt { get; set; }
+
     public DateTimeOffset? LastUsedAt { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }

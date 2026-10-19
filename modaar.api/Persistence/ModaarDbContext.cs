@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using modaar.api.Features.Authentication.Entities;
+using modaar.api.Features.Chat.Entities;
 using modaar.api.Features.Contracts.Entities;
 using modaar.api.Features.Maintenance.Entities;
+using modaar.api.Features.Notifications.Entities;
 using modaar.api.Features.Payments.Entities;
 using modaar.api.Features.Properties.Entities;
 using modaar.api.Features.Users.Entities;
@@ -18,6 +20,15 @@ public class ModaarDbContext : DbContext
     public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<UserDevice> UserDevices => Set<UserDevice>();
+
+    // Notifications
+    public DbSet<Notification> Notifications => Set<Notification>();
+
+    // Chat
+    public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<ConversationParticipant> ConversationParticipants => Set<ConversationParticipant>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<ChatAttachment> ChatAttachments => Set<ChatAttachment>();
     // Brokers
     public DbSet<Broker> Brokers => Set<Broker>();
     public DbSet<BrokerReview> BrokerReviews => Set<BrokerReview>();

@@ -366,6 +366,142 @@
         }
       }
     },
+    "/api/Auth/biometric/challenge": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BiometricChallengeRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BiometricChallengeRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BiometricChallengeRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BiometricChallengeResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Auth/biometric": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BiometricLoginRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BiometricLoginRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BiometricLoginRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccessResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Auth/account-types": {
       "get": {
         "tags": [
@@ -1184,6 +1320,57 @@
         }
       }
     },
+    "/api/devices/biometric": {
+      "post": {
+        "tags": [
+          "Devices"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterBiometricDeviceDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterBiometricDeviceDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterBiometricDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/maintenance-requests/{requestId}/accept": {
       "post": {
         "tags": [
@@ -1542,8 +1729,222 @@
         }
       }
     },
+    "/api/maintenance-requests/{requestId}/quote": {
+      "put": {
+        "tags": [
+          "MaintenanceActions"
+        ],
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitMaintenanceQuoteDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitMaintenanceQuoteDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitMaintenanceQuoteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/maintenance-requests/rating-tags": {
+      "get": {
+        "tags": [
+          "MaintenanceFeedback"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaintenanceRatingTagDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/maintenance-requests/{requestId}/rating": {
       "post": {
+        "tags": [
+          "MaintenanceFeedback"
+        ],
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaintenanceRatingSubmitDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaintenanceRatingSubmitDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaintenanceRatingSubmitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
         "tags": [
           "MaintenanceFeedback"
         ],
@@ -1743,10 +2144,11 @@
             }
           },
           {
-            "name": "ServiceType",
+            "name": "ServiceTypeId",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/MaintenanceServiceType"
+              "type": "string",
+              "format": "uuid"
             }
           },
           {
@@ -1999,6 +2401,306 @@
         }
       }
     },
+    "/api/maintenance-service-types": {
+      "get": {
+        "tags": [
+          "MaintenanceServiceTypes"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaintenanceServiceTypeDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MaintenanceServiceTypes"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintenanceServiceTypeDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintenanceServiceTypeDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintenanceServiceTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceServiceTypeAdminDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/maintenance-service-types/admin": {
+      "get": {
+        "tags": [
+          "MaintenanceServiceTypes"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaintenanceServiceTypeAdminDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/maintenance-service-types/{serviceTypeId}": {
+      "patch": {
+        "tags": [
+          "MaintenanceServiceTypes"
+        ],
+        "parameters": [
+          {
+            "name": "serviceTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenanceServiceTypeDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenanceServiceTypeDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenanceServiceTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceServiceTypeAdminDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "MaintenanceServiceTypes"
+        ],
+        "parameters": [
+          {
+            "name": "serviceTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/payments": {
       "get": {
         "tags": [
@@ -2010,6 +2712,13 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/PaymentType"
+            }
+          },
+          {
+            "name": "IncludeUpcoming",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
             }
           },
           {
@@ -2058,6 +2767,45 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/summary": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentSummaryDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
@@ -2266,6 +3014,75 @@
           },
           "409": {
             "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profile/avatar": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
@@ -2896,6 +3713,12 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "priority": {
+            "$ref": "#/components/schemas/MaintenancePriorityDto"
+          },
+          "requiresQuote": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -2905,7 +3728,8 @@
           "owner",
           "tenant",
           "broker",
-          "technician"
+          "technician",
+          "admin"
         ],
         "type": "string"
       },
@@ -3000,6 +3824,55 @@
             "items": {
               "$ref": "#/components/schemas/AccountType"
             },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BiometricChallengeRequestDto": {
+        "required": [
+          "deviceId"
+        ],
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BiometricChallengeResponseDto": {
+        "required": [
+          "challenge",
+          "expiresInSeconds"
+        ],
+        "type": "object",
+        "properties": {
+          "challenge": {
+            "type": "string",
+            "nullable": true
+          },
+          "expiresInSeconds": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BiometricLoginRequestDto": {
+        "required": [
+          "deviceId",
+          "signature"
+        ],
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "nullable": true
+          },
+          "signature": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -3363,7 +4236,8 @@
           "currency",
           "endDate",
           "id",
-          "monthlyAmount",
+          "installmentAmount",
+          "paymentFrequency",
           "propertyId",
           "propertyTitle",
           "startDate",
@@ -3380,13 +4254,26 @@
             "type": "string",
             "nullable": true
           },
+          "paymentFrequency": {
+            "$ref": "#/components/schemas/PaymentFrequency"
+          },
+          "securityDeposit": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
           "title": {
             "type": "string",
             "nullable": true
           },
-          "monthlyAmount": {
+          "installmentAmount": {
             "type": "number",
             "format": "double"
+          },
+          "annualRent": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           },
           "currency": {
             "type": "string",
@@ -3412,6 +4299,10 @@
             "format": "uuid"
           },
           "propertyTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "landlordName": {
             "type": "string",
             "nullable": true
           }
@@ -3518,22 +4409,33 @@
       "CreateMaintenanceRequestDto": {
         "required": [
           "description",
-          "preferredVisitDate",
-          "serviceType",
-          "visitTimeSlot"
+          "serviceTypeId"
         ],
         "type": "object",
         "properties": {
-          "serviceType": {
-            "$ref": "#/components/schemas/MaintenanceServiceType"
+          "serviceTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
           },
           "description": {
             "type": "string",
             "nullable": true
           },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "priority": {
+            "$ref": "#/components/schemas/MaintenancePriority"
+          },
           "preferredVisitDate": {
             "type": "string",
-            "format": "date"
+            "format": "date",
+            "nullable": true
           },
           "visitTimeSlot": {
             "$ref": "#/components/schemas/MaintenanceTimeSlot"
@@ -3572,6 +4474,38 @@
         },
         "additionalProperties": false
       },
+      "CreateMaintenanceServiceTypeDto": {
+        "required": [
+          "code",
+          "nameAr",
+          "nameEn"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAr": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameEn": {
+            "type": "string",
+            "nullable": true
+          },
+          "iconUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CreatePropertyRequestDto": {
         "required": [
           "annualRent",
@@ -3581,6 +4515,14 @@
         ],
         "type": "object",
         "properties": {
+          "unitNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "floor": {
+            "type": "string",
+            "nullable": true
+          },
           "title": {
             "type": "string",
             "nullable": true
@@ -3732,6 +4674,50 @@
             "type": "string",
             "nullable": true
           },
+          "receiptNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "transactionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "periodStart": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "periodEnd": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "serviceFee": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "isVatExempt": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "vatAmount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "tenantName": {
+            "type": "string",
+            "nullable": true
+          },
+          "unitLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "contractNumber": {
+            "type": "string",
+            "nullable": true
+          },
           "items": {
             "type": "array",
             "items": {
@@ -3796,6 +4782,38 @@
         },
         "additionalProperties": false
       },
+      "MaintenanceCostBearer": {
+        "enum": [
+          "owner",
+          "tenant"
+        ],
+        "type": "string"
+      },
+      "MaintenanceCostBearerDto": {
+        "enum": [
+          "owner",
+          "tenant"
+        ],
+        "type": "string"
+      },
+      "MaintenanceHandledBy": {
+        "enum": [
+          "broker",
+          "owner"
+        ],
+        "type": "string"
+      },
+      "MaintenanceHistoryStep": {
+        "enum": [
+          "sent",
+          "approved",
+          "rejected",
+          "delegated",
+          "technicianAssigned",
+          "completed"
+        ],
+        "type": "string"
+      },
       "MaintenanceInquiryDto": {
         "required": [
           "message"
@@ -3809,15 +4827,133 @@
         },
         "additionalProperties": false
       },
-      "MaintenanceRatingSubmitDto": {
+      "MaintenancePriority": {
+        "enum": [
+          "normal",
+          "urgent"
+        ],
+        "type": "string"
+      },
+      "MaintenancePriorityDto": {
+        "enum": [
+          "normal",
+          "urgent"
+        ],
+        "type": "string"
+      },
+      "MaintenanceQuoteDto": {
         "required": [
-          "stars"
+          "costBearer",
+          "laborCost",
+          "partsCost",
+          "total"
         ],
         "type": "object",
         "properties": {
+          "partsCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "laborCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "total": {
+            "type": "number",
+            "format": "double"
+          },
+          "costBearer": {
+            "$ref": "#/components/schemas/MaintenanceCostBearer"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaintenanceRatingDto": {
+        "required": [
+          "average",
+          "ratedAt",
+          "stars",
+          "tagKeys"
+        ],
+        "type": "object",
+        "properties": {
+          "technicianRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "repairQualityRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "responseSpeedRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "brokerCommunicationRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "average": {
+            "type": "number",
+            "format": "double"
+          },
           "stars": {
             "type": "integer",
             "format": "int32"
+          },
+          "tagKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "ratedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaintenanceRatingSubmitDto": {
+        "type": "object",
+        "properties": {
+          "technicianRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "repairQualityRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "responseSpeedRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "brokerCommunicationRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "stars": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           },
           "tagKeys": {
             "type": "array",
@@ -3843,20 +4979,45 @@
         },
         "additionalProperties": false
       },
+      "MaintenanceRatingTagDto": {
+        "required": [
+          "key",
+          "labelAr",
+          "labelEn"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "labelAr": {
+            "type": "string",
+            "nullable": true
+          },
+          "labelEn": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "MaintenanceRequestDetailsDto": {
         "required": [
           "attachmentImageUrls",
+          "createdAt",
+          "handledBy",
           "id",
           "problemDescription",
           "propertyId",
           "propertyTitle",
           "requestNumber",
           "serviceType",
+          "stage",
           "status",
-          "visitDate",
-          "visitDayIsTomorrow",
-          "visitTimePeriod",
-          "visitTimeRange"
+          "statusHistory",
+          "title",
+          "visitDayIsTomorrow"
         ],
         "type": "object",
         "properties": {
@@ -3868,8 +5029,30 @@
             "type": "string",
             "nullable": true
           },
+          "priority": {
+            "$ref": "#/components/schemas/MaintenancePriority"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
           "status": {
             "$ref": "#/components/schemas/MaintenanceRequestStatus"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/MaintenanceStage"
+          },
+          "nextActionLabel": {
+            "type": "string",
+            "nullable": true
           },
           "rejectedBy": {
             "$ref": "#/components/schemas/MaintenanceRequestRejectedBy"
@@ -3878,9 +5061,24 @@
             "type": "string",
             "nullable": true
           },
+          "handledBy": {
+            "$ref": "#/components/schemas/MaintenanceHandledBy"
+          },
+          "handledByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "statusHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaintenanceStatusHistoryItemDto"
+            },
+            "nullable": true
+          },
           "visitDate": {
             "type": "string",
-            "format": "date"
+            "format": "date",
+            "nullable": true
           },
           "visitDayIsTomorrow": {
             "type": "boolean"
@@ -3895,17 +5093,23 @@
           "assignedTechnician": {
             "$ref": "#/components/schemas/TechnicianDto"
           },
+          "quote": {
+            "$ref": "#/components/schemas/MaintenanceQuoteDto"
+          },
           "tenantRatingStars": {
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "rating": {
+            "$ref": "#/components/schemas/MaintenanceRatingDto"
           },
           "problemDescription": {
             "type": "string",
             "nullable": true
           },
           "serviceType": {
-            "$ref": "#/components/schemas/MaintenanceServiceType"
+            "$ref": "#/components/schemas/MaintenanceServiceTypeDto"
           },
           "attachmentImageUrls": {
             "type": "array",
@@ -3932,8 +5136,11 @@
         "required": [
           "createdAt",
           "id",
+          "propertyId",
+          "propertyTitle",
           "requestCode",
           "serviceType",
+          "stage",
           "status",
           "title"
         ],
@@ -3947,12 +5154,15 @@
             "type": "string",
             "nullable": true
           },
+          "priority": {
+            "$ref": "#/components/schemas/MaintenancePriority"
+          },
           "title": {
             "type": "string",
             "nullable": true
           },
           "serviceType": {
-            "$ref": "#/components/schemas/MaintenanceServiceType"
+            "$ref": "#/components/schemas/MaintenanceServiceTypeDto"
           },
           "createdAt": {
             "type": "string",
@@ -3965,8 +5175,27 @@
           "status": {
             "$ref": "#/components/schemas/MaintenanceRequestStatus"
           },
+          "stage": {
+            "$ref": "#/components/schemas/MaintenanceStage"
+          },
+          "nextActionLabel": {
+            "type": "string",
+            "nullable": true
+          },
           "assignedTechnician": {
             "$ref": "#/components/schemas/TechnicianDto"
+          },
+          "propertyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "propertyTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "ownerName": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -4012,14 +5241,127 @@
         ],
         "type": "string"
       },
-      "MaintenanceServiceType": {
+      "MaintenanceServiceTypeAdminDto": {
+        "required": [
+          "code",
+          "createdAt",
+          "id",
+          "isActive",
+          "nameAr",
+          "nameEn",
+          "requestsCount",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAr": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameEn": {
+            "type": "string",
+            "nullable": true
+          },
+          "iconUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "requestsCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaintenanceServiceTypeDto": {
+        "required": [
+          "code",
+          "id",
+          "name",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "iconUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaintenanceStage": {
         "enum": [
-          "cleaning",
-          "paintRepair",
-          "appliances",
-          "ac"
+          "pending",
+          "withOwner",
+          "awaitingQuote",
+          "accepted",
+          "onTheWay",
+          "inProgress",
+          "completed",
+          "rejected",
+          "cancelled"
         ],
         "type": "string"
+      },
+      "MaintenanceStatusHistoryItemDto": {
+        "required": [
+          "at",
+          "step"
+        ],
+        "type": "object",
+        "properties": {
+          "step": {
+            "$ref": "#/components/schemas/MaintenanceHistoryStep"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actorName": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
       },
       "MaintenanceTimeSlot": {
         "enum": [
@@ -4171,12 +5513,23 @@
         },
         "additionalProperties": false
       },
+      "PaymentDisplayStatus": {
+        "enum": [
+          "paid",
+          "due",
+          "overdue"
+        ],
+        "type": "string"
+      },
       "PaymentDto": {
         "required": [
           "amount",
           "currency",
           "date",
+          "daysOverdue",
+          "displayStatus",
           "id",
+          "status",
           "title",
           "type"
         ],
@@ -4205,6 +5558,44 @@
           "type": {
             "$ref": "#/components/schemas/PaymentType"
           },
+          "status": {
+            "$ref": "#/components/schemas/PaymentStatus"
+          },
+          "displayStatus": {
+            "$ref": "#/components/schemas/PaymentDisplayStatus"
+          },
+          "daysOverdue": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "periodStart": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "periodEnd": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "serviceFee": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "sadadBillNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "paymentMethod": {
+            "type": "string",
+            "nullable": true
+          },
           "invoiceUrl": {
             "type": "string",
             "nullable": true
@@ -4229,6 +5620,46 @@
           "totalCount": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PaymentFrequency": {
+        "enum": [
+          "monthly",
+          "quarterly",
+          "semiAnnual",
+          "annual"
+        ],
+        "type": "string"
+      },
+      "PaymentStatus": {
+        "enum": [
+          "paid",
+          "pending",
+          "failed"
+        ],
+        "type": "string"
+      },
+      "PaymentSummaryDto": {
+        "required": [
+          "currency",
+          "paidThisYear",
+          "remainingOnContract"
+        ],
+        "type": "object",
+        "properties": {
+          "paidThisYear": {
+            "type": "number",
+            "format": "double"
+          },
+          "remainingOnContract": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -4410,6 +5841,10 @@
             "type": "string",
             "format": "uuid"
           },
+          "unitNumber": {
+            "type": "string",
+            "nullable": true
+          },
           "title": {
             "type": "string",
             "nullable": true
@@ -4421,10 +5856,13 @@
           "status": {
             "$ref": "#/components/schemas/PropertyRentalStatus"
           },
-          "monthlyRent": {
+          "installmentRent": {
             "type": "number",
             "format": "double",
             "nullable": true
+          },
+          "paymentFrequency": {
+            "$ref": "#/components/schemas/PaymentFrequency"
           },
           "annualRent": {
             "type": "number",
@@ -4513,7 +5951,7 @@
             "nullable": true
           },
           "serviceType": {
-            "$ref": "#/components/schemas/MaintenanceServiceType"
+            "$ref": "#/components/schemas/MaintenanceServiceTypeDto"
           },
           "status": {
             "$ref": "#/components/schemas/MaintenanceRequestStatus"
@@ -4556,6 +5994,14 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "unitNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "floor": {
+            "type": "string",
+            "nullable": true
           },
           "title": {
             "type": "string",
@@ -4607,7 +6053,7 @@
           "contractNumber",
           "contractStart",
           "currency",
-          "monthlyAmount",
+          "installmentAmount",
           "remainingDays",
           "renewalAvailability",
           "status",
@@ -4654,7 +6100,7 @@
             "type": "integer",
             "format": "int32"
           },
-          "monthlyAmount": {
+          "installmentAmount": {
             "type": "number",
             "format": "double"
           },
@@ -4707,6 +6153,28 @@
             "nullable": true
           },
           "refreshToken": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisterBiometricDeviceDto": {
+        "required": [
+          "deviceId",
+          "publicKey"
+        ],
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "nullable": true
+          },
+          "publicKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "platform": {
             "type": "string",
             "nullable": true
           }
@@ -4812,6 +6280,32 @@
         },
         "additionalProperties": false
       },
+      "SubmitMaintenanceQuoteDto": {
+        "required": [
+          "costBearer",
+          "laborCost",
+          "partsCost"
+        ],
+        "type": "object",
+        "properties": {
+          "partsCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "laborCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "costBearer": {
+            "$ref": "#/components/schemas/MaintenanceCostBearerDto"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "SubmitPropertyHandoverDto": {
         "required": [
           "images"
@@ -4872,6 +6366,10 @@
           "averageRating": {
             "type": "number",
             "format": "double"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -4879,7 +6377,8 @@
       "TenantDashboardDto": {
         "required": [
           "maintenanceCategories",
-          "paymentsPreview"
+          "paymentsPreview",
+          "units"
         ],
         "type": "object",
         "properties": {
@@ -4890,10 +6389,17 @@
           "currentUnit": {
             "$ref": "#/components/schemas/TenantUnitCardDto"
           },
+          "units": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TenantUnitCardDto"
+            },
+            "nullable": true
+          },
           "maintenanceCategories": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MaintenanceServiceType"
+              "$ref": "#/components/schemas/MaintenanceServiceTypeDto"
             },
             "nullable": true
           },
@@ -4935,12 +6441,15 @@
       },
       "TenantUnitCardDto": {
         "required": [
+          "contractEndDate",
           "contractId",
           "currency",
+          "daysOverdue",
           "dueDate",
           "installmentAmount",
           "isOverdue",
           "propertyId",
+          "propertyName",
           "unitTitle"
         ],
         "type": "object",
@@ -4952,6 +6461,10 @@
           "propertyId": {
             "type": "string",
             "format": "uuid"
+          },
+          "unitNumber": {
+            "type": "string",
+            "nullable": true
           },
           "unitTitle": {
             "type": "string",
@@ -4968,6 +6481,34 @@
           "dueDate": {
             "type": "string",
             "format": "date"
+          },
+          "sadadBillNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "contractEndDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "propertyName": {
+            "type": "string",
+            "nullable": true
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "floor": {
+            "type": "string",
+            "nullable": true
+          },
+          "daysOverdue": {
+            "type": "integer",
+            "format": "int32"
           },
           "isOverdue": {
             "type": "boolean"
@@ -5016,6 +6557,33 @@
         },
         "additionalProperties": false
       },
+      "UpdateMaintenanceServiceTypeDto": {
+        "type": "object",
+        "properties": {
+          "nameAr": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameEn": {
+            "type": "string",
+            "nullable": true
+          },
+          "iconUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdateProfileRequestDto": {
         "type": "object",
         "properties": {
@@ -5052,6 +6620,14 @@
       "UpdatePropertyRequestDto": {
         "type": "object",
         "properties": {
+          "unitNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "floor": {
+            "type": "string",
+            "nullable": true
+          },
           "title": {
             "type": "string",
             "nullable": true
@@ -5179,6 +6755,15 @@
           "profileImageUrl": {
             "type": "string",
             "nullable": true
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "nationality": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -5270,6 +6855,9 @@
       "name": "Dashboard"
     },
     {
+      "name": "Devices"
+    },
+    {
       "name": "MaintenanceActions"
     },
     {
@@ -5277,6 +6865,9 @@
     },
     {
       "name": "MaintenanceRequests"
+    },
+    {
+      "name": "MaintenanceServiceTypes"
     },
     {
       "name": "Payments"

@@ -25,6 +25,7 @@ public sealed class AuthService : IAuthService
     private readonly JwtSettings _jwtSettings;
     private readonly TimeProvider _time;
     private readonly ILogger<AuthService> _logger;
+    private readonly IDeviceService _devices;
 
     public AuthService(
         ModaarDbContext db,
@@ -36,8 +37,10 @@ public sealed class AuthService : IAuthService
         IOptions<OtpSettings> otpSettings,
         IOptions<JwtSettings> jwtSettings,
         TimeProvider time,
+        IDeviceService devices,
         ILogger<AuthService> logger)
     {
+        _devices = devices;
         _db = db;
         _passwordHasher = passwordHasher;
         _otpHasher = otpHasher;
@@ -521,8 +524,11 @@ public sealed class AuthService : IAuthService
 
         await _db.SaveChangesAsync(ct);
 
-        // DeviceToken is accepted and ignored: push notifications are not implemented, so there is
-        // no registration to remove. Kept on the DTO because the client already sends it.
+        // Stop pushing to the phone that logged out. Other phones keep their tokens: they still
+        // get pushes until they log out or their refresh fails.
+        if (!string.IsNullOrWhiteSpace(request.DeviceToken))
+            await _devices.ClearPushTokenAsync(userId, request.DeviceToken, ct);
+
         _logger.LogInformation("User {UserId} logged out; revoked {Count} refresh token(s).",
             userId, liveTokens.Count);
 

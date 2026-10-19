@@ -17,6 +17,11 @@ public class UserDeviceConfiguration : IEntityTypeConfiguration<UserDevice>
         b.Property(x => x.Platform).HasMaxLength(20);
         b.Property(x => x.BiometricPublicKey).HasMaxLength(500);
         b.Property(x => x.BiometricChallenge).HasMaxLength(100);
+        b.Property(x => x.FcmToken).HasMaxLength(500);
+
+        // A token belongs to one install. Looking it up finds the row to clear when Firebase says
+        // it's dead, or when another account registers the same phone.
+        b.HasIndex(x => x.FcmToken).HasFilter("[FcmToken] IS NOT NULL");
 
         b.Property(x => x.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
         b.Property(x => x.UpdatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");

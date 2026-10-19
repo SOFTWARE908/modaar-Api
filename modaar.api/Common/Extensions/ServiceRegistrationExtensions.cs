@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using modaar.api.Common.Auth;
 using modaar.api.Common.Localization;
+using modaar.api.Common.Realtime;
 using modaar.api.Common.Validation;
 using modaar.api.Features.Authentication.Services;
 using modaar.api.Features.Contracts.Services;
@@ -109,10 +110,70 @@ public static class ServiceRegistrationExtensions
                     ClockSkew = TimeSpan.FromMinutes(1),
                     NameClaimType = JsonWebTokens.JwtRegisteredClaimNames.Sub
                 };
+
+                // A WebSocket can't carry an Authorization header, so the SignalR client sends the
+                // JWT as ?access_token=. Accept it from there for the hub only — everywhere else a
+                // token in the URL would end up in logs and browser history.
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var token = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(token) &&
+                            context.HttpContext.Request.Path.StartsWithSegments(RealtimeRoutes.AppHub))
+                        {
+                            context.Token = token;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         services.AddAuthorization();
 
+
+        return services;
+    }
+
+    public static IServiceCollection AddModaarRealtime(this IServiceCollection services, IConfiguration configuration)
+    {
+        services
+            .AddSignalR()
+            // Same JSON shape as the REST API — camelCase enums — so a DTO looks identical whether
+            // it arrives over HTTP or over the hub.
+            .AddJsonProtocol(options =>
+                options.PayloadSerializerOptions.Converters.Add(
+                    new System.Text.Json.Serialization.JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase)));
+
+        services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, SubClaimUserIdProvider>();
+        services.AddSingleton<IRealtimeNotifier, RealtimeNotifier>();
+
+        // Scoped: it uses the request's DbContext.
+        services.AddScoped<Features.Notifications.Services.INotificationService,
+                           Features.Notifications.Services.NotificationService>();
+
+        // Push: the queue and its background worker are singletons living for the whole app; the
+        // sender is Firebase when a credentials file is configured, otherwise a no-op.
+        services.AddSingleton<Push.PushQueue>();
+        services.AddSingleton<Push.IPushSender>(sp =>
+        {
+            var settings = configuration.GetSection(Push.FirebaseSettings.SectionName).Get<Push.FirebaseSettings>();
+            var path = settings?.CredentialsPath;
+
+            if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+                return new Push.FirebasePushSender(path, sp.GetRequiredService<ILogger<Push.FirebasePushSender>>());
+
+            if (!string.IsNullOrWhiteSpace(path))
+                sp.GetRequiredService<ILogger<Push.NullPushSender>>()
+                    .LogWarning("Firebase credentials file not found at {Path}; push is off.", path);
+
+            return new Push.NullPushSender(sp.GetRequiredService<ILogger<Push.NullPushSender>>());
+        });
+        services.AddHostedService<Push.PushDispatcher>();
+        services.AddScoped<Features.Authentication.Services.IDeviceService, Features.Authentication.Services.DeviceService>();
+
+        services.AddScoped<Features.Chat.Services.ChatAccess>();
+        services.AddScoped<Features.Chat.Services.IChatService, Features.Chat.Services.ChatService>();
 
         return services;
     }
