@@ -35,4 +35,17 @@ public record InvoiceDetailsDto
     public required IReadOnlyList<InvoiceBreakdownItemDto> Items { get; init; }
 
     public string? InvoiceUrl { get; init; }
+
+    // pending · paid · underReview — whether there is anything left to pay.
+    public required modaar.api.Features.Payments.Enums.PaymentStatus Status { get; init; }
+
+    // What the tenant is charged when paying: amount + service fee + VAT.
+    public required decimal AmountDue { get; init; }
+
+    // The latest bank transfer on this payment (under review, rejected or approved), or null.
+    public BankTransferDto? BankTransfer { get; init; }
+
+    // True for the owner or broker running the property while a transfer waits for them:
+    // show approve / reject.
+    public required bool CanReviewTransfer { get; init; }
 }

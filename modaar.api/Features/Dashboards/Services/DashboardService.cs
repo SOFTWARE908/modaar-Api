@@ -222,6 +222,7 @@ public sealed class DashboardService : IDashboardService
                 Currency = p.Currency,
                 DisplayStatus =
                     p.Status == PaymentStatus.Paid ? PaymentDisplayStatus.Paid
+                    : p.Status == PaymentStatus.UnderReview ? PaymentDisplayStatus.UnderReview
                     : p.DueDate != null && p.DueDate < today ? PaymentDisplayStatus.Overdue
                     : PaymentDisplayStatus.Due,
                 DaysOverdue =

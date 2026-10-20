@@ -44,7 +44,7 @@ public sealed class RentReminderJob : IDailyJob
 
         var installments = await _db.Payments
             .AsNoTracking()
-            .Where(p => p.Type == PaymentType.Rent && p.Status != PaymentStatus.Paid
+            .Where(p => p.Type == PaymentType.Rent && p.Status == PaymentStatus.Pending
                      && p.DueDate != null && p.DueDate <= horizon)
             .Select(p => new
             {

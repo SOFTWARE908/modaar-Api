@@ -7,5 +7,7 @@ public enum PaymentDisplayStatus
 {
     Paid,
     Due,
-    Overdue
+    Overdue,
+    // A bank-transfer receipt is waiting for the owner or broker to confirm it.
+    UnderReview
 }

@@ -4,19 +4,20 @@ using modaar.api.Features.Notifications.Services;
 
 namespace modaar.api.Features.Payments;
 
-// Rent reminder wording, both languages. The jobs decide when and who; this decides what it says.
+// Payment notification wording, both languages: rent reminders, receipts and bank-transfer
+// review. The jobs and services decide when and who; this decides what it says.
 public static class PaymentNotifications
 {
     // ar-EG, not ar-SA: ar-SA formats in the Hijri calendar, and due dates are Gregorian.
     private static readonly CultureInfo Arabic = CultureInfo.GetCultureInfo("ar-EG");
     private static readonly CultureInfo English = CultureInfo.InvariantCulture;
 
-    public sealed record Subject(Guid PaymentId, string PropertyTitle, decimal Amount, DateOnly DueDate, string? TenantName)
+    public sealed record Subject(Guid PaymentId, string PropertyTitle, decimal Amount, DateOnly? DueDate, string? TenantName)
     {
         public string Ar => $"{PropertyTitle} · {Amount:0.##} ر.س";
         public string En => $"{PropertyTitle} · SAR {Amount:0.##}";
-        public string DueAr => DueDate.ToString("d MMMM", Arabic);
-        public string DueEn => DueDate.ToString("d MMMM", English);
+        public string DueAr => DueDate?.ToString("d MMMM", Arabic) ?? string.Empty;
+        public string DueEn => DueDate?.ToString("d MMMM", English) ?? string.Empty;
     }
 
     // To the tenant, in the week before.
@@ -38,6 +39,21 @@ public static class PaymentNotifications
     public static NewNotification OverdueToHandler(Subject s) => New(s,
         "قسط إيجار متأخر", "Overdue rent",
         $"{s.TenantName} · {s.Ar} · كان مستحقاً {s.DueAr}", $"{s.TenantName} · {s.En} · was due {s.DueEn}");
+
+    // To the tenant, once a card charge or a bank transfer is confirmed.
+    public static NewNotification Received(Subject s) => New(s,
+        "تم استلام دفعتك", "Payment received",
+        s.Ar, s.En);
+
+    // To the owner or broker running the property: a receipt is waiting for them.
+    public static NewNotification TransferToReview(Subject s) => New(s,
+        "إيصال تحويل بانتظار المراجعة", "Bank transfer to review",
+        $"{s.TenantName} · {s.Ar}", $"{s.TenantName} · {s.En}");
+
+    // To the tenant: the receipt was turned down; the installment is owed again.
+    public static NewNotification TransferRejected(Subject s, string reason) => New(s,
+        "لم يتم قبول إيصال التحويل", "Bank transfer not accepted",
+        $"{s.Ar}\n{reason}", $"{s.En}\n{reason}");
 
     private static NewNotification New(Subject s, string titleAr, string titleEn, string bodyAr, string bodyEn) =>
         new(NotificationType.Payments, titleAr, titleEn, bodyAr, bodyEn,

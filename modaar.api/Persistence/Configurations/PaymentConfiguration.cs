@@ -52,3 +52,32 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         b.HasOne<MaintenanceRequest>().WithMany().HasForeignKey(x => x.MaintenanceRequestId).OnDelete(DeleteBehavior.NoAction);
     }
 }
+
+public class PaymentTransactionConfiguration : IEntityTypeConfiguration<PaymentTransaction>
+{
+    public void Configure(EntityTypeBuilder<PaymentTransaction> b)
+    {
+        b.ToTable("PaymentTransactions");
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+
+        b.Property(x => x.Channel).HasConversion<string>().HasMaxLength(20).IsRequired();
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
+        b.Property(x => x.Amount).HasPrecision(18, 2);
+        b.Property(x => x.Currency).HasMaxLength(3).IsRequired();
+
+        b.Property(x => x.GatewayPaymentId).HasMaxLength(100);
+        b.Property(x => x.CardBrand).HasMaxLength(20);
+        b.Property(x => x.CardLast4).HasMaxLength(4);
+        b.Property(x => x.FailureReason).HasMaxLength(300);
+        b.Property(x => x.ReceiptUrl).HasMaxLength(500);
+        b.Property(x => x.ReceiptFileName).HasMaxLength(200);
+        b.Property(x => x.RejectionReason).HasMaxLength(500);
+
+        b.HasOne<Payment>().WithMany().HasForeignKey(x => x.PaymentId).OnDelete(DeleteBehavior.Cascade);
+        b.HasIndex(x => x.PaymentId);
+
+        // One gateway charge settles one installment, never two.
+        b.HasIndex(x => x.GatewayPaymentId).IsUnique().HasFilter("[GatewayPaymentId] IS NOT NULL");
+    }
+}

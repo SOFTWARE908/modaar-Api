@@ -7,6 +7,7 @@ using modaar.api.Features.Contracts.Enums;
 using modaar.api.Features.Payments.Dtos;
 using modaar.api.Features.Payments.Entities;
 using modaar.api.Features.Payments.Enums;
+using modaar.api.Features.Users.Services;
 using modaar.api.Persistence;
 
 namespace modaar.api.Features.Payments.Services;
@@ -78,6 +79,7 @@ public sealed class PaymentService : IPaymentService
                 Status = p.Status,
                 DisplayStatus =
                     p.Status == PaymentStatus.Paid ? PaymentDisplayStatus.Paid
+                    : p.Status == PaymentStatus.UnderReview ? PaymentDisplayStatus.UnderReview
                     : p.DueDate != null && p.DueDate < today ? PaymentDisplayStatus.Overdue
                     : PaymentDisplayStatus.Due,
                 DaysOverdue =
@@ -167,6 +169,19 @@ public sealed class PaymentService : IPaymentService
             .Select(c => c.ContractNumber)
             .FirstOrDefaultAsync(ct);
 
+        var transfer = await _db.PaymentTransactions
+            .AsNoTracking()
+            .Where(t => t.PaymentId == p.Id && t.Channel == PaymentChannel.BankTransfer)
+            .OrderByDescending(t => t.CreatedAt)
+            .FirstOrDefaultAsync(ct);
+
+        var canReview = false;
+        if (p.Status == PaymentStatus.UnderReview && p.PropertyId is { } propertyId)
+        {
+            var handlers = await PropertyHandlers.ResolveAsync(_db, [propertyId], ct);
+            canReview = handlers.TryGetValue(propertyId, out var handler) && handler == callerUserId;
+        }
+
         return Result<InvoiceDetailsDto>.Ok(new InvoiceDetailsDto
         {
             Id = p.Id,
@@ -191,7 +206,11 @@ public sealed class PaymentService : IPaymentService
                 : $"{unit.Title} · {unit.UnitNumber}",
             ContractNumber = contractNumber,
             Items = items,
-            InvoiceUrl = p.InvoiceUrl
+            InvoiceUrl = p.InvoiceUrl,
+            Status = p.Status,
+            AmountDue = p.Amount + (p.ServiceFee ?? 0) + (p.VatAmount ?? 0),
+            BankTransfer = transfer is null ? null : PayService.ToTransferDto(transfer),
+            CanReviewTransfer = canReview
         });
     }
 

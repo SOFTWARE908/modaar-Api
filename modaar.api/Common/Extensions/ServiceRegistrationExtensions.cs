@@ -73,6 +73,20 @@ public static class ServiceRegistrationExtensions
         ///////////////////////////payments/////////////////////
         services.AddScoped<IPaymentService, PaymentService>();
 
+        // Paying installments. With a Moyasar secret key the real gateway is used; without one, a
+        // simulator, so the app can build the flow before the account exists. Test → live is
+        // swapping the keys in config, nothing else.
+        services.Configure<Features.Payments.Gateway.PaymentSettings>(
+            configuration.GetSection(Features.Payments.Gateway.PaymentSettings.SectionName));
+        var moyasar = configuration.GetSection(Features.Payments.Gateway.PaymentSettings.SectionName)
+            .Get<Features.Payments.Gateway.PaymentSettings>()?.Moyasar;
+        if (moyasar?.IsConfigured == true)
+            services.AddHttpClient<Features.Payments.Gateway.IPaymentGatewayClient, Features.Payments.Gateway.MoyasarClient>();
+        else
+            services.AddSingleton<Features.Payments.Gateway.IPaymentGatewayClient, Features.Payments.Gateway.SimulatedMoyasarClient>();
+        services.AddScoped<Features.Wallets.Services.IWalletService, Features.Wallets.Services.WalletService>();
+        services.AddScoped<Features.Payments.Services.IPayService, Features.Payments.Services.PayService>();
+
 
         services.AddScoped<IDashboardService, DashboardService>();
 
