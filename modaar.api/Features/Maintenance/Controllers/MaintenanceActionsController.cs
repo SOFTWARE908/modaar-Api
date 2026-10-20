@@ -10,8 +10,9 @@ namespace modaar.api.Features.Maintenance.Controllers;
 // The owner and broker side of a request: deciding what happens to it. Split from
 // MaintenanceRequestsController, which is the tenant-facing lifecycle.
 //
-// All four are pending-only. Accept / reject / inquiry: owner or managing broker.
-// Delegate: owner alone.
+// Who may call what, and when, follows the owner's subscription plan; see MaintenanceStages.
+// The details response lists the caller's availableActions. 403 = someone else's action,
+// 409 = not possible at this stage.
 [ApiController]
 [Route("api/maintenance-requests/{requestId:guid}")]
 [Authorize]
@@ -96,7 +97,8 @@ public class MaintenanceActionsController : ControllerBase
         return result.Success ? NoContent() : result.ToActionResult();
     }
 
-    // Owner or managing broker prices the work once accepted. Resubmitting replaces the quote.
+    // The handler prices the work once accepted. Resubmitting replaces the quote and, on Managed,
+    // asks the owner again (unless the new total is under their auto-approve limit).
     [HttpPut("quote")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -111,6 +113,96 @@ public class MaintenanceActionsController : ControllerBase
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
         var result = await _actions.SubmitQuoteAsync(requestId, userId, request, ct);
+        return result.Success ? NoContent() : result.ToActionResult();
+    }
+
+    // Owner, Managed plan: approves the broker's price so a technician can be sent.
+    [HttpPost("quote/approve")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ApproveQuote(
+        Guid requestId, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        var result = await _actions.ApproveQuoteAsync(requestId, userId, ct);
+        return result.Success ? NoContent() : result.ToActionResult();
+    }
+
+    // Owner, Managed plan: turns the price down, which closes the request. To negotiate, use inquiry.
+    [HttpPost("quote/reject")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RejectQuote(
+        Guid requestId, [FromBody] RejectMaintenanceRequestDto request, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        var result = await _actions.RejectQuoteAsync(requestId, userId, request, ct);
+        return result.Success ? NoContent() : result.ToActionResult();
+    }
+
+    // The handler sends a technician at a set date and time. Calling it again replaces both.
+    [HttpPost("assign-technician")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AssignTechnician(
+        Guid requestId, [FromBody] AssignTechnicianDto request, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        var result = await _actions.AssignTechnicianAsync(requestId, userId, request, ct);
+        return result.Success ? NoContent() : result.ToActionResult();
+    }
+
+    // "تغيير الموعد": same technician, new date and time.
+    [HttpPost("reschedule")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Reschedule(
+        Guid requestId, [FromBody] RescheduleMaintenanceVisitDto request, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        var result = await _actions.RescheduleAsync(requestId, userId, request, ct);
+        return result.Success ? NoContent() : result.ToActionResult();
+    }
+
+    // "تأكيد اكتمال العمل". Opens rating for the tenant.
+    [HttpPost("complete")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Complete(
+        Guid requestId, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        var result = await _actions.CompleteAsync(requestId, userId, ct);
         return result.Success ? NoContent() : result.ToActionResult();
     }
 }

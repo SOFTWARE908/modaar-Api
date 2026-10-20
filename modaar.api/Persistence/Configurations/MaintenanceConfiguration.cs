@@ -50,6 +50,15 @@ public class MaintenanceRequestConfiguration : IEntityTypeConfiguration<Maintena
         b.Property(x => x.QuoteCostBearer).HasConversion<string>().HasMaxLength(10);
         b.Property(x => x.QuoteDescription).HasMaxLength(1000);
 
+        // No HasDefaultValue: SelfManaged is the enum's zero, and EF would read it as "unset" and
+        // let a database default overwrite it. The migration sets existing rows (Managed, or
+        // SelfManaged where the property has no broker).
+        b.Property(x => x.SubscriptionPlan)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .IsRequired();
+        b.Property(x => x.QuoteAutoApproved).HasDefaultValue(false);
+
         b.Property(x => x.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
         b.Property(x => x.UpdatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
 

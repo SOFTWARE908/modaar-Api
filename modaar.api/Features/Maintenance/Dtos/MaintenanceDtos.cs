@@ -1,6 +1,7 @@
 using modaar.api.Common.Dtos;
 using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Features.Users.Dtos;
+using modaar.api.Features.Users.Enums;
 
 namespace modaar.api.Features.Maintenance.Dtos;
 
@@ -78,6 +79,12 @@ public record MaintenanceRequestDetailsDto
     public required MaintenanceHandledBy HandledBy { get; init; }
     public string? HandledByName { get; init; }
 
+    // The owner's subscription when the request was raised — it decides the workflow below.
+    public required OwnerSubscriptionPlan SubscriptionPlan { get; init; }
+
+    // What the caller may do right now. Show exactly these buttons; the server refuses the rest.
+    public required IReadOnlyList<MaintenanceAvailableAction> AvailableActions { get; init; }
+
     // Oldest first. Only steps that actually happened; the client draws the rest as upcoming.
     public required IReadOnlyList<MaintenanceStatusHistoryItemDto> StatusHistory { get; init; }
 
@@ -87,6 +94,9 @@ public record MaintenanceRequestDetailsDto
     public required bool VisitDayIsTomorrow { get; init; }
     public string? VisitTimeRange { get; init; }
     public MaintenanceTimeSlot? VisitTimePeriod { get; init; }
+
+    // The exact visit time, once a technician is assigned with one ("14:30"). Null before that.
+    public TimeOnly? VisitTime { get; init; }
 
     public TechnicianDto? AssignedTechnician { get; init; }
 
@@ -123,6 +133,11 @@ public record MaintenanceQuoteDto
     public required decimal Total { get; init; }
     public required MaintenanceCostBearer CostBearer { get; init; }
     public string? Description { get; init; }
+    public DateTimeOffset? QuotedAt { get; init; }
+
+    // Managed plan. Null while the owner has not answered. AutoApproved = under the owner's limit.
+    public DateTimeOffset? ApprovedAt { get; init; }
+    public bool AutoApproved { get; init; }
 }
 
 public record MaintenanceRatingDto

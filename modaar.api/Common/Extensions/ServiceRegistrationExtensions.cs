@@ -49,6 +49,7 @@ public static class ServiceRegistrationExtensions
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<ISecuritySettingsService, SecuritySettingsService>();
         services.AddScoped<IBrokerService, Features.Users.Services.BrokerService>();
+        services.AddScoped<IOwnerSubscriptionService, OwnerSubscriptionService>();
 
 
         services.AddHttpContextAccessor();
@@ -56,6 +57,7 @@ public static class ServiceRegistrationExtensions
         services.AddScoped<IMaintenanceAttachmentService, MaintenanceAttachmentService>();
 
         services.AddScoped<IMaintenanceActionService, MaintenanceActionService>();
+        services.AddScoped<ITechnicianService, TechnicianService>();
 
         services.AddScoped<IMaintenanceFeedbackService, MaintenanceFeedbackService>();
 
@@ -170,6 +172,13 @@ public static class ServiceRegistrationExtensions
             return new Push.NullPushSender(sp.GetRequiredService<ILogger<Push.NullPushSender>>());
         });
         services.AddHostedService<Push.PushDispatcher>();
+
+        // Once-a-day work. Registration order is run order: expiry before renewal reminders.
+        services.Configure<Jobs.JobsSettings>(configuration.GetSection(Jobs.JobsSettings.SectionName));
+        services.AddScoped<Jobs.IDailyJob, Features.Contracts.Jobs.ContractExpiryJob>();
+        services.AddScoped<Jobs.IDailyJob, Features.Contracts.Jobs.ContractRenewalReminderJob>();
+        services.AddScoped<Jobs.IDailyJob, Features.Payments.Jobs.RentReminderJob>();
+        services.AddHostedService<Jobs.DailyJobsRunner>();
         services.AddScoped<Features.Authentication.Services.IDeviceService, Features.Authentication.Services.DeviceService>();
 
         services.AddScoped<Features.Chat.Services.ChatAccess>();

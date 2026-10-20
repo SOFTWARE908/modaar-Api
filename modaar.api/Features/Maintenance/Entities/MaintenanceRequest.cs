@@ -1,4 +1,5 @@
 using modaar.api.Features.Maintenance.Enums;
+using modaar.api.Features.Users.Enums;
 
 namespace modaar.api.Features.Maintenance.Entities;
 
@@ -56,6 +57,20 @@ public class MaintenanceRequest
     public MaintenanceCostBearer? QuoteCostBearer { get; set; }
     public string? QuoteDescription { get; set; }
     public DateTimeOffset? QuotedAt { get; set; }
+
+    // The owner's answer to the quote (Managed plan). AutoApproved = the total was at or under
+    // the owner's auto-approve limit, so nobody asked them; ApprovedByUserId is then null.
+    public DateTimeOffset? QuoteApprovedAt { get; set; }
+    public Guid? QuoteApprovedByUserId { get; set; }
+    public bool QuoteAutoApproved { get; set; }
+
+    // The owner's subscription when the request was raised. Snapshotted so a plan change midway
+    // doesn't move a request into a workflow it never went through.
+    public OwnerSubscriptionPlan SubscriptionPlan { get; set; } = OwnerSubscriptionPlan.Managed;
+
+    // The concrete visit time picked when a technician is assigned (the design asks for a time,
+    // not only a morning/evening slot). Goes with ScheduledVisitDate.
+    public TimeOnly? ScheduledVisitTime { get; set; }
 
     // Set together when the request is rejected; the client shows who turned it down.
     public MaintenanceRequestRejectedBy? RejectedBy { get; set; }

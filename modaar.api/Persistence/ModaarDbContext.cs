@@ -23,6 +23,7 @@ public class ModaarDbContext : DbContext
 
     // Notifications
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<SentReminder> SentReminders => Set<SentReminder>();
 
     // Chat
     public DbSet<Conversation> Conversations => Set<Conversation>();

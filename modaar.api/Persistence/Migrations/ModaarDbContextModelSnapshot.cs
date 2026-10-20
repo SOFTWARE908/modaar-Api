@@ -782,6 +782,17 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<Guid>("PropertyId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset?>("QuoteApprovedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("QuoteApprovedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("QuoteAutoApproved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("QuoteCostBearer")
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
@@ -824,10 +835,18 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<DateOnly?>("ScheduledVisitDate")
                         .HasColumnType("date");
 
+                    b.Property<TimeOnly?>("ScheduledVisitTime")
+                        .HasColumnType("time");
+
                     b.Property<Guid>("ServiceTypeId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("SubscriptionPlan")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
@@ -1073,6 +1092,20 @@ namespace modaar.api.Persistence.Migrations
                     b.HasIndex("UserId", "CreatedAt");
 
                     b.ToTable("Notifications", (string)null);
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Notifications.Entities.SentReminder", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("SentAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("SentReminders", (string)null);
                 });
 
             modelBuilder.Entity("modaar.api.Features.Payments.Entities.InvoiceItem", b =>
@@ -1463,6 +1496,10 @@ namespace modaar.api.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<decimal?>("AutoApproveLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<bool>("BiometricEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -1549,6 +1586,11 @@ namespace modaar.api.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<string>("SubscriptionPlan")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAdd()

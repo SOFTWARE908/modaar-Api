@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using modaar.api.Common.Results;
 using modaar.api.Common.Time;
-using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Maintenance.Dtos;
 using modaar.api.Features.Maintenance.Entities;
 using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Features.Notifications.Services;
+using modaar.api.Features.Users.Enums;
 using modaar.api.Persistence;
 
 namespace modaar.api.Features.Maintenance.Services;
@@ -17,8 +17,22 @@ public interface IMaintenanceActionService
     Task<Result<bool>> InquiryAsync(Guid requestId, Guid callerUserId, MaintenanceInquiryDto request, CancellationToken ct);
     Task<Result<bool>> DelegateAsync(Guid requestId, Guid callerUserId, DelegateMaintenanceRequestDto request, CancellationToken ct);
     Task<Result<bool>> SubmitQuoteAsync(Guid requestId, Guid callerUserId, SubmitMaintenanceQuoteDto request, CancellationToken ct);
+    Task<Result<bool>> ApproveQuoteAsync(Guid requestId, Guid callerUserId, CancellationToken ct);
+    Task<Result<bool>> RejectQuoteAsync(Guid requestId, Guid callerUserId, RejectMaintenanceRequestDto request, CancellationToken ct);
+    Task<Result<bool>> AssignTechnicianAsync(Guid requestId, Guid callerUserId, AssignTechnicianDto request, CancellationToken ct);
+    Task<Result<bool>> RescheduleAsync(Guid requestId, Guid callerUserId, RescheduleMaintenanceVisitDto request, CancellationToken ct);
+    Task<Result<bool>> CompleteAsync(Guid requestId, Guid callerUserId, CancellationToken ct);
 }
 
+// Every owner/broker action on a request. Which action is allowed, for whom, at which point, is
+// not decided here: MaintenanceStages.Available is the single rule, and each action starts by
+// checking it. That is what keeps the buttons the app shows and what the server accepts in step.
+//
+// The three workflows, by the owner's subscription plan (snapshotted on the request):
+//   SelfManaged  tenant → owner accepts → (quote, technician optional) → owner completes
+//   Managed      broker accepts → broker quotes → owner approves (or auto under the limit)
+//                → broker assigns technician + visit time → broker completes
+//   FullyManaged broker accepts → (quote optional, broker pays) → assigns → completes
 public sealed class MaintenanceActionService : IMaintenanceActionService
 {
     private readonly ModaarDbContext _db;
@@ -38,51 +52,27 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
     public async Task<Result<bool>> AcceptAsync(
         Guid requestId, Guid callerUserId, AcceptMaintenanceRequestDto request, CancellationToken ct)
     {
-        var ctx = await ResolveAsync(requestId, callerUserId, ct);
+        var ctx = await ResolveAsync(requestId, callerUserId, MaintenanceAvailableAction.Accept, ct);
         if (ctx.Failure is { } failure) return failure;
 
-        if (!ctx.IsOwner && !ctx.IsManagingBroker)
-            return Forbidden("Only the property owner or its managing broker can accept a request.");
+        // Managed always prices first: the owner has to see the cost before anyone is sent.
+        ctx.Request.QuoteRequired = ctx.Facts.NeedsOwnerApproval || request.RequiresQuote;
 
-        // A technician must belong to the accepting brokerage, or be independent. Otherwise an
-        // owner could assign someone else's staff to their job.
+        // A technician named on accept skips the pricing step, so it only fits when there is none.
         if (request.TechnicianId is { } technicianId)
         {
-            var technician = await _db.Technicians
-                .AsNoTracking()
-                .Where(t => t.Id == technicianId)
-                .Select(t => new { t.BrokerId, t.IsAvailable })
-                .FirstOrDefaultAsync(ct);
+            if (ctx.Request.QuoteRequired)
+                return Result<bool>.Fail(AppErrorCode.Conflict,
+                    "This request is priced first; assign the technician once the quote is settled.");
 
-            if (technician is null)
-                return Result<bool>.Fail(AppErrorCode.NotFound, "Technician not found.");
-
-            if (!technician.IsAvailable)
-                return Result<bool>.Fail(AppErrorCode.Conflict, "That technician is not available.");
-
-            if (technician.BrokerId is not null && technician.BrokerId != ctx.Property.BrokerId)
-                return Forbidden("That technician belongs to a different brokerage.");
+            var technician = await LoadTechnicianAsync(technicianId, ctx, ct);
+            if (technician.Failure is { } techFailure) return techFailure;
 
             ctx.Request.AssignedTechnicianId = technicianId;
 
             // Its own audit row so the tenant's status history can date the assignment.
-            var technicianName = await _db.Technicians
-                .Where(t => t.Id == technicianId)
-                .Select(t => _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault())
-                .FirstOrDefaultAsync(ct);
-
-            _db.MaintenanceRequestActions.Add(new MaintenanceRequestAction
-            {
-                Id = Guid.NewGuid(),
-                RequestId = ctx.Request.Id,
-                ActorUserId = callerUserId,
-                Type = MaintenanceActionType.AssignTechnician,
-                Message = technicianName,
-                CreatedAt = _time.GetUtcNow()
-            });
+            AddAction(ctx, MaintenanceActionType.AssignTechnician, technician.Name);
         }
-
-        ctx.Request.QuoteRequired = request.RequiresQuote;
 
         if (request.ScheduledVisitDate is { } date && request.ScheduledTimeSlot is { } slot)
         {
@@ -100,6 +90,7 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
             ctx.Request.ScheduledVisitDate = ctx.Request.PreferredVisitDate;
             ctx.Request.ScheduledTimeSlot = ctx.Request.PreferredTimeSlot;
         }
+
         // إعادة الترتيب أثناء الفرز: المستأجر يرفع ما يراه، والمالك يعرف ما يحتمل التأجيل.
         if (request.Priority is { } priority)
             ctx.Request.Priority = (MaintenancePriority)priority;
@@ -110,15 +101,12 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
     public async Task<Result<bool>> RejectAsync(
         Guid requestId, Guid callerUserId, RejectMaintenanceRequestDto request, CancellationToken ct)
     {
-        var ctx = await ResolveAsync(requestId, callerUserId, ct);
+        var ctx = await ResolveAsync(requestId, callerUserId, MaintenanceAvailableAction.Reject, ct);
         if (ctx.Failure is { } failure) return failure;
 
-        if (!ctx.IsOwner && !ctx.IsManagingBroker)
-            return Forbidden("Only the property owner or its managing broker can reject a request.");
-
-        ctx.Request.RejectedBy = ctx.IsOwner
-            ? MaintenanceRequestRejectedBy.Owner
-            : MaintenanceRequestRejectedBy.Broker;
+        ctx.Request.RejectedBy = ctx.Facts.BrokerHandles
+            ? MaintenanceRequestRejectedBy.Broker
+            : MaintenanceRequestRejectedBy.Owner;
 
         ctx.Request.RejectionReason = request.Reason.Trim();
 
@@ -129,14 +117,11 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
     public async Task<Result<bool>> InquiryAsync(
         Guid requestId, Guid callerUserId, MaintenanceInquiryDto request, CancellationToken ct)
     {
-        var ctx = await ResolveAsync(requestId, callerUserId, ct);
+        var ctx = await ResolveAsync(requestId, callerUserId, MaintenanceAvailableAction.Inquiry, ct);
         if (ctx.Failure is { } failure) return failure;
 
-        if (!ctx.IsOwner && !ctx.IsManagingBroker)
-            return Forbidden("Only the property owner or its managing broker can raise an inquiry.");
-
-        // An inquiry asks the tenant a question; it does not decide anything, so the request
-        // stays Pending and can still be accepted or rejected afterwards.
+        // An inquiry asks a question; it decides nothing, so the request stays where it is.
+        // While pending it goes to the tenant; while the quote waits it goes to the broker.
         return await TransitionAsync(ctx, null, MaintenanceActionType.Inquiry,
             request.Message.Trim(), null, ct);
     }
@@ -144,24 +129,20 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
     public async Task<Result<bool>> DelegateAsync(
         Guid requestId, Guid callerUserId, DelegateMaintenanceRequestDto request, CancellationToken ct)
     {
-        var ctx = await ResolveAsync(requestId, callerUserId, ct);
+        var ctx = await ResolveAsync(requestId, callerUserId, MaintenanceAvailableAction.Delegate, ct);
         if (ctx.Failure is { } failure) return failure;
 
-        // Owner only. A broker cannot hand a job on to someone else.
-        if (!ctx.IsOwner)
-            return Forbidden("Only the property owner can delegate a request.");
-
         var brokerId = request.BrokerId ?? ctx.Property.BrokerId;
-
-        if (brokerId is null)
-            return Result<bool>.Fail(AppErrorCode.Conflict,
-                "This property has no managing broker to delegate to.");
 
         // Delegating to an unrelated brokerage would grant them access to a property they have no
         // relationship with, so the target must be the one already managing it.
         if (brokerId != ctx.Property.BrokerId)
             return Forbidden("That broker does not manage this property.");
 
+        // A SelfManaged owner handing one job over: from here it runs as Managed — the broker
+        // prices it and the owner still approves the price.
+        ctx.Request.SubscriptionPlan = OwnerSubscriptionPlan.Managed;
+        ctx.Request.QuoteRequired = true;
         ctx.Request.AssignedTechnicianId = null;
 
         return await TransitionAsync(ctx, MaintenanceRequestStatus.Accepted, MaintenanceActionType.Delegate,
@@ -171,34 +152,125 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
     public async Task<Result<bool>> SubmitQuoteAsync(
         Guid requestId, Guid callerUserId, SubmitMaintenanceQuoteDto request, CancellationToken ct)
     {
-        var ctx = await ResolveAsync(requestId, callerUserId, ct, requirePending: false);
+        var ctx = await ResolveAsync(requestId, callerUserId, MaintenanceAvailableAction.SubmitQuote, ct);
         if (ctx.Failure is { } failure) return failure;
 
-        if (!ctx.IsOwner && !ctx.IsManagingBroker)
-            return Forbidden("Only the property owner or its managing broker can submit a quote.");
+        var costBearer = (MaintenanceCostBearer)request.CostBearer;
 
-        // Pricing happens between accepting and finishing the work. A quote on a pending request
-        // skips the decision; one on a closed request changes nothing anyone will act on.
-        if (ctx.Request.Status is not (MaintenanceRequestStatus.Accepted
-                                    or MaintenanceRequestStatus.OnTheWay
-                                    or MaintenanceRequestStatus.InProgress))
-            return Result<bool>.Fail(AppErrorCode.Conflict,
-                $"This request is {ctx.Request.Status}; a quote can only be added once it is accepted and before it is completed.");
+        // Only the full package puts the cost on the broker.
+        if (costBearer == MaintenanceCostBearer.Broker &&
+            ctx.Facts.EffectivePlan != OwnerSubscriptionPlan.FullyManaged)
+            return Result<bool>.Fail(AppErrorCode.ValidationFailed,
+                "The broker carries the cost only on a fully managed subscription.");
+
+        var now = _time.GetUtcNow();
 
         ctx.Request.QuotePartsCost = request.PartsCost;
         ctx.Request.QuoteLaborCost = request.LaborCost;
-        ctx.Request.QuoteCostBearer = (MaintenanceCostBearer)request.CostBearer;
+        ctx.Request.QuoteCostBearer = costBearer;
         ctx.Request.QuoteDescription = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
-        ctx.Request.QuotedAt = _time.GetUtcNow();
+        ctx.Request.QuotedAt = now;
+
+        // A new price needs a new answer.
+        ctx.Request.QuoteApprovedAt = null;
+        ctx.Request.QuoteApprovedByUserId = null;
+        ctx.Request.QuoteAutoApproved = false;
+
+        var total = request.PartsCost + request.LaborCost;
+
+        if (ctx.Facts.NeedsOwnerApproval)
+        {
+            // Read live, not snapshotted: the limit is the owner's standing instruction to the broker.
+            var limit = await _db.Users
+                .Where(u => u.Id == ctx.Property.OwnerUserId)
+                .Select(u => u.AutoApproveLimit)
+                .FirstOrDefaultAsync(ct);
+
+            if (limit is { } max && total <= max)
+            {
+                ctx.Request.QuoteApprovedAt = now;
+                ctx.Request.QuoteAutoApproved = true;
+                ctx.AutoApproved = true;
+            }
+        }
 
         return await TransitionAsync(ctx, null, MaintenanceActionType.Quote,
-            $"{request.PartsCost + request.LaborCost:0.##} ({request.CostBearer})", null, ct);
+            $"{total:0.##} ({costBearer})", null, ct);
     }
 
-    // Loads the request and works out who the caller is to it. Every action starts here, so the
-    // pending-only rule and the not-found/forbidden shapes are decided in one place.
+    public async Task<Result<bool>> ApproveQuoteAsync(Guid requestId, Guid callerUserId, CancellationToken ct)
+    {
+        var ctx = await ResolveAsync(requestId, callerUserId, MaintenanceAvailableAction.ApproveQuote, ct);
+        if (ctx.Failure is { } failure) return failure;
+
+        ctx.Request.QuoteApprovedAt = _time.GetUtcNow();
+        ctx.Request.QuoteApprovedByUserId = callerUserId;
+        ctx.Request.QuoteAutoApproved = false;
+
+        return await TransitionAsync(ctx, null, MaintenanceActionType.ApproveQuote, null, null, ct);
+    }
+
+    public async Task<Result<bool>> RejectQuoteAsync(
+        Guid requestId, Guid callerUserId, RejectMaintenanceRequestDto request, CancellationToken ct)
+    {
+        var ctx = await ResolveAsync(requestId, callerUserId, MaintenanceAvailableAction.RejectQuote, ct);
+        if (ctx.Failure is { } failure) return failure;
+
+        // The owner turning down the price closes the request. To negotiate instead they use an
+        // inquiry, and the broker can revise the quote.
+        ctx.Request.RejectedBy = MaintenanceRequestRejectedBy.Owner;
+        ctx.Request.RejectionReason = request.Reason.Trim();
+
+        return await TransitionAsync(ctx, MaintenanceRequestStatus.Rejected, MaintenanceActionType.RejectQuote,
+            request.Reason.Trim(), null, ct);
+    }
+
+    public async Task<Result<bool>> AssignTechnicianAsync(
+        Guid requestId, Guid callerUserId, AssignTechnicianDto request, CancellationToken ct)
+    {
+        var ctx = await ResolveAsync(requestId, callerUserId, MaintenanceAvailableAction.AssignTechnician, ct);
+        if (ctx.Failure is { } failure) return failure;
+
+        if (VisitInPast(request.VisitDate, request.VisitTime) is { } pastFailure) return pastFailure;
+
+        var technician = await LoadTechnicianAsync(request.TechnicianId, ctx, ct);
+        if (technician.Failure is { } techFailure) return techFailure;
+
+        ctx.Request.AssignedTechnicianId = request.TechnicianId;
+        SetVisit(ctx.Request, request.VisitDate, request.VisitTime);
+
+        return await TransitionAsync(ctx, null, MaintenanceActionType.AssignTechnician, technician.Name, null, ct);
+    }
+
+    public async Task<Result<bool>> RescheduleAsync(
+        Guid requestId, Guid callerUserId, RescheduleMaintenanceVisitDto request, CancellationToken ct)
+    {
+        var ctx = await ResolveAsync(requestId, callerUserId, MaintenanceAvailableAction.Reschedule, ct);
+        if (ctx.Failure is { } failure) return failure;
+
+        if (VisitInPast(request.VisitDate, request.VisitTime) is { } pastFailure) return pastFailure;
+
+        SetVisit(ctx.Request, request.VisitDate, request.VisitTime);
+
+        return await TransitionAsync(ctx, null, MaintenanceActionType.Reschedule,
+            $"{request.VisitDate:yyyy-MM-dd} {request.VisitTime:HH\\:mm}", null, ct);
+    }
+
+    public async Task<Result<bool>> CompleteAsync(Guid requestId, Guid callerUserId, CancellationToken ct)
+    {
+        var ctx = await ResolveAsync(requestId, callerUserId, MaintenanceAvailableAction.Complete, ct);
+        if (ctx.Failure is { } failure) return failure;
+
+        // Completing is what opens rating for the tenant.
+        ctx.Request.CompletedAt = _time.GetUtcNow();
+
+        return await TransitionAsync(ctx, MaintenanceRequestStatus.Completed, MaintenanceActionType.Complete, null, null, ct);
+    }
+
+    // Loads the request, works out who the caller is to it, and checks the action against
+    // MaintenanceStages.Available. Every action starts here.
     private async Task<ActionContext> ResolveAsync(
-        Guid requestId, Guid callerUserId, CancellationToken ct, bool requirePending = true)
+        Guid requestId, Guid callerUserId, MaintenanceAvailableAction action, CancellationToken ct)
     {
         var request = await _db.MaintenanceRequests.FirstOrDefaultAsync(m => m.Id == requestId, ct);
         if (request is null)
@@ -213,26 +285,102 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
         if (property is null)
             return ActionContext.Failed(Result<bool>.Fail(AppErrorCode.NotFound, "Property not found."));
 
-        // Actions are only available while the request is awaiting a decision. Without this, a
-        // completed job could be rejected months later.
-        if (requirePending && request.Status != MaintenanceRequestStatus.Pending)
-            return ActionContext.Failed(Result<bool>.Fail(AppErrorCode.Conflict,
-                $"This request is {request.Status} and can no longer be actioned."));
-
         var isOwner = property.OwnerUserId == callerUserId;
 
         var isManagingBroker = property.BrokerId is { } brokerId &&
             await _db.Brokers.AnyAsync(b => b.Id == brokerId && b.UserId == callerUserId, ct);
+
+        var isRated = await _db.MaintenanceRatings.AnyAsync(r => r.RequestId == requestId, ct);
+
+        var facts = new MaintenanceFacts(
+            request.Status, request.SubscriptionPlan, property.BrokerId is not null, request.QuoteRequired,
+            request.QuotedAt is not null, request.QuoteApprovedAt is not null,
+            request.AssignedTechnicianId is not null, isRated);
+
+        var caller = new MaintenanceCaller(request.TenantUserId == callerUserId, isOwner, isManagingBroker);
+
+        if (!MaintenanceStages.Available(facts, caller).Contains(action))
+        {
+            // Someone could do this right now, just not this caller → 403. Nobody could → 409,
+            // because the request is past (or not yet at) the point where it applies.
+            var anyone = new MaintenanceCaller(true, true, true);
+            var stage = MaintenanceStages.Derive(facts);
+
+            return ActionContext.Failed(MaintenanceStages.Available(facts, anyone).Contains(action)
+                ? Forbidden($"You cannot {action} this request: on a {facts.EffectivePlan} subscription that is up to someone else.")
+                : Result<bool>.Fail(AppErrorCode.Conflict, $"This request is at stage {stage}; {action} is not possible now."));
+        }
 
         return new ActionContext
         {
             Request = request,
             Property = property,
             CallerUserId = callerUserId,
-            IsOwner = isOwner,
-            IsManagingBroker = isManagingBroker
+            Facts = facts,
+            StageBefore = MaintenanceStages.Derive(facts)
         };
     }
+
+    // A technician must belong to the property's brokerage, or be independent. Otherwise one
+    // brokerage could send another's staff to a job.
+    private async Task<TechnicianRef> LoadTechnicianAsync(Guid technicianId, ActionContext ctx, CancellationToken ct)
+    {
+        var technician = await _db.Technicians
+            .AsNoTracking()
+            .Where(t => t.Id == technicianId)
+            .Select(t => new
+            {
+                t.BrokerId,
+                t.IsAvailable,
+                t.UserId,
+                Name = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault()
+            })
+            .FirstOrDefaultAsync(ct);
+
+        if (technician is null)
+            return TechnicianRef.Failed(Result<bool>.Fail(AppErrorCode.NotFound, "Technician not found."));
+
+        if (!technician.IsAvailable)
+            return TechnicianRef.Failed(Result<bool>.Fail(AppErrorCode.Conflict, "That technician is not available."));
+
+        if (technician.BrokerId is not null && technician.BrokerId != ctx.Property.BrokerId)
+            return TechnicianRef.Failed(Forbidden("That technician belongs to a different brokerage."));
+
+        return new TechnicianRef { Name = technician.Name, UserId = technician.UserId };
+    }
+
+    private Result<bool>? VisitInPast(DateOnly date, TimeOnly time)
+    {
+        // Visit times are Riyadh wall-clock times.
+        var now = TimeZoneInfo.ConvertTime(_time.GetUtcNow(), SaudiTime.Zone).DateTime;
+        return date.ToDateTime(time) < now
+            ? Result<bool>.Fail(AppErrorCode.ValidationFailed, "The visit time is in the past.")
+            : null;
+    }
+
+    // The exact time is what was agreed; the slot is kept in step so older screens that only read
+    // the slot still show the right part of the day.
+    private static void SetVisit(MaintenanceRequest request, DateOnly date, TimeOnly time)
+    {
+        request.ScheduledVisitDate = date;
+        request.ScheduledVisitTime = time;
+        request.ScheduledTimeSlot = time < VisitSlots.Range(MaintenanceTimeSlot.Afternoon).Start
+            ? MaintenanceTimeSlot.Morning
+            : time < VisitSlots.Range(MaintenanceTimeSlot.Evening).Start
+                ? MaintenanceTimeSlot.Afternoon
+                : MaintenanceTimeSlot.Evening;
+    }
+
+    private void AddAction(ActionContext ctx, MaintenanceActionType type, string? message, Guid? actorUserId = null) =>
+        _db.MaintenanceRequestActions.Add(new MaintenanceRequestAction
+        {
+            Id = Guid.NewGuid(),
+            RequestId = ctx.Request.Id,
+            ActorUserId = actorUserId ?? ctx.CallerUserId,
+            Type = type,
+            Message = message,
+            CreatedAt = _time.GetUtcNow()
+        });
 
     // One write path for every action: the status change and the audit row always land together.
     private async Task<Result<bool>> TransitionAsync(
@@ -261,6 +409,19 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
             CreatedAt = now
         });
 
+        // Under the owner's limit: the approval is the owner's standing rule, so it is recorded
+        // in their name, a moment after the quote so the history reads in order.
+        if (ctx.AutoApproved)
+            _db.MaintenanceRequestActions.Add(new MaintenanceRequestAction
+            {
+                Id = Guid.NewGuid(),
+                RequestId = ctx.Request.Id,
+                ActorUserId = ctx.Property.OwnerUserId,
+                Type = MaintenanceActionType.ApproveQuote,
+                Message = "auto",
+                CreatedAt = now.AddMilliseconds(1)
+            });
+
         await _db.SaveChangesAsync(ct);
 
         _logger.LogInformation("Maintenance {Number}: {Action} by {UserId}; status now {Status}.",
@@ -273,15 +434,21 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
         return Result<bool>.Ok(true);
     }
 
-    // Every action's notification is decided here, because every action passes through
-    // TransitionAsync. Who gets what:
-    //   accept / reject / inquiry / quote → the tenant
-    //   delegate                          → the tenant, and the broker it was handed to
+    // Every action's notification is decided here. Who gets what:
+    //   accept / reject                  → tenant
+    //   inquiry                          → tenant while pending; broker when the owner asks about a quote
+    //   delegate                         → tenant, and the broker it was handed to
+    //   quote                            → tenant; owner too when it needs their approval
+    //   approve quote                    → broker
+    //   reject quote                     → broker and tenant
+    //   assign technician / reschedule   → tenant and technician
+    //   complete                         → tenant; owner too when the broker ran it
     private async Task NotifyAsync(
         ActionContext ctx, MaintenanceActionType actionType, string? message, Guid? delegatedToBrokerId, CancellationToken ct)
     {
         var subject = await LoadSubjectAsync(ctx.Request, ct);
-        var tenant = new[] { ctx.Request.TenantUserId };
+        Guid[] tenant = [ctx.Request.TenantUserId];
+        Guid[] owner = [ctx.Property.OwnerUserId];
 
         switch (actionType)
         {
@@ -299,6 +466,10 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
                 await _notifications.NotifyAsync(tenant, MaintenanceNotifications.Rejected(subject, message), ct);
                 break;
 
+            case MaintenanceActionType.Inquiry when ctx.StageBefore == MaintenanceStage.AwaitingOwnerApproval:
+                await _notifications.NotifyAsync(await BrokerAsync(ctx, ct), MaintenanceNotifications.OwnerInquiry(subject, message), ct);
+                break;
+
             case MaintenanceActionType.Inquiry:
                 await _notifications.NotifyAsync(tenant, MaintenanceNotifications.Inquiry(subject, message), ct);
                 break;
@@ -306,6 +477,46 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
             case MaintenanceActionType.Quote:
                 var total = (ctx.Request.QuotePartsCost ?? 0) + (ctx.Request.QuoteLaborCost ?? 0);
                 await _notifications.NotifyAsync(tenant, MaintenanceNotifications.Quoted(subject, total), ct);
+                if (ctx.Facts.NeedsOwnerApproval && !ctx.AutoApproved)
+                    await _notifications.NotifyAsync(owner, MaintenanceNotifications.QuoteAwaitingApproval(subject, total), ct);
+                break;
+
+            case MaintenanceActionType.ApproveQuote:
+                await _notifications.NotifyAsync(await BrokerAsync(ctx, ct), MaintenanceNotifications.QuoteApproved(subject), ct);
+                break;
+
+            case MaintenanceActionType.RejectQuote:
+                var quoteRejected = MaintenanceNotifications.QuoteRejected(subject, message);
+                await _notifications.NotifyAsync([.. await BrokerAsync(ctx, ct), .. tenant], quoteRejected, ct);
+                break;
+
+            case MaintenanceActionType.AssignTechnician:
+            {
+                var (visitAr, visitEn) = MaintenanceNotifications.Visit(
+                    ctx.Request.ScheduledVisitDate!.Value, ctx.Request.ScheduledVisitTime!.Value);
+                var technician = await TechnicianUserAsync(ctx.Request, ct);
+                await _notifications.NotifyAsync(tenant, MaintenanceNotifications.TechnicianAssigned(
+                    subject, ctx.Request.RequestNumber, technician?.Name, visitAr, visitEn), ct);
+                if (technician is not null)
+                    await _notifications.NotifyAsync([technician.UserId],
+                        MaintenanceNotifications.JobAssigned(subject, visitAr, visitEn), ct);
+                break;
+            }
+
+            case MaintenanceActionType.Reschedule:
+            {
+                var (visitAr, visitEn) = MaintenanceNotifications.Visit(
+                    ctx.Request.ScheduledVisitDate!.Value, ctx.Request.ScheduledVisitTime!.Value);
+                var technician = await TechnicianUserAsync(ctx.Request, ct);
+                Guid[] recipients = technician is null ? tenant : [.. tenant, technician.UserId];
+                await _notifications.NotifyAsync(recipients, MaintenanceNotifications.Rescheduled(subject, visitAr, visitEn), ct);
+                break;
+            }
+
+            case MaintenanceActionType.Complete:
+                await _notifications.NotifyAsync(tenant, MaintenanceNotifications.CompletedToTenant(subject), ct);
+                if (ctx.Facts.BrokerHandles)
+                    await _notifications.NotifyAsync(owner, MaintenanceNotifications.CompletedToOwner(subject), ct);
                 break;
 
             case MaintenanceActionType.Delegate:
@@ -320,6 +531,26 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
                 break;
         }
     }
+
+    private async Task<Guid[]> BrokerAsync(ActionContext ctx, CancellationToken ct)
+    {
+        var brokerUserId = await _db.Brokers
+            .Where(b => b.Id == ctx.Property.BrokerId)
+            .Select(b => (Guid?)b.UserId)
+            .FirstOrDefaultAsync(ct);
+
+        return brokerUserId is { } id ? [id] : [];
+    }
+
+    private async Task<TechnicianRef?> TechnicianUserAsync(MaintenanceRequest request, CancellationToken ct) =>
+        await _db.Technicians
+            .Where(t => t.Id == request.AssignedTechnicianId)
+            .Select(t => new TechnicianRef
+            {
+                UserId = t.UserId,
+                Name = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault()
+            })
+            .FirstOrDefaultAsync(ct);
 
     private async Task<MaintenanceNotifications.Subject> LoadSubjectAsync(MaintenanceRequest request, CancellationToken ct)
     {
@@ -343,13 +574,25 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
 
     private sealed record PropertyRef(Guid Id, Guid OwnerUserId, Guid? BrokerId);
 
+    private sealed class TechnicianRef
+    {
+        public Guid UserId { get; init; }
+        public string? Name { get; init; }
+        public Result<bool>? Failure { get; private init; }
+
+        public static TechnicianRef Failed(Result<bool> failure) => new() { Failure = failure };
+    }
+
     private sealed class ActionContext
     {
         public MaintenanceRequest Request { get; init; } = null!;
-        public PropertyRef Property { get; init; }
+        public PropertyRef Property { get; init; } = null!;
         public Guid CallerUserId { get; init; }
-        public bool IsOwner { get; init; }
-        public bool IsManagingBroker { get; init; }
+        public MaintenanceFacts Facts { get; init; } = null!;
+        public MaintenanceStage StageBefore { get; init; }
+
+        // Set by SubmitQuote when the total fell under the owner's limit.
+        public bool AutoApproved { get; set; }
 
         public Result<bool>? Failure { get; private init; }
 

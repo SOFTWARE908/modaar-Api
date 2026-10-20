@@ -43,10 +43,26 @@ namespace modaar.api.Features.Maintenance.Dtos
         public string? Description { get; init; }
     }
 
+    // Assigns (or replaces) the technician and fixes the visit to a date and an exact time, as the
+    // broker picks them on the assign screen.
+    public record AssignTechnicianDto
+    {
+        public required Guid TechnicianId { get; init; }
+        public required DateOnly VisitDate { get; init; }
+        public required TimeOnly VisitTime { get; init; }
+    }
+
+    // "تغيير الموعد": same technician, new date and time.
+    public record RescheduleMaintenanceVisitDto
+    {
+        public required DateOnly VisitDate { get; init; }
+        public required TimeOnly VisitTime { get; init; }
+    }
+
     // Alias so the DTO file doesn't pull the Enums namespace into every consumer.
     public enum MaintenanceTimeSlotDto { Morning, Afternoon, Evening }
     public enum MaintenancePriorityDto { Normal, Urgent }
-    public enum MaintenanceCostBearerDto { Owner, Tenant }
+    public enum MaintenanceCostBearerDto { Owner, Tenant, Broker }
 }
 
 namespace modaar.api.Features.Maintenance.Validation
@@ -80,6 +96,14 @@ namespace modaar.api.Features.Maintenance.Validation
                 .WithMessage("A quote must have a non-zero total.");
             RuleFor(x => x.CostBearer).IsInEnum();
             RuleFor(x => x.Description).MaximumLength(1000);
+        }
+    }
+
+    public sealed class AssignTechnicianValidator : AbstractValidator<AssignTechnicianDto>
+    {
+        public AssignTechnicianValidator()
+        {
+            RuleFor(x => x.TechnicianId).NotEmpty();
         }
     }
 

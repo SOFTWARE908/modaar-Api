@@ -41,7 +41,15 @@ public enum MaintenanceActionType
     Delegate,
     // Recorded alongside Accept when a technician is named, so the status history can date it.
     AssignTechnician,
-    Quote
+    Quote,
+    // Managed plan: the owner's answer to the quote (also recorded, with a note, when the quote
+    // was under the auto-approve limit).
+    ApproveQuote,
+    RejectQuote,
+    // A new visit date/time for the assigned technician.
+    Reschedule,
+    // The handler confirmed the work is done; this is what opens rating.
+    Complete
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -87,7 +95,9 @@ public enum MaintenancePriority
 public enum MaintenanceCostBearer
 {
     Owner,
-    Tenant
+    Tenant,
+    // FullyManaged owners: the broker carries the cost as part of the package.
+    Broker
 }
 
 // Finer than Status, for the client's card label and next-step strip. Derived on read and never
@@ -96,9 +106,19 @@ public enum MaintenanceCostBearer
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum MaintenanceStage
 {
+    // Waiting for the broker to accept or reject.
     Pending,
+    // Waiting for the owner to accept or reject (SelfManaged owners, where the broker is not involved).
     WithOwner,
+    // Accepted; the broker has yet to price it (Managed).
     AwaitingQuote,
+    // Priced; waiting for the owner to approve the quote (Managed).
+    AwaitingOwnerApproval,
+    // Approved and ready for someone to assign a technician.
+    ReadyForTechnician,
+    // A technician and a visit time are set.
+    TechnicianAssigned,
+    // Kept for older clients; no request reaches these today.
     Accepted,
     OnTheWay,
     InProgress,
@@ -114,6 +134,7 @@ public enum MaintenanceHandledBy
     Owner
 }
 
+// One entry per recorded action, oldest first.
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum MaintenanceHistoryStep
 {
@@ -122,6 +143,30 @@ public enum MaintenanceHistoryStep
     Rejected,
     // The owner handed the request to the property's broker.
     Delegated,
+    // The handler priced the job.
+    QuoteSubmitted,
+    // The owner approved the quote — or it was under their auto-approve limit (note says so).
+    OwnerApproved,
     TechnicianAssigned,
+    Rescheduled,
     Completed
+}
+
+// What the caller may do to the request right now — the buttons the app shows. Computed on the
+// server from the owner's plan, the request's state and who is asking, so the app never has to
+// re-implement those rules.
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum MaintenanceAvailableAction
+{
+    Accept,
+    Reject,
+    Inquiry,
+    Delegate,
+    SubmitQuote,
+    ApproveQuote,
+    RejectQuote,
+    AssignTechnician,
+    Reschedule,
+    Complete,
+    Rate
 }

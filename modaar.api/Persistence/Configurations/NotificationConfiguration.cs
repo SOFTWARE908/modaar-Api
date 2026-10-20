@@ -32,3 +32,13 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+public class SentReminderConfiguration : IEntityTypeConfiguration<SentReminder>
+{
+    public void Configure(EntityTypeBuilder<SentReminder> b)
+    {
+        b.ToTable("SentReminders");
+        b.HasKey(x => x.Key);
+        b.Property(x => x.Key).HasMaxLength(100);
+    }
+}

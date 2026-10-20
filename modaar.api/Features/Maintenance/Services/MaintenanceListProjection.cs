@@ -32,6 +32,8 @@ public static class MaintenanceListProjection
                 m.PreferredTimeSlot,
                 m.QuoteRequired,
                 HasQuote = m.QuotedAt != null,
+                QuoteApproved = m.QuoteApprovedAt != null,
+                m.SubscriptionPlan,
                 IsRated = db.MaintenanceRatings.Any(r => r.RequestId == m.Id),
                 m.PropertyId,
                 Property = db.Properties
@@ -67,7 +69,9 @@ public static class MaintenanceListProjection
                 ? string.Empty
                 : language.Pick(m.ServiceType.NameAr, m.ServiceType.NameEn);
 
-            var stage = MaintenanceStages.Derive(m.Status, m.Property?.HasBroker ?? false, m.QuoteRequired, m.HasQuote);
+            var stage = MaintenanceStages.Derive(new MaintenanceFacts(
+                m.Status, m.SubscriptionPlan, m.Property?.HasBroker ?? false, m.QuoteRequired, m.HasQuote,
+                m.QuoteApproved, m.Technician is not null, m.IsRated));
 
             return new MaintenanceRequestListItemDto
             {
@@ -87,8 +91,7 @@ public static class MaintenanceListProjection
                 Title = string.IsNullOrWhiteSpace(m.Title) ? categoryName : m.Title,
                 Status = m.Status,
                 Stage = stage,
-                NextActionLabel = MaintenanceStages.NextActionLabel(
-                    stage, m.Technician is not null, date, m.IsRated, language),
+                NextActionLabel = MaintenanceStages.NextActionLabel(stage, date, m.IsRated, language),
                 CreatedAt = m.CreatedAt,
                 PropertyId = m.PropertyId,
                 PropertyTitle = m.Property?.Title ?? string.Empty,

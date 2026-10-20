@@ -9,6 +9,7 @@ using modaar.api.Features.Maintenance.Entities;
 using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Features.Notifications.Services;
 using modaar.api.Features.Users.Dtos;
+using modaar.api.Features.Users.Enums;
 using modaar.api.Persistence;
 using modaar.api.Common.Localization;
 using modaar.api.Features.Maintenance;
@@ -198,16 +199,19 @@ public sealed class MaintenanceService : IMaintenanceService
                 .FirstOrDefaultAsync(ct);
         }
 
+        var facts = new MaintenanceFacts(
+            request.Status, request.SubscriptionPlan, property.BrokerId is not null, request.QuoteRequired,
+            request.QuotedAt is not null, request.QuoteApprovedAt is not null, technician is not null, rating is not null);
+
         var (handledBy, handledByName) = await ResolveHandlerAsync(
-            actions, property.OwnerUserId, property.BrokerId, ct);
+            facts.BrokerHandles, property.OwnerUserId, property.BrokerId, ct);
 
         var visitDate = request.ScheduledVisitDate ?? request.PreferredVisitDate;
         var visitSlot = request.ScheduledTimeSlot ?? request.PreferredTimeSlot;
         var today = SaudiTime.Today(_time);
 
         var categoryName = serviceType is null ? string.Empty : _language.Pick(serviceType.NameAr, serviceType.NameEn);
-        var stage = MaintenanceStages.Derive(
-            request.Status, property.BrokerId is not null, request.QuoteRequired, request.QuotedAt is not null);
+        var stage = MaintenanceStages.Derive(facts);
 
         return Result<MaintenanceRequestDetailsDto>.Ok(new MaintenanceRequestDetailsDto
         {
@@ -219,17 +223,19 @@ public sealed class MaintenanceService : IMaintenanceService
             Location = request.Location,
             Status = request.Status,
             Stage = stage,
-            NextActionLabel = MaintenanceStages.NextActionLabel(
-                stage, technician is not null, visitDate, rating is not null, _language),
+            NextActionLabel = MaintenanceStages.NextActionLabel(stage, visitDate, rating is not null, _language),
             RejectedBy = request.RejectedBy,
             RejectionReason = request.RejectionReason,
             HandledBy = handledBy,
             HandledByName = handledByName,
+            SubscriptionPlan = facts.EffectivePlan,
+            AvailableActions = MaintenanceStages.Available(facts, new MaintenanceCaller(isTenant, isOwner, isBroker)),
             StatusHistory = BuildHistory(request, actions),
             VisitDate = visitDate,
             VisitDayIsTomorrow = visitDate is { } d && d.DayNumber == today.DayNumber + 1,
             VisitTimeRange = visitSlot is { } slot ? VisitSlots.Format(slot) : null,
             VisitTimePeriod = visitSlot,
+            VisitTime = request.ScheduledVisitTime,
             AssignedTechnician = technician is null ? null : new TechnicianDto
             {
                 Id = technician.Id,
@@ -245,7 +251,10 @@ public sealed class MaintenanceService : IMaintenanceService
                 LaborCost = request.QuoteLaborCost ?? 0,
                 Total = (request.QuotePartsCost ?? 0) + (request.QuoteLaborCost ?? 0),
                 CostBearer = request.QuoteCostBearer ?? MaintenanceCostBearer.Owner,
-                Description = request.QuoteDescription
+                Description = request.QuoteDescription,
+                QuotedAt = request.QuotedAt,
+                ApprovedAt = request.QuoteApprovedAt,
+                AutoApproved = request.QuoteAutoApproved
             },
             TenantRatingStars = rating?.Stars,
             Rating = rating is null ? null : ToRatingDto(rating),
@@ -343,6 +352,18 @@ public sealed class MaintenanceService : IMaintenanceService
                     AppErrorCode.ValidationFailed, "One or more attachments are unknown or already used.");
         }
 
+        // The owner's plan at this moment decides the workflow for the life of the request. With no
+        // broker on the property there is no one else to run it, whatever the plan says.
+        var handling = await _db.Properties
+            .AsNoTracking()
+            .Where(p => p.Id == lease.PropertyId)
+            .Select(p => new
+            {
+                HasBroker = p.BrokerId != null,
+                Plan = _db.Users.Where(u => u.Id == p.OwnerUserId).Select(u => u.SubscriptionPlan).FirstOrDefault()
+            })
+            .FirstAsync(ct);
+
         var now = _time.GetUtcNow();
 
         var maintenanceRequest = new MaintenanceRequest
@@ -360,6 +381,7 @@ public sealed class MaintenanceService : IMaintenanceService
             Priority = request.Priority ?? MaintenancePriority.Normal,
             PreferredVisitDate = request.PreferredVisitDate,
             PreferredTimeSlot = request.VisitTimeSlot,
+            SubscriptionPlan = handling.HasBroker ? handling.Plan : OwnerSubscriptionPlan.SelfManaged,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -374,7 +396,7 @@ public sealed class MaintenanceService : IMaintenanceService
         _logger.LogInformation("Maintenance request {Number} created by {UserId} on property {PropertyId}.",
             maintenanceRequest.RequestNumber, tenantUserId, lease.PropertyId);
 
-        // Whoever decides on it hears about it: the owner, and the managing broker if there is one.
+        // Whoever decides on it hears about it: the owner on SelfManaged, the managing broker otherwise.
         var deciders = await _db.Properties
             .AsNoTracking()
             .Where(p => p.Id == lease.PropertyId)
@@ -388,9 +410,10 @@ public sealed class MaintenanceService : IMaintenanceService
             })
             .FirstAsync(ct);
 
-        var recipients = new List<Guid> { deciders.OwnerUserId };
-        if (deciders.BrokerUserId is { } brokerUserId)
-            recipients.Add(brokerUserId);
+        var recipients = maintenanceRequest.SubscriptionPlan != OwnerSubscriptionPlan.SelfManaged &&
+                         deciders.BrokerUserId is { } brokerUserId
+            ? new List<Guid> { brokerUserId }
+            : new List<Guid> { deciders.OwnerUserId };
 
         await _notifications.NotifyAsync(recipients, MaintenanceNotifications.Created(new MaintenanceNotifications.Subject(
             maintenanceRequest.Id, deciders.Title, deciders.Category?.NameAr ?? string.Empty, deciders.Category?.NameEn ?? string.Empty)), ct);
@@ -428,20 +451,12 @@ public sealed class MaintenanceService : IMaintenanceService
     private sealed record ActionRow(
         MaintenanceActionType Type, Guid ActorUserId, string? ActorName, string? Message, DateTimeOffset At);
 
-    // Whoever made the decision handles it. Before anyone has, it is the managing broker if the
-    // property has one, otherwise the owner.
+    // The owner's plan decides who runs the request: the owner on SelfManaged (or when the
+    // property has no broker), the managing broker otherwise.
     private async Task<(MaintenanceHandledBy, string?)> ResolveHandlerAsync(
-        List<ActionRow> actions, Guid ownerUserId, Guid? brokerId, CancellationToken ct)
+        bool brokerHandles, Guid ownerUserId, Guid? brokerId, CancellationToken ct)
     {
-        var decision = actions.LastOrDefault(a =>
-            a.Type is MaintenanceActionType.Accept or MaintenanceActionType.Reject or MaintenanceActionType.Delegate);
-
-        var handledBy = decision switch
-        {
-            { Type: MaintenanceActionType.Delegate } => MaintenanceHandledBy.Broker,
-            not null => decision.ActorUserId == ownerUserId ? MaintenanceHandledBy.Owner : MaintenanceHandledBy.Broker,
-            null => brokerId is null ? MaintenanceHandledBy.Owner : MaintenanceHandledBy.Broker
-        };
+        var handledBy = brokerHandles ? MaintenanceHandledBy.Broker : MaintenanceHandledBy.Owner;
 
         // A broker that has since been unlinked from the property falls back to the owner's name
         // rather than showing nothing.
@@ -465,7 +480,7 @@ public sealed class MaintenanceService : IMaintenanceService
         return (MaintenanceHandledBy.Owner, ownerName);
     }
 
-    // One step per recorded action, oldest first. Inquiries and quotes are not steps on the
+    // One step per recorded action, oldest first. Inquiries are not steps on the
     // tenant's timeline: an inquiry leaves the request pending, so showing it would make the
     // progress look like it went backwards.
     private static List<MaintenanceStatusHistoryItemDto> BuildHistory(MaintenanceRequest request, List<ActionRow> actions)
@@ -483,6 +498,12 @@ public sealed class MaintenanceService : IMaintenanceService
                 MaintenanceActionType.Reject => MaintenanceHistoryStep.Rejected,
                 MaintenanceActionType.Delegate => MaintenanceHistoryStep.Delegated,
                 MaintenanceActionType.AssignTechnician => MaintenanceHistoryStep.TechnicianAssigned,
+                MaintenanceActionType.Quote => MaintenanceHistoryStep.QuoteSubmitted,
+                MaintenanceActionType.ApproveQuote => MaintenanceHistoryStep.OwnerApproved,
+                // A rejected quote closes the request, so it reads as a rejection.
+                MaintenanceActionType.RejectQuote => MaintenanceHistoryStep.Rejected,
+                MaintenanceActionType.Reschedule => MaintenanceHistoryStep.Rescheduled,
+                MaintenanceActionType.Complete => MaintenanceHistoryStep.Completed,
                 _ => null
             };
 
@@ -500,7 +521,8 @@ public sealed class MaintenanceService : IMaintenanceService
             !actions.Any(a => a.Type == MaintenanceActionType.AssignTechnician))
             history.Add(new() { Step = MaintenanceHistoryStep.TechnicianAssigned, At = accept.At, ActorName = accept.ActorName });
 
-        if (request.CompletedAt is { } completedAt)
+        // Requests completed before completion was an action.
+        if (request.CompletedAt is { } completedAt && !actions.Any(a => a.Type == MaintenanceActionType.Complete))
             history.Add(new() { Step = MaintenanceHistoryStep.Completed, At = completedAt });
 
         return history.OrderBy(h => h.At).ToList();
