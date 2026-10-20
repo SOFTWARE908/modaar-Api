@@ -41,4 +41,10 @@ public record PaymentDto
     public string? PaymentMethod { get; init; }
     // Present once an invoice has been generated for this payment.
     public string? InvoiceUrl { get; init; }
+
+    // Who and where, for the owner's and broker's collection list. Null when unknown.
+    public string? TenantName { get; init; }
+    public string? OwnerName { get; init; }
+    public string? PropertyName { get; init; }
+    public string? UnitNumber { get; init; }
 }

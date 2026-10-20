@@ -15,6 +15,7 @@ public class PropertyConfiguration : IEntityTypeConfiguration<Property>
 
         b.Property(p => p.UnitNumber).HasMaxLength(20);
         b.Property(p => p.Floor).HasMaxLength(20);
+        b.Property(p => p.Area).HasPrecision(10, 2);
         b.Property(x => x.Title).HasMaxLength(200).IsRequired();
 
         b.Property(x => x.AddressLine).HasMaxLength(500);
@@ -39,6 +40,8 @@ public class PropertyConfiguration : IEntityTypeConfiguration<Property>
         // "My properties" is always scoped to one owner, so cover that read directly.
         b.HasIndex(x => new { x.OwnerUserId, x.IsDeleted });
         b.HasIndex(x => x.BrokerId);
+        b.HasIndex(x => x.BuildingId);
+        b.HasOne<Features.Buildings.Entities.Building>().WithMany().HasForeignKey(x => x.BuildingId).OnDelete(DeleteBehavior.Restrict);
 
         // NoAction, not Cascade: users are soft-deleted, and a property outliving a deactivated
         // owner account is the behaviour we want anyway.

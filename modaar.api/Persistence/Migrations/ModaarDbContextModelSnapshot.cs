@@ -221,6 +221,65 @@ namespace modaar.api.Persistence.Migrations
                     b.ToTable("UserDevices", (string)null);
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.Building", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AddressLine")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CoverImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("District")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal?>("Latitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.ToTable("Buildings", (string)null);
+                });
+
             modelBuilder.Entity("modaar.api.Features.Chat.Entities.ChatAttachment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1032,6 +1091,33 @@ namespace modaar.api.Persistence.Migrations
                     b.ToTable("TechnicianServiceTypes", (string)null);
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.TechnicianWorkingHours", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DayOfWeek")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<TimeOnly>("End")
+                        .HasColumnType("time");
+
+                    b.Property<TimeOnly>("Start")
+                        .HasColumnType("time");
+
+                    b.Property<Guid>("TechnicianId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TechnicianId", "DayOfWeek")
+                        .IsUnique();
+
+                    b.ToTable("TechnicianWorkingHours", (string)null);
+                });
+
             modelBuilder.Entity("modaar.api.Features.Notifications.Entities.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1338,7 +1424,17 @@ namespace modaar.api.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal?>("Area")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int?>("BathroomsCount")
+                        .HasColumnType("int");
+
                     b.Property<Guid?>("BrokerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BuildingId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("City")
@@ -1407,6 +1503,8 @@ namespace modaar.api.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BrokerId");
+
+                    b.HasIndex("BuildingId");
 
                     b.HasIndex("OwnerUserId", "IsDeleted");
 
@@ -1823,6 +1921,15 @@ namespace modaar.api.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.Building", b =>
+                {
+                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("modaar.api.Features.Chat.Entities.ChatAttachment", b =>
                 {
                     b.HasOne("modaar.api.Features.Chat.Entities.ChatMessage", null)
@@ -2067,6 +2174,15 @@ namespace modaar.api.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.TechnicianWorkingHours", b =>
+                {
+                    b.HasOne("modaar.api.Features.Maintenance.Entities.Technician", null)
+                        .WithMany()
+                        .HasForeignKey("TechnicianId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("modaar.api.Features.Notifications.Entities.Notification", b =>
                 {
                     b.HasOne("modaar.api.Features.Users.Entities.User", null)
@@ -2124,6 +2240,11 @@ namespace modaar.api.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("BrokerId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("modaar.api.Features.Buildings.Entities.Building", null)
+                        .WithMany()
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("modaar.api.Features.Users.Entities.User", null)
                         .WithMany()

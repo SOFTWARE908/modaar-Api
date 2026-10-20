@@ -236,6 +236,9 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
         var technician = await LoadTechnicianAsync(request.TechnicianId, ctx, ct);
         if (technician.Failure is { } techFailure) return techFailure;
 
+        if (await BusyAsync(request.TechnicianId, request.VisitDate, request.VisitTime, ctx.Request.Id, ct) is { } busy)
+            return busy;
+
         ctx.Request.AssignedTechnicianId = request.TechnicianId;
         SetVisit(ctx.Request, request.VisitDate, request.VisitTime);
 
@@ -249,6 +252,10 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
         if (ctx.Failure is { } failure) return failure;
 
         if (VisitInPast(request.VisitDate, request.VisitTime) is { } pastFailure) return pastFailure;
+
+        if (ctx.Request.AssignedTechnicianId is { } technicianId
+            && await BusyAsync(technicianId, request.VisitDate, request.VisitTime, ctx.Request.Id, ct) is { } busy)
+            return busy;
 
         SetVisit(ctx.Request, request.VisitDate, request.VisitTime);
 
@@ -347,6 +354,16 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
             return TechnicianRef.Failed(Forbidden("That technician belongs to a different brokerage."));
 
         return new TechnicianRef { Name = technician.Name, UserId = technician.UserId };
+    }
+
+    // 409 when the technician is booked then, or it's outside their working hours (if set).
+    // This request's own current visit doesn't count, so rescheduling into an overlapping time works.
+    private async Task<Result<bool>?> BusyAsync(Guid technicianId, DateOnly date, TimeOnly time, Guid requestId, CancellationToken ct)
+    {
+        var calendar = (await TechnicianSchedule.LoadAsync(_db, [technicianId], date, ct))[technicianId];
+        return calendar.WhyNot(date.ToDateTime(time), requestId) is { } reason
+            ? Result<bool>.Fail(AppErrorCode.Conflict, reason)
+            : null;
     }
 
     private Result<bool>? VisitInPast(DateOnly date, TimeOnly time)

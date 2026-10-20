@@ -85,6 +85,7 @@ public static class ServiceRegistrationExtensions
         else
             services.AddSingleton<Features.Payments.Gateway.IPaymentGatewayClient, Features.Payments.Gateway.SimulatedMoyasarClient>();
         services.AddScoped<Features.Wallets.Services.IWalletService, Features.Wallets.Services.WalletService>();
+        services.AddScoped<Features.Buildings.Services.IBuildingService, Features.Buildings.Services.BuildingService>();
         services.AddScoped<Features.Payments.Services.IPayService, Features.Payments.Services.PayService>();
 
 

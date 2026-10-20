@@ -9,6 +9,10 @@ public record PropertySummaryDto
     public required Guid Id { get; init; }
     public string? UnitNumber { get; init; }
 
+    // The building it is in: "برج النخيل" under the unit title.
+    public Guid? BuildingId { get; init; }
+    public string? BuildingName { get; init; }
+
     // Text, not a number: "4", "G", "الأرضي".
     public string? Floor { get; init; }
     public required string Title { get; init; }
@@ -20,6 +24,10 @@ public record PropertySummaryDto
 
     public required PropertyType PropertyType { get; init; }
     public required int RoomsCount { get; init; }
+
+    // Square metres and bathrooms; null until the owner fills them in.
+    public decimal? Area { get; init; }
+    public int? BathroomsCount { get; init; }
 
     public required decimal AnnualRent { get; init; }
     public required string Currency { get; init; }

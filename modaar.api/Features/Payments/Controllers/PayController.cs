@@ -77,6 +77,21 @@ public class PayController : ControllerBase
         return (await _pay.SubmitBankTransferAsync(paymentId, userId, file, ct)).ToActionResult();
     }
 
+    // Owner or the property's broker: "إرسال تذكير بالسداد" to the tenant. Unpaid installments
+    // only; once per 24 hours per installment (409 with the next time otherwise).
+    [HttpPost("{paymentId:guid}/remind")]
+    [ProducesResponseType(typeof(PaymentReminderResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Remind(Guid paymentId, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        return (await _pay.SendReminderAsync(paymentId, userId, ct)).ToActionResult();
+    }
+
     // Owner or broker running the property: the money arrived.
     [HttpPost("{paymentId:guid}/bank-transfer/approve")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

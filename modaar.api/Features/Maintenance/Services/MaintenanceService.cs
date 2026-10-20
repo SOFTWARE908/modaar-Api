@@ -99,7 +99,7 @@ public sealed class MaintenanceService : IMaintenanceService
                 .OrderByDescending(m => m.CreatedAt)
                 .Skip(query.SkipCount)
                 .Take(query.MaxResultCount),
-            _db, _language, ct);
+            _db, _language, callerUserId, ct);
 
         return Result<PagedResultDto<MaintenanceRequestListItemDto>>.Ok(
             new PagedResultDto<MaintenanceRequestListItemDto> { Items = items, TotalCount = totalCount });
@@ -148,9 +148,22 @@ public sealed class MaintenanceService : IMaintenanceService
                 t.RatingAverage,
                 User = _db.Users.Where(u => u.Id == t.UserId)
                     .Select(u => new { u.FullName, u.ProfileImageUrl, u.CountryCode, u.PhoneNumber })
-                    .FirstOrDefault()
+                    .FirstOrDefault(),
+                Specialties = _db.TechnicianServiceTypes
+                    .Where(s => s.TechnicianId == t.Id)
+                    .Join(_db.MaintenanceServiceTypes, s => s.ServiceTypeId, st => st.Id,
+                        (s, st) => new { st.NameAr, st.NameEn, st.SortOrder })
+                    .ToList()
             })
             .FirstOrDefaultAsync(ct);
+
+        // The owner as the broker sees them, and the owner's auto-approve limit for both sides.
+        var owner = isBroker || isOwner
+            ? await _db.Users.AsNoTracking()
+                .Where(u => u.Id == property.OwnerUserId)
+                .Select(u => new { u.Id, u.FullName, u.CountryCode, u.PhoneNumber, u.ProfileImageUrl, u.AutoApproveLimit })
+                .FirstOrDefaultAsync(ct)
+            : null;
 
         var attachments = await _db.MaintenanceAttachments
             .AsNoTracking()
@@ -243,7 +256,9 @@ public sealed class MaintenanceService : IMaintenanceService
                 Role = _language.Pick(technician.RoleAr, technician.RoleEn),
                 ImageUrl = technician.User?.ProfileImageUrl,
                 AverageRating = technician.RatingAverage,
-                PhoneNumber = technician.User is null ? null : technician.User.CountryCode + technician.User.PhoneNumber
+                PhoneNumber = technician.User is null ? null : technician.User.CountryCode + technician.User.PhoneNumber,
+                Specialty = MaintenanceListProjection.Specialty(
+                    technician.Specialties.Select(s => (s.NameAr, s.NameEn, s.SortOrder)), _language)
             },
             Quote = request.QuotedAt is null ? null : new MaintenanceQuoteDto
             {
@@ -272,7 +287,15 @@ public sealed class MaintenanceService : IMaintenanceService
             AttachmentImageUrls = attachments,
             PropertyId = property.Id,
             PropertyTitle = property.Title,
-            Tenant = tenant
+            Tenant = tenant,
+            Owner = isBroker && owner is not null ? new MaintenanceOwnerDto
+            {
+                Id = owner.Id,
+                Name = owner.FullName,
+                PhoneNumber = owner.CountryCode + owner.PhoneNumber,
+                AvatarUrl = owner.ProfileImageUrl
+            } : null,
+            AutoApproveLimit = facts.NeedsOwnerApproval ? owner?.AutoApproveLimit : null
         });
     }
 

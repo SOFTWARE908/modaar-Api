@@ -18,6 +18,9 @@ public record TechnicianDto
 
     // International format, "+9665…", for the call button on the technician card.
     public string? PhoneNumber { get; init; }
+
+    // The categories they handle, localized and joined: "سباكة، كهرباء". Null if none set.
+    public string? Specialty { get; init; }
 }
 
 public record MaintenanceRequestListItemDto
@@ -33,7 +36,14 @@ public record MaintenanceRequestListItemDto
     public required DateTimeOffset CreatedAt { get; init; }
 
     // Pre-composed line, e.g. "Nov 4, 2025 · Morning". Null while nothing is scheduled.
+    // In Arabic it comes out in the Hijri calendar; format VisitDate in the app instead.
     public string? VisitSummary { get; init; }
+
+    // The visit as data: scheduled if agreed, otherwise what the tenant asked for. VisitTime is
+    // the exact time once a technician is assigned ("14:30:00"), otherwise null.
+    public DateOnly? VisitDate { get; init; }
+    public TimeOnly? VisitTime { get; init; }
+    public MaintenanceTimeSlot? VisitTimePeriod { get; init; }
 
     public required MaintenanceRequestStatus Status { get; init; }
 
@@ -54,6 +64,19 @@ public record MaintenanceRequestListItemDto
     // Who owns it. Null until that owner completes their profile, which is normal on an
     // account created from a phone number and never filled in.
     public string? OwnerName { get; init; }
+
+    // Who raised it, for the owner's and broker's cards. Null when the caller is that tenant.
+    public string? TenantName { get; init; }
+
+    // The quote total once priced ("اكتمل · 2,400 ر.س"), null before.
+    public decimal? Cost { get; init; }
+
+    // Once the tenant rated it ("تقييم 5/5"): stars, and the average of the four criteria.
+    public int? RatingStars { get; init; }
+    public decimal? RatingAverage { get; init; }
+
+    // The caller's buttons on this card — the same list the details screen returns.
+    public required IReadOnlyList<MaintenanceAvailableAction> AvailableActions { get; init; }
 }
 
 public record MaintenanceRequestDetailsDto
@@ -116,6 +139,21 @@ public record MaintenanceRequestDetailsDto
 
     // Owner and broker views only; null when the caller is the tenant looking at their own request.
     public TenantDto? Tenant { get; init; }
+
+    // The broker's view of whose property it is (call, avatar). Null for everyone else.
+    public MaintenanceOwnerDto? Owner { get; init; }
+
+    // Managed plan, owner and broker only: quotes at or under this are approved without asking
+    // the owner ("يعتمد العروض فوق 300 ر.س"). Null when there is no limit or it doesn't apply.
+    public decimal? AutoApproveLimit { get; init; }
+}
+
+public record MaintenanceOwnerDto
+{
+    public required Guid Id { get; init; }
+    public string? Name { get; init; }
+    public string? PhoneNumber { get; init; }
+    public string? AvatarUrl { get; init; }
 }
 
 public record MaintenanceStatusHistoryItemDto

@@ -11,6 +11,7 @@ using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Features.Properties.Dtos;
 using modaar.api.Features.Properties.Entities;
 using modaar.api.Features.Properties.Enums;
+using modaar.api.Features.Payments.Enums;
 using modaar.api.Features.Users.Dtos;
 using modaar.api.Persistence;
 using System.Drawing.Design;
@@ -93,6 +94,8 @@ public sealed class PropertyService : IPropertyService
                 })
                 .FirstOrDefault(),
             p.UnitNumber,
+            p.BuildingId,
+            BuildingName = _db.Buildings.Where(b => b.Id == p.BuildingId).Select(b => b.Name).FirstOrDefault(),
             p.CreatedAt
         });
 
@@ -118,6 +121,8 @@ public sealed class PropertyService : IPropertyService
             Id = r.Id,
             Title = r.Title,
             UnitNumber = r.UnitNumber,
+            BuildingId = r.BuildingId,
+            BuildingName = r.BuildingName,
             ImageUrl = r.CoverImageUrl,
             Status = r.Contract is null ? PropertyRentalStatus.NotRented : PropertyRentalStatus.Rented,
             AnnualRent = r.AnnualRent,
@@ -169,7 +174,7 @@ public sealed class PropertyService : IPropertyService
             var tenant = await _db.Users
                 .AsNoTracking()
                 .Where(u => u.Id == contract.TenantUserId)
-                .Select(u => new { u.FullName, u.ProfileImageUrl })
+                .Select(u => new { u.FullName, u.ProfileImageUrl, Phone = u.CountryCode + u.PhoneNumber })
                 .FirstOrDefaultAsync(ct);
 
             var hasPendingRenewal = await _db.ContractRequests.AnyAsync(r =>
@@ -186,6 +191,7 @@ public sealed class PropertyService : IPropertyService
                 TenantUserId = contract.TenantUserId,
                 TenantName = tenant?.FullName,
                 TenantAvatarUrl = tenant?.ProfileImageUrl,
+                TenantPhoneNumber = tenant?.Phone,
                 TenantSubtitle = null,
                 Status = contract.Status,
                 ContractStart = contract.StartDate,
@@ -257,12 +263,24 @@ public sealed class PropertyService : IPropertyService
                     .Select(t => new { t.Id, t.Code, t.NameAr, t.NameEn, t.IconUrl, t.SortOrder })
                     .FirstOrDefault(),
         m.Status,
-        m.CreatedAt
+        m.CreatedAt,
+        m.SubscriptionPlan,
+        m.QuoteRequired,
+        HasQuote = m.QuotedAt != null,
+        QuoteTotal = m.QuotedAt != null ? (m.QuotePartsCost ?? 0) + (m.QuoteLaborCost ?? 0) : (decimal?)null,
+        QuoteApproved = m.QuoteApprovedAt != null,
+        HasTechnician = m.AssignedTechnicianId != null,
+        IsRated = _db.MaintenanceRatings.Any(r => r.RequestId == m.Id),
+        VisitDate = m.ScheduledVisitDate ?? m.PreferredVisitDate,
+        TenantName = _db.Users.Where(u => u.Id == m.TenantUserId).Select(u => u.FullName).FirstOrDefault()
     })
     .ToListAsync(ct);
         var history = historyRows.Select(m =>
         {
             var categoryName = _language.Pick(m.ServiceType.NameAr, m.ServiceType.NameEn);
+            var stage = MaintenanceStages.Derive(new MaintenanceFacts(
+                m.Status, m.SubscriptionPlan, property.BrokerId is not null, m.QuoteRequired, m.HasQuote,
+                m.QuoteApproved, m.HasTechnician, m.IsRated));
             return new PropertyMaintenanceHistoryItemDto
             {
                 RequestId = m.Id,
@@ -279,25 +297,63 @@ public sealed class PropertyService : IPropertyService
                 Description = m.ProblemDescription,
                 Status = m.Status,
                 Date = m.CreatedAt,
-                CostAmount = null,
-                Currency = null
+                CostAmount = m.QuoteTotal,
+                Currency = m.QuoteTotal is null ? null : DefaultCurrency,
+                Stage = stage,
+                NextActionLabel = MaintenanceStages.NextActionLabel(stage, m.VisitDate, m.IsRated, _language),
+                TenantName = m.TenantName
             };
 
         }
         ).ToList();
 
+        var contracts = await _db.Contracts
+            .AsNoTracking()
+            .Where(c => c.PropertyId == propertyId)
+            .OrderByDescending(c => c.StartDate)
+            .Select(c => new PropertyContractHistoryItemDto
+            {
+                ContractId = c.Id,
+                ContractNumber = c.ContractNumber,
+                TenantName = _db.Users.Where(u => u.Id == c.TenantUserId).Select(u => u.FullName).FirstOrDefault(),
+                StartDate = c.StartDate,
+                EndDate = c.EndDate,
+                Status = c.Status
+            })
+            .ToListAsync(ct);
+
+        // Vacant since the last lease ended (early termination counts as the end).
+        var lastEnded = contract is not null ? null : await _db.Contracts
+            .AsNoTracking()
+            .Where(c => c.PropertyId == propertyId && c.Status != ContractStatus.Active)
+            .Select(c => (DateOnly?)(c.TerminatedOn ?? c.EndDate))
+            .OrderByDescending(d => d)
+            .FirstOrDefaultAsync(ct);
+
+        var currentRent = contract is null ? null : await CurrentRentAsync(contract, today, ct);
+
+        var buildingName = property.BuildingId is null ? null
+            : await _db.Buildings.Where(b => b.Id == property.BuildingId).Select(b => b.Name).FirstOrDefaultAsync(ct);
+
         return Result<PropertyDetailsDto>.Ok(new PropertyDetailsDto
         {
+            CurrentRent = currentRent,
+            VacantSince = lastEnded,
+            Contracts = contracts,
             Summary = new PropertySummaryDto
             {
                 Id = property.Id,
                 Title = property.Title,
+                BuildingId = property.BuildingId,
+                BuildingName = buildingName,
                 ImageUrl = property.CoverImageUrl,
                 Address = ComposeAddress(property.AddressLine, property.District, property.City),
                 UnitNumber = property.UnitNumber,
                 Floor = property.Floor,
                 PropertyType = property.PropertyType,
                 RoomsCount = property.RoomsCount,
+                Area = property.Area,
+                BathroomsCount = property.BathroomsCount,
                 AnnualRent = property.AnnualRent,
                 Currency = DefaultCurrency,
                 Status = contract is null ? PropertyRentalStatus.NotRented : PropertyRentalStatus.Rented,
@@ -311,6 +367,54 @@ public sealed class PropertyService : IPropertyService
             HandoverDescription = handover?.Description,
             MaintenanceHistory = history
         });
+    }
+
+    // The installment the rent card is about: the oldest overdue one if any; otherwise the one
+    // covering today; otherwise the next one coming. Null when the lease has no schedule yet.
+    private async Task<PropertyCurrentRentDto?> CurrentRentAsync(
+        Features.Contracts.Entities.Contract contract, DateOnly today, CancellationToken ct)
+    {
+        // Installments of this lease. Uploaded rows don't always carry the lease id, so a row for
+        // this unit and this tenant with no lease id counts too.
+        var rent = _db.Payments.AsNoTracking()
+            .Where(p => p.Type == PaymentType.Rent
+                     && (p.ContractId == contract.Id
+                         || (p.ContractId == null && p.PropertyId == contract.PropertyId && p.PayerUserId == contract.TenantUserId)));
+
+        var row = await rent
+                      .Where(p => p.Status == PaymentStatus.Pending && p.DueDate != null && p.DueDate < today)
+                      .OrderBy(p => p.DueDate).FirstOrDefaultAsync(ct)
+                  ?? await rent
+                      .Where(p => p.PeriodStart != null && p.PeriodStart <= today && p.PeriodEnd != null && p.PeriodEnd >= today)
+                      .FirstOrDefaultAsync(ct)
+                  ?? await rent
+                      .Where(p => p.Status != PaymentStatus.Paid && p.DueDate != null && p.DueDate >= today)
+                      .OrderBy(p => p.DueDate).FirstOrDefaultAsync(ct);
+
+        if (row is null)
+            return null;
+
+        var overdue = row.Status == PaymentStatus.Pending && row.DueDate is { } due && due < today;
+        var periodDate = row.PeriodStart ?? row.DueDate ?? DateOnly.FromDateTime(row.Date.UtcDateTime);
+
+        return new PropertyCurrentRentDto
+        {
+            PaymentId = row.Id,
+            // Gregorian month names in Arabic too (ar-EG); ar-SA would give the Hijri month.
+            PeriodLabel = periodDate.ToString("MMMM yyyy",
+                _language.IsArabic ? System.Globalization.CultureInfo.GetCultureInfo("ar-EG") : _language.Culture),
+            Amount = row.Amount,
+            Currency = row.Currency,
+            Status = row.Status switch
+            {
+                PaymentStatus.Paid => PaymentDisplayStatus.Paid,
+                PaymentStatus.UnderReview => PaymentDisplayStatus.UnderReview,
+                _ => overdue ? PaymentDisplayStatus.Overdue : PaymentDisplayStatus.Due
+            },
+            DueDate = row.DueDate,
+            PaidAt = row.Status == PaymentStatus.Paid ? row.Date : null,
+            DaysOverdue = overdue ? today.DayNumber - row.DueDate!.Value.DayNumber : 0
+        };
     }
 
     // Clamped to 0–1 so a lease that started early or has run over doesn't drive the progress bar
@@ -353,10 +457,45 @@ public sealed class PropertyService : IPropertyService
 
         var now = _time.GetUtcNow();
 
+        Guid buildingId;
+        if (request.BuildingId is { } requested)
+        {
+            // Only a building the owner already has units in, or added themselves.
+            var allowed = await _db.Buildings.AnyAsync(b => b.Id == requested &&
+                (b.CreatedByUserId == ownerUserId
+                 || _db.Properties.Any(x => x.BuildingId == b.Id && x.OwnerUserId == ownerUserId && !x.IsDeleted)), ct);
+            if (!allowed)
+                return Result<PropertyDetailsDto>.Fail(AppErrorCode.NotFound, "Building not found.");
+            buildingId = requested;
+        }
+        else
+        {
+            var building = new Features.Buildings.Entities.Building
+            {
+                Id = Guid.NewGuid(),
+                Name = request.Title.Trim(),
+                Type = request.PropertyType == PropertyType.Villa
+                    ? Features.Buildings.Entities.BuildingType.VillaCompound
+                    : Features.Buildings.Entities.BuildingType.ResidentialBuilding,
+                AddressLine = request.AddressLine?.Trim(),
+                District = request.District?.Trim(),
+                City = request.City?.Trim(),
+                Latitude = request.Latitude,
+                Longitude = request.Longitude,
+                CoverImageUrl = request.CoverImageUrl?.Trim(),
+                CreatedByUserId = ownerUserId,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+            _db.Buildings.Add(building);
+            buildingId = building.Id;
+        }
+
         var property = new Property
         {
             Id = Guid.NewGuid(),
             OwnerUserId = ownerUserId,
+            BuildingId = buildingId,
             UnitNumber = string.IsNullOrWhiteSpace(request.UnitNumber)
                 ? null
                 : request.UnitNumber.Trim(),
@@ -364,6 +503,8 @@ public sealed class PropertyService : IPropertyService
             Title = request.Title.Trim(),
             PropertyType = request.PropertyType,
             RoomsCount = request.RoomsCount,
+            Area = request.Area,
+            BathroomsCount = request.BathroomsCount,
             AnnualRent = request.AnnualRent,
             AddressLine = request.AddressLine?.Trim(),
             District = request.District?.Trim(),
@@ -410,6 +551,8 @@ public sealed class PropertyService : IPropertyService
         if (request.PropertyType is { } type) property.PropertyType = type;
         if (request.RoomsCount is { } rooms) property.RoomsCount = rooms;
         if (request.AnnualRent is { } rent) property.AnnualRent = rent;
+        if (request.Area is { } area) property.Area = area;
+        if (request.BathroomsCount is { } baths) property.BathroomsCount = baths;
 
         if (request.AddressLine is not null) property.AddressLine = request.AddressLine.Trim();
         if (request.District is not null) property.District = request.District.Trim();

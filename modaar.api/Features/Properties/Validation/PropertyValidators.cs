@@ -22,6 +22,8 @@ public sealed class CreatePropertyRequestValidator : AbstractValidator<CreatePro
             .WithMessage("رقم الوحدة لا يجوز أن يزيد على 20 حرفاً.");
 
         RuleFor(x => x.Floor).MaximumLength(20);
+        RuleFor(x => x.Area!.Value).GreaterThan(0).LessThan(100_000).When(x => x.Area is not null);
+        RuleFor(x => x.BathroomsCount!.Value).InclusiveBetween(0, 50).When(x => x.BathroomsCount is not null);
 
         RuleFor(x => x.CoverImageUrl).MaximumLength(500);
 
@@ -71,6 +73,8 @@ public sealed class UpdatePropertyRequestValidator : AbstractValidator<UpdatePro
             .WithMessage("رقم الوحدة لا يجوز أن يزيد على 20 حرفاً.");
 
         RuleFor(x => x.Floor).MaximumLength(20);
+        RuleFor(x => x.Area!.Value).GreaterThan(0).LessThan(100_000).When(x => x.Area is not null);
+        RuleFor(x => x.BathroomsCount!.Value).InclusiveBetween(0, 50).When(x => x.BathroomsCount is not null);
 
         RuleFor(x => x.AddressLine).MaximumLength(500);
         RuleFor(x => x.District).MaximumLength(150);

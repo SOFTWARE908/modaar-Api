@@ -64,7 +64,7 @@ public sealed class DashboardService : IDashboardService
 
         var maintenancePreview = await MaintenancePreviewAsync(
             _db.MaintenanceRequests.AsNoTracking()
-                .Where(m => properties.Any(p => p.Id == m.PropertyId)), ct);
+                .Where(m => properties.Any(p => p.Id == m.PropertyId)), userId, ct);
 
         // The brokerage on the owner's portfolio. Taking the first is a simplification: an owner
         // can in principle use different brokers per property, and the spec has one slot.
@@ -92,10 +92,26 @@ public sealed class DashboardService : IDashboardService
                 Value = $"{rate:0}%"
             });
 
+        var (_, expectedThisMonth) = await MonthAsync(payments, ct);
+        var maintenanceCounts = await MaintenanceTaskCountsAsync(
+            _db.MaintenanceRequests.AsNoTracking().Where(m => properties.Any(p => p.Id == m.PropertyId)), userId, ct);
+        var expiringBy = SaudiTime.Today(_time).AddDays(60);
+        var contractsExpiring = await _db.Contracts.AsNoTracking().CountAsync(c =>
+            c.Status == ContractStatus.Active && c.EndDate <= expiringBy && properties.Any(p => p.Id == c.PropertyId), ct);
+
         return Result<OwnerDashboardDto>.Ok(new OwnerDashboardDto
         {
             UserName = user.FullName,
             Revenue = revenue,
+            CollectedThisMonth = revenue.Amount,
+            ExpectedThisMonth = expectedThisMonth,
+            Tasks =
+            [
+                new() { Type = DashboardTaskType.AwaitingOwnerApproval, Count = maintenanceCounts.GetValueOrDefault(MaintenanceAvailableAction.ApproveQuote) },
+                new() { Type = DashboardTaskType.NewRequests, Count = maintenanceCounts.GetValueOrDefault(MaintenanceAvailableAction.Accept) },
+                new() { Type = DashboardTaskType.ReadyForTechnician, Count = maintenanceCounts.GetValueOrDefault(MaintenanceAvailableAction.AssignTechnician) },
+                new() { Type = DashboardTaskType.ContractsExpiring, Count = contractsExpiring }
+            ],
             Stats = stats,
             Broker = broker,
             MaintenancePreview = maintenancePreview,
@@ -325,7 +341,7 @@ public sealed class DashboardService : IDashboardService
 
         var maintenancePreview = await MaintenancePreviewAsync(
             _db.MaintenanceRequests.AsNoTracking()
-                .Where(m => managed.Any(p => p.Id == m.PropertyId)), ct);
+                .Where(m => managed.Any(p => p.Id == m.PropertyId)), userId, ct);
 
         var stats = new List<DashboardStatDto>
         {
@@ -341,9 +357,26 @@ public sealed class DashboardService : IDashboardService
                 Value = $"{rate:0}%"
             });
 
+        var (collected, expected) = await MonthAsync(payments, ct);
+        var counts = await MaintenanceTaskCountsAsync(
+            _db.MaintenanceRequests.AsNoTracking().Where(m => managed.Any(p => p.Id == m.PropertyId)), userId, ct);
+        var lateRent = payments.Where(p => p.Type == PaymentType.Rent && p.Status == PaymentStatus.Pending
+                                           && p.DueDate != null && p.DueDate < today);
+        var lateCount = await lateRent.CountAsync(ct);
+        var lateAmount = await lateRent.SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
+
         return Result<BrokerDashboardDto>.Ok(new BrokerDashboardDto
         {
             UserName = user.FullName,
+            Collected = collected,
+            Expected = expected,
+            Tasks =
+            [
+                new() { Type = DashboardTaskType.NeedsQuote, Count = counts.GetValueOrDefault(MaintenanceAvailableAction.SubmitQuote) },
+                new() { Type = DashboardTaskType.ReadyForTechnician, Count = counts.GetValueOrDefault(MaintenanceAvailableAction.AssignTechnician) },
+                new() { Type = DashboardTaskType.NewRequests, Count = counts.GetValueOrDefault(MaintenanceAvailableAction.Accept) },
+                new() { Type = DashboardTaskType.LateRents, Count = lateCount, Amount = lateAmount }
+            ],
             ClosedDeals = new BrokerDealsSummaryDto { Count = closedThisMonth, PeriodLabel = DashboardLabels.ThisMonth(_language) },
             Stats = stats,
             MaintenancePreview = maintenancePreview,
@@ -355,6 +388,70 @@ public sealed class DashboardService : IDashboardService
             }).ToList(),
             TransactionsPreview = await TransactionsPreviewAsync(payments, ct)
         });
+    }
+
+    // Rent paid this month (by payment date) and rent due this month (by due date, any status),
+    // in Riyadh months.
+    private async Task<(decimal Collected, decimal Expected)> MonthAsync(IQueryable<Payment> payments, CancellationToken ct)
+    {
+        var today = SaudiTime.Today(_time);
+        var first = new DateOnly(today.Year, today.Month, 1);
+        var next = first.AddMonths(1);
+        var start = first.ToDateTime(TimeOnly.MinValue);
+        var from = new DateTimeOffset(start, SaudiTime.Zone.GetUtcOffset(start));
+        var to = from.AddMonths(1);
+
+        var collected = await payments
+            .Where(p => p.Status == PaymentStatus.Paid && p.Date >= from && p.Date < to)
+            .SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
+
+        var expected = await payments
+            .Where(p => p.Type == PaymentType.Rent && p.DueDate != null && p.DueDate >= first && p.DueDate < next)
+            .SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
+
+        return (collected, expected);
+    }
+
+    // How many open requests offer the caller each action. Uses MaintenanceStages.Available, the
+    // rule behind every request's availableActions, so the counts match the buttons.
+    private async Task<Dictionary<MaintenanceAvailableAction, int>> MaintenanceTaskCountsAsync(
+        IQueryable<Features.Maintenance.Entities.MaintenanceRequest> scoped, Guid callerUserId, CancellationToken ct)
+    {
+        var open = await scoped
+            .Where(m => m.Status == MaintenanceRequestStatus.Pending || m.Status == MaintenanceRequestStatus.Accepted)
+            .Select(m => new
+            {
+                m.Status,
+                m.SubscriptionPlan,
+                m.QuoteRequired,
+                m.TenantUserId,
+                HasQuote = m.QuotedAt != null,
+                QuoteApproved = m.QuoteApprovedAt != null,
+                HasTechnician = m.AssignedTechnicianId != null,
+                Property = _db.Properties.Where(p => p.Id == m.PropertyId).Select(p => new
+                {
+                    p.OwnerUserId,
+                    HasBroker = p.BrokerId != null,
+                    BrokerUserId = _db.Brokers.Where(b => b.Id == p.BrokerId).Select(b => (Guid?)b.UserId).FirstOrDefault()
+                }).FirstOrDefault()
+            })
+            .ToListAsync(ct);
+
+        return open
+            .SelectMany(m =>
+            {
+                var facts = new MaintenanceFacts(m.Status, m.SubscriptionPlan, m.Property?.HasBroker ?? false,
+                    m.QuoteRequired, m.HasQuote, m.QuoteApproved, m.HasTechnician, false);
+                var stage = MaintenanceStages.Derive(facts);
+                return MaintenanceStages.Available(facts, new MaintenanceCaller(
+                        m.TenantUserId == callerUserId, m.Property?.OwnerUserId == callerUserId,
+                        m.Property?.BrokerUserId == callerUserId))
+                    // Revising a quote that waits for the owner, or an optional quote, isn't
+                    // "needs a quote": only a request stuck at the pricing step is.
+                    .Where(a => a != MaintenanceAvailableAction.SubmitQuote || stage == MaintenanceStage.AwaitingQuote);
+            })
+            .GroupBy(a => a)
+            .ToDictionary(g => g.Key, g => g.Count());
     }
 
     // Revenue for the current calendar month, with the change against the previous one.
@@ -455,9 +552,9 @@ public sealed class DashboardService : IDashboardService
 
     // Same projection for both dashboards so their maintenance cards cannot drift apart.
     private async Task<List<MaintenanceRequestListItemDto>> MaintenancePreviewAsync(
-        IQueryable<Features.Maintenance.Entities.MaintenanceRequest> scoped, CancellationToken ct) =>
+        IQueryable<Features.Maintenance.Entities.MaintenanceRequest> scoped, Guid callerUserId, CancellationToken ct) =>
         await MaintenanceListProjection.ToListItemsAsync(
-            scoped.OrderByDescending(m => m.CreatedAt).Take(PreviewCount), _db, _language, ct);
+            scoped.OrderByDescending(m => m.CreatedAt).Take(PreviewCount), _db, _language, callerUserId, ct);
 
     private async Task<BrokerSummaryDto?> BrokerSummaryAsync(Guid brokerId, CancellationToken ct)
     {

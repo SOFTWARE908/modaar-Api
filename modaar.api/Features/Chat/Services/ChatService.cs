@@ -144,7 +144,8 @@ public sealed class ChatService : IChatService
                     UserId = x.Other.UserId,
                     Role = x.Other.Role,
                     Name = _db.Users.Where(u => u.Id == x.Other.UserId).Select(u => u.FullName).FirstOrDefault(),
-                    AvatarUrl = _db.Users.Where(u => u.Id == x.Other.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault()
+                    AvatarUrl = _db.Users.Where(u => u.Id == x.Other.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault(),
+                    PhoneNumber = _db.Users.Where(u => u.Id == x.Other.UserId).Select(u => u.CountryCode + u.PhoneNumber).FirstOrDefault()
                 },
                 ContextType = x.Conversation.ContextType,
                 ContextId = x.Conversation.ContextId,

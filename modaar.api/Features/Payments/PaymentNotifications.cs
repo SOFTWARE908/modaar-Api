@@ -55,6 +55,12 @@ public static class PaymentNotifications
         "لم يتم قبول إيصال التحويل", "Bank transfer not accepted",
         $"{s.Ar}\n{reason}", $"{s.En}\n{reason}");
 
+    // To the tenant, sent by hand from the owner's or broker's "إرسال تذكير بالسداد".
+    public static NewNotification ManualReminder(Subject s, string? senderName) => New(s,
+        "تذكير بسداد الإيجار", "Rent payment reminder",
+        $"{s.Ar} · يستحق {s.DueAr}" + (senderName is null ? "" : $"\nمن {senderName}"),
+        $"{s.En} · due {s.DueEn}" + (senderName is null ? "" : $"\nfrom {senderName}"));
+
     private static NewNotification New(Subject s, string titleAr, string titleEn, string bodyAr, string bodyEn) =>
         new(NotificationType.Payments, titleAr, titleEn, bodyAr, bodyEn,
             NotificationTargetType.Payment, s.PaymentId);

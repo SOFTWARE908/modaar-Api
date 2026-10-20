@@ -25,6 +25,10 @@ public record ChatParticipantDto
     public string? Name { get; init; }
     public required AccountType Role { get; init; }
     public string? AvatarUrl { get; init; }
+
+    // "+9665…", for the call button in the chat header. Only ever the other side of a
+    // conversation the caller is already allowed to be in.
+    public string? PhoneNumber { get; init; }
 }
 
 // A row in the conversations tab.

@@ -29,4 +29,33 @@ public class TechniciansController : ControllerBase
 
         return (await _technicians.ListAsync(userId, serviceTypeId, ct)).ToActionResult();
     }
+
+    // The technician's week. Days not listed are days off.
+    [HttpGet("{technicianId:guid}/working-hours")]
+    [ProducesResponseType(typeof(List<WorkingHoursDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetWorkingHours(Guid technicianId, CancellationToken ct) =>
+        (await _technicians.GetWorkingHoursAsync(technicianId, ct)).ToActionResult();
+
+    // Replaces the whole week. The technician themselves, or the brokerage they work for.
+    [HttpPut("{technicianId:guid}/working-hours")]
+    [ProducesResponseType(typeof(List<WorkingHoursDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetWorkingHours(Guid technicianId, [FromBody] SetWorkingHoursDto request, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        return (await _technicians.SetWorkingHoursAsync(technicianId, userId, request, ct)).ToActionResult();
+    }
+
+    // Free two-hour slots, by day. ?from=2026-10-26 (default today) &days=1..14 (default 7).
+    [HttpGet("{technicianId:guid}/availability")]
+    [ProducesResponseType(typeof(TechnicianAvailabilityDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Availability(Guid technicianId, [FromQuery] DateOnly? from, [FromQuery] int days = 7, CancellationToken ct = default) =>
+        (await _technicians.GetAvailabilityAsync(technicianId, from, days, ct)).ToActionResult();
 }

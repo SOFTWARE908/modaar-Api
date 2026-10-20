@@ -4,6 +4,10 @@ namespace modaar.api.Features.Properties.Dtos;
 
 public record CreatePropertyRequestDto
 {
+    // The building to put it in (one the caller already has units in, or added). Omitted → a
+    // building is created from Title and the address, so every unit belongs to one.
+    public Guid? BuildingId { get; init; }
+
     public string? UnitNumber { get; init; }
 
     // Text, not a number: "4", "G", "الأرضي".
@@ -12,6 +16,10 @@ public record CreatePropertyRequestDto
 
     public required PropertyType PropertyType { get; init; }
     public required int RoomsCount { get; init; }
+
+    // Square metres, and bathrooms. Optional.
+    public decimal? Area { get; init; }
+    public int? BathroomsCount { get; init; }
 
     // The asking rent. What a tenant ends up paying is set on their contract.
     public required decimal AnnualRent { get; init; }
@@ -41,6 +49,10 @@ public record UpdatePropertyRequestDto
     public PropertyType? PropertyType { get; init; }
     public int? RoomsCount { get; init; }
     public decimal? AnnualRent { get; init; }
+
+    // Omitted leaves them as they are.
+    public decimal? Area { get; init; }
+    public int? BathroomsCount { get; init; }
 
     public string? AddressLine { get; init; }
     public string? District { get; init; }

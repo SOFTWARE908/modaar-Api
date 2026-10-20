@@ -9,6 +9,8 @@ public record PropertyListItemDto
 {
     public required Guid Id { get; init; }
     public string? UnitNumber { get; init; }
+    public Guid? BuildingId { get; init; }
+    public string? BuildingName { get; init; }
     public required string Title { get; init; }
     public string? ImageUrl { get; init; }
 

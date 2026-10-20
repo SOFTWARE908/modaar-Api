@@ -37,6 +37,7 @@ public class ModaarDbContext : DbContext
 
     // Properties
     public DbSet<Property> Properties => Set<Property>();
+    public DbSet<Features.Buildings.Entities.Building> Buildings => Set<Features.Buildings.Entities.Building>();
     public DbSet<PropertyHandover> PropertyHandovers => Set<PropertyHandover>();
 
     // Contracts
@@ -46,6 +47,7 @@ public class ModaarDbContext : DbContext
     // Maintenance
     public DbSet<Technician> Technicians => Set<Technician>();
     public DbSet<TechnicianServiceType> TechnicianServiceTypes => Set<TechnicianServiceType>();
+    public DbSet<TechnicianWorkingHours> TechnicianWorkingHours => Set<TechnicianWorkingHours>();
 
     public DbSet<MaintenanceRequest> MaintenanceRequests => Set<MaintenanceRequest>();
     public DbSet<MaintenanceAttachment> MaintenanceAttachments => Set<MaintenanceAttachment>();

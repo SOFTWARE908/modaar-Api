@@ -21,6 +21,7 @@ public interface IPayService
     Task<Result<BankTransferDto>> SubmitBankTransferAsync(Guid paymentId, Guid callerUserId, IFormFile receipt, CancellationToken ct);
     Task<Result<bool>> ApproveBankTransferAsync(Guid paymentId, Guid callerUserId, CancellationToken ct);
     Task<Result<bool>> RejectBankTransferAsync(Guid paymentId, Guid callerUserId, RejectBankTransferDto request, CancellationToken ct);
+    Task<Result<PaymentReminderResultDto>> SendReminderAsync(Guid paymentId, Guid callerUserId, CancellationToken ct);
 }
 
 // Paying an installment that is owed (Status = Pending).
@@ -315,6 +316,50 @@ public sealed class PayService : IPayService
             PaymentNotifications.TransferRejected(subject, transfer.RejectionReason), ct);
 
         return Result<bool>.Ok(true);
+    }
+
+    // ---- manual reminder ----
+
+    private static readonly TimeSpan ReminderInterval = TimeSpan.FromHours(24);
+
+    // "إرسال تذكير بالسداد" from the owner or the property's broker — either may send it. At most
+    // once per 24 hours per installment, whoever sends it, so the tenant isn't bombarded.
+    public async Task<Result<PaymentReminderResultDto>> SendReminderAsync(Guid paymentId, Guid callerUserId, CancellationToken ct)
+    {
+        var payment = await _db.Payments.AsNoTracking().FirstOrDefaultAsync(p => p.Id == paymentId, ct);
+        if (payment is null)
+            return Result<PaymentReminderResultDto>.Fail(AppErrorCode.NotFound, "Payment not found.");
+
+        var propertyId = payment.PropertyId ?? await _db.Contracts
+            .Where(c => c.Id == payment.ContractId).Select(c => (Guid?)c.PropertyId).FirstOrDefaultAsync(ct);
+
+        var allowed = propertyId is { } pid && await _db.Properties.AnyAsync(p => p.Id == pid &&
+            (p.OwnerUserId == callerUserId || _db.Brokers.Any(b => b.Id == p.BrokerId && b.UserId == callerUserId)), ct);
+        if (!allowed)
+            return Result<PaymentReminderResultDto>.Fail(AppErrorCode.NotFound, "Payment not found.");
+
+        if (payment.Status != PaymentStatus.Pending)
+            return Result<PaymentReminderResultDto>.Fail(AppErrorCode.Conflict, $"This payment is {payment.Status}; there is nothing to remind about.");
+
+        var now = _time.GetUtcNow();
+        var key = $"manual-reminder:{payment.Id}";
+        var last = await _db.SentReminders.FirstOrDefaultAsync(r => r.Key == key, ct);
+
+        if (last is not null && now - last.SentAt < ReminderInterval)
+            return Result<PaymentReminderResultDto>.Fail(AppErrorCode.Conflict,
+                $"A reminder was already sent; the next one is possible at {last.SentAt + ReminderInterval:yyyy-MM-ddTHH:mm:ssZ}.");
+
+        if (last is null)
+            _db.SentReminders.Add(new modaar.api.Features.Notifications.Entities.SentReminder { Key = key, SentAt = now });
+        else
+            last.SentAt = now;
+        await _db.SaveChangesAsync(ct);
+
+        var (subject, _) = await SubjectAndHandlerAsync(payment, ct);
+        var sender = await _db.Users.Where(u => u.Id == callerUserId).Select(u => u.FullName).FirstOrDefaultAsync(ct);
+        await _notifications.NotifyAsync([payment.PayerUserId], PaymentNotifications.ManualReminder(subject, sender), ct);
+
+        return Result<PaymentReminderResultDto>.Ok(new PaymentReminderResultDto { SentAt = now, NextAllowedAt = now + ReminderInterval });
     }
 
     // ---- shared ----

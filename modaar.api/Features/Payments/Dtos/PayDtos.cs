@@ -66,6 +66,14 @@ namespace modaar.api.Features.Payments.Dtos
         public string? RejectionReason { get; init; }
     }
 
+    public record PaymentReminderResultDto
+    {
+        public required DateTimeOffset SentAt { get; init; }
+
+        // When the next reminder for this installment may go out (24 hours later).
+        public required DateTimeOffset NextAllowedAt { get; init; }
+    }
+
     public record RejectBankTransferDto
     {
         public required string Reason { get; init; }

@@ -1,6 +1,7 @@
 using modaar.api.Features.Contracts.Enums;
 using modaar.api.Features.Maintenance.Dtos;
 using modaar.api.Features.Maintenance.Enums;
+using modaar.api.Features.Payments.Enums;
 using modaar.api.Features.Users.Dtos;
 
 namespace modaar.api.Features.Properties.Dtos;
@@ -22,6 +23,15 @@ public record PropertyDetailsDto
     public required IReadOnlyList<string> HandoverImageUrls { get; init; }
     public string? HandoverDescription { get; init; }
 
+    // The rent card: the installment that matters now. Null with no active lease or no schedule.
+    public PropertyCurrentRentDto? CurrentRent { get; init; }
+
+    // When the last lease ended, for "شاغرة منذ …". Null while rented or if never rented.
+    public DateOnly? VacantSince { get; init; }
+
+    // Every lease on the unit, newest first ("كل العقود").
+    public required IReadOnlyList<PropertyContractHistoryItemDto> Contracts { get; init; }
+
     public required IReadOnlyList<PropertyMaintenanceHistoryItemDto> MaintenanceHistory { get; init; }
 }
 
@@ -34,6 +44,9 @@ public record PropertyTenantContractDto
     public required Guid TenantUserId { get; init; }
     public string? TenantName { get; init; }
     public string? TenantAvatarUrl { get; init; }
+
+    // "+9665…", for the call button on the tenant card.
+    public string? TenantPhoneNumber { get; init; }
 
     // Secondary line under the name, e.g. how long they have been a tenant.
     public string? TenantSubtitle { get; init; }
@@ -69,7 +82,38 @@ public record PropertyMaintenanceHistoryItemDto
 
     public required DateTimeOffset Date { get; init; }
 
-    // Null while the job has no invoice against it.
+    // The quote total once priced; null before.
     public decimal? CostAmount { get; init; }
     public string? Currency { get; init; }
+
+    // Same meaning as on the maintenance list.
+    public required MaintenanceStage Stage { get; init; }
+    public string? NextActionLabel { get; init; }
+    public string? TenantName { get; init; }
+}
+
+public record PropertyCurrentRentDto
+{
+    public required Guid PaymentId { get; init; }
+
+    // "سبتمبر 2026" / "September 2026", from the period the installment covers.
+    public required string PeriodLabel { get; init; }
+    public required decimal Amount { get; init; }
+    public required string Currency { get; init; }
+
+    // paid · due · overdue · underReview
+    public required PaymentDisplayStatus Status { get; init; }
+    public DateOnly? DueDate { get; init; }
+    public DateTimeOffset? PaidAt { get; init; }
+    public required int DaysOverdue { get; init; }
+}
+
+public record PropertyContractHistoryItemDto
+{
+    public required Guid ContractId { get; init; }
+    public required string ContractNumber { get; init; }
+    public string? TenantName { get; init; }
+    public required DateOnly StartDate { get; init; }
+    public required DateOnly EndDate { get; init; }
+    public required ContractStatus Status { get; init; }
 }

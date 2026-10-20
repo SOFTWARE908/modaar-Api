@@ -92,7 +92,13 @@ public sealed class PaymentService : IPaymentService
                 ServiceFee = p.ServiceFee,
                 SadadBillNumber = p.SadadBillNumber,
                 PaymentMethod = p.PaymentMethod,
-                InvoiceUrl = p.InvoiceUrl
+                InvoiceUrl = p.InvoiceUrl,
+                TenantName = _db.Users.Where(u => u.Id == p.PayerUserId).Select(u => u.FullName).FirstOrDefault(),
+                OwnerName = _db.Properties.Where(prop => prop.Id == p.PropertyId)
+                    .Select(prop => _db.Users.Where(u => u.Id == prop.OwnerUserId).Select(u => u.FullName).FirstOrDefault())
+                    .FirstOrDefault(),
+                PropertyName = _db.Properties.Where(prop => prop.Id == p.PropertyId).Select(prop => prop.Title).FirstOrDefault(),
+                UnitNumber = _db.Properties.Where(prop => prop.Id == p.PropertyId).Select(prop => prop.UnitNumber).FirstOrDefault()
             })
             .ToListAsync(ct);
         return Result<PagedResultDto<PaymentDto>>.Ok(

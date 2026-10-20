@@ -14,6 +14,10 @@ public class Property
     // The brokerage managing it, once the owner has authorised one.
     public Guid? BrokerId { get; set; }
 
+    // The building it is in. Null only on units added before buildings existed and deleted since;
+    // the migration grouped every live unit into one.
+    public Guid? BuildingId { get; set; }
+
     public string? UnitNumber { get; set; }
 
     // Text, not a number: "4", "G", "الأرضي", "M" all occur.
@@ -30,6 +34,10 @@ public class Property
 
     public PropertyType PropertyType { get; set; }
     public int RoomsCount { get; set; }
+
+    // Unit specs on the details screen. Null until the owner fills them in.
+    public decimal? Area { get; set; }          // square metres
+    public int? BathroomsCount { get; set; }
 
     // The asking rent, which is what a vacant unit is advertised at. What a sitting tenant
     // actually pays lives on their contract and can differ.
