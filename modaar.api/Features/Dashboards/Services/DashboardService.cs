@@ -60,7 +60,7 @@ public sealed class DashboardService : IDashboardService
             .Where(p => properties.Any(prop => prop.Id == p.PropertyId));
 
         var revenue = await RevenueAsync(payments, ct);
-        var collectionRate = await CollectionRateAsync(payments, ct);
+        var collectionRate = await CollectionRateAsync(payments, SaudiTime.Today(_time), ct);
 
         var maintenancePreview = await MaintenancePreviewAsync(
             _db.MaintenanceRequests.AsNoTracking()
@@ -332,7 +332,7 @@ public sealed class DashboardService : IDashboardService
         var payments = _db.Payments.AsNoTracking()
             .Where(p => managed.Any(prop => prop.Id == p.PropertyId));
 
-        var collectionRate = await CollectionRateAsync(payments, ct);
+        var collectionRate = await CollectionRateAsync(payments, SaudiTime.Today(_time), ct);
 
         var clients = await managed
             .GroupBy(p => p.OwnerUserId)
@@ -493,8 +493,12 @@ public sealed class DashboardService : IDashboardService
     }
 
     // Paid against everything billed. Null when nothing has been billed at all.
-    private static async Task<decimal?> CollectionRateAsync(IQueryable<Payment> payments, CancellationToken ct)
+    // Collected out of what has fallen due: installments due by today (or with no due date), plus
+    // any paid early. Future installments stay out, or a tenant paying on time would read as 2/12.
+    private static async Task<decimal?> CollectionRateAsync(IQueryable<Payment> payments, DateOnly today, CancellationToken ct)
     {
+        payments = payments.Where(p => p.DueDate == null || p.DueDate <= today || p.Status == PaymentStatus.Paid);
+
         var billed = await payments.SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
         if (billed == 0m) return null;
 

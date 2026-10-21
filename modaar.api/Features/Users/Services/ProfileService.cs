@@ -103,7 +103,19 @@ public sealed class ProfileService : IProfileService
             return AuthResult<UserProfileDto>.Fail(AuthErrorCode.UserNotFound, "User not found.");
 
         if (request.AccountTypes is not null)
+        {
             user.AccountTypes = request.AccountTypes.ToList();
+
+            // Everything broker-side (managed units, clients, technicians, reviews) hangs off the
+            // Brokers row, so a user taking the role gets one. Dropping the role keeps the row:
+            // properties and history still point at it.
+            if (user.AccountTypes.Contains(AccountType.Broker) &&
+                !await _db.Brokers.AnyAsync(b => b.UserId == userId, ct))
+            {
+                var now = _time.GetUtcNow();
+                _db.Brokers.Add(new Broker { Id = Guid.NewGuid(), UserId = userId, CreatedAt = now, UpdatedAt = now });
+            }
+        }
 
         if (request.Email is not null)
         {

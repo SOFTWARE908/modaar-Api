@@ -50,6 +50,7 @@ public static class ServiceRegistrationExtensions
         services.AddScoped<ISecuritySettingsService, SecuritySettingsService>();
         services.AddScoped<IBrokerService, Features.Users.Services.BrokerService>();
         services.AddScoped<IOwnerSubscriptionService, OwnerSubscriptionService>();
+        services.AddScoped<IBrokerClientService, BrokerClientService>();
 
 
         services.AddHttpContextAccessor();
