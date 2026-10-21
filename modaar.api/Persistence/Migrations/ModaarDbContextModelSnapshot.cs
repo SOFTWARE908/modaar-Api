@@ -377,7 +377,7 @@ namespace modaar.api.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<Guid>("PropertyId")
+                    b.Property<Guid?>("PropertyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -1411,6 +1411,31 @@ namespace modaar.api.Persistence.Migrations
                     b.ToTable("PaymentTransactions", (string)null);
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Payments.Entities.ReceiptShareLink", b =>
+                {
+                    b.Property<string>("Token")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Token");
+
+                    b.HasIndex("PaymentId", "ExpiresAt");
+
+                    b.ToTable("ReceiptShareLinks", (string)null);
+                });
+
             modelBuilder.Entity("modaar.api.Features.Properties.Entities.Property", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1728,6 +1753,9 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<DateTimeOffset?>("LastLoginAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTimeOffset?>("LastSeenAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("NationalId")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -1964,8 +1992,7 @@ namespace modaar.api.Persistence.Migrations
                     b.HasOne("modaar.api.Features.Properties.Entities.Property", null)
                         .WithMany()
                         .HasForeignKey("PropertyId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
                 });
 
             modelBuilder.Entity("modaar.api.Features.Chat.Entities.ConversationParticipant", b =>
@@ -2226,6 +2253,15 @@ namespace modaar.api.Persistence.Migrations
                 });
 
             modelBuilder.Entity("modaar.api.Features.Payments.Entities.PaymentTransaction", b =>
+                {
+                    b.HasOne("modaar.api.Features.Payments.Entities.Payment", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Payments.Entities.ReceiptShareLink", b =>
                 {
                     b.HasOne("modaar.api.Features.Payments.Entities.Payment", null)
                         .WithMany()

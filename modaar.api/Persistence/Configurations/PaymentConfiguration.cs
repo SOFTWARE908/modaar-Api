@@ -81,3 +81,15 @@ public class PaymentTransactionConfiguration : IEntityTypeConfiguration<PaymentT
         b.HasIndex(x => x.GatewayPaymentId).IsUnique().HasFilter("[GatewayPaymentId] IS NOT NULL");
     }
 }
+
+public class ReceiptShareLinkConfiguration : IEntityTypeConfiguration<ReceiptShareLink>
+{
+    public void Configure(EntityTypeBuilder<ReceiptShareLink> b)
+    {
+        b.ToTable("ReceiptShareLinks");
+        b.HasKey(x => x.Token);
+        b.Property(x => x.Token).HasMaxLength(64);
+        b.HasOne<Payment>().WithMany().HasForeignKey(x => x.PaymentId).OnDelete(DeleteBehavior.Cascade);
+        b.HasIndex(x => new { x.PaymentId, x.ExpiresAt });
+    }
+}

@@ -72,6 +72,7 @@ public static class ServiceRegistrationExtensions
 
         ///////////////////////////payments/////////////////////
         services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<Features.Payments.Services.IReceiptShareService, Features.Payments.Services.ReceiptShareService>();
 
         // Paying installments. With a Moyasar secret key the real gateway is used; without one, a
         // simulator, so the app can build the flow before the account exists. Test → live is
@@ -164,6 +165,7 @@ public static class ServiceRegistrationExtensions
 
         services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, SubClaimUserIdProvider>();
         services.AddSingleton<IRealtimeNotifier, RealtimeNotifier>();
+        services.AddSingleton<PresenceTracker>();
 
         // Scoped: it uses the request's DbContext.
         services.AddScoped<Features.Notifications.Services.INotificationService,

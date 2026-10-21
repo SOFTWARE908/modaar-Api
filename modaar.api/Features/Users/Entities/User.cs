@@ -56,4 +56,7 @@ public class User
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public DateTimeOffset? LastLoginAt { get; set; }
+
+    // When they last closed the app (their last hub connection went away). For "آخر ظهور".
+    public DateTimeOffset? LastSeenAt { get; set; }
 }

@@ -409,7 +409,11 @@ public sealed class PropertyService : IPropertyService
             {
                 PaymentStatus.Paid => PaymentDisplayStatus.Paid,
                 PaymentStatus.UnderReview => PaymentDisplayStatus.UnderReview,
-                _ => overdue ? PaymentDisplayStatus.Overdue : PaymentDisplayStatus.Due
+                _ when overdue => PaymentDisplayStatus.Overdue,
+                // The rent card always shows the next one, so only the window decides.
+                _ => row.DueDate is { } d && d > today.AddDays(PaymentDisplay.DueWindowDays)
+                    ? PaymentDisplayStatus.Scheduled
+                    : PaymentDisplayStatus.Due
             },
             DueDate = row.DueDate,
             PaidAt = row.Status == PaymentStatus.Paid ? row.Date : null,

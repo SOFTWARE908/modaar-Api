@@ -16,23 +16,36 @@ namespace modaar.api.Common.Realtime;
 public sealed class AppHub : Hub
 {
     private readonly ILogger<AppHub> _logger;
+    private readonly PresenceTracker _presence;
 
-    public AppHub(ILogger<AppHub> logger) => _logger = logger;
+    public AppHub(ILogger<AppHub> logger, PresenceTracker presence)
+    {
+        _logger = logger;
+        _presence = presence;
+    }
 
     // Runs once per connection. Context.UserIdentifier comes from SubClaimUserIdProvider.
-    public override Task OnConnectedAsync()
+    public override async Task OnConnectedAsync()
     {
         _logger.LogInformation("Realtime: user {UserId} connected ({ConnectionId}).",
             Context.UserIdentifier, Context.ConnectionId);
-        return base.OnConnectedAsync();
+
+        if (Guid.TryParse(Context.UserIdentifier, out var userId))
+            await _presence.ConnectedAsync(userId);
+
+        await base.OnConnectedAsync();
     }
 
-    // Runs when the app closes the connection or it drops. Nothing to clean up: SignalR removes
-    // the connection from the user on its own.
+    // Runs when the app closes the connection or it drops. SignalR removes the connection from the
+    // user on its own; presence counts it down (and goes offline after a grace period).
     public override Task OnDisconnectedAsync(Exception? exception)
     {
         _logger.LogInformation("Realtime: user {UserId} disconnected ({ConnectionId}).",
             Context.UserIdentifier, Context.ConnectionId);
+
+        if (Guid.TryParse(Context.UserIdentifier, out var userId))
+            _presence.Disconnected(userId);
+
         return base.OnDisconnectedAsync(exception);
     }
 

@@ -20,6 +20,10 @@ public static class HubEvents
     // The unread badge changed without a new item arriving, e.g. read on another device.
     public const string UnreadCountChanged = "unreadCountChanged";
 
+    // Someone you have a conversation with came online or went offline.
+    // Payload: { userId, isOnline, lastSeenAt }.
+    public const string PresenceChanged = "presenceChanged";
+
     // Reply to the hub's Ping method. For testing a connection end to end.
     public const string Pong = "pong";
 }

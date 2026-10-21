@@ -37,7 +37,7 @@ public sealed class MaintenanceService : IMaintenanceService
         _logger = logger;
     }
 
-    public async Task<Result<PagedResultDto<MaintenanceRequestListItemDto>>> ListAsync(
+    public async Task<Result<MaintenanceListResultDto>> ListAsync(
         Guid callerUserId, MaintenanceListQueryDto query, AccountType activeRole, CancellationToken ct)
     {
         var caller = await _db.Users
@@ -47,7 +47,7 @@ public sealed class MaintenanceService : IMaintenanceService
             .FirstOrDefaultAsync(ct);
 
         if (caller is null)
-            return Result<PagedResultDto<MaintenanceRequestListItemDto>>.Fail(
+            return Result<MaintenanceListResultDto>.Fail(
                 AppErrorCode.NotFound, "User not found.");
 
         var requests = _db.MaintenanceRequests.AsNoTracking();
@@ -93,6 +93,10 @@ public sealed class MaintenanceService : IMaintenanceService
         }
 
         var totalCount = await requests.CountAsync(ct);
+        var ownersCount = await requests
+            .Select(r => _db.Properties.Where(p => p.Id == r.PropertyId).Select(p => p.OwnerUserId).FirstOrDefault())
+            .Distinct()
+            .CountAsync(ct);
 
         var items = await MaintenanceListProjection.ToListItemsAsync(
             requests
@@ -101,8 +105,8 @@ public sealed class MaintenanceService : IMaintenanceService
                 .Take(query.MaxResultCount),
             _db, _language, callerUserId, ct);
 
-        return Result<PagedResultDto<MaintenanceRequestListItemDto>>.Ok(
-            new PagedResultDto<MaintenanceRequestListItemDto> { Items = items, TotalCount = totalCount });
+        return Result<MaintenanceListResultDto>.Ok(
+            new MaintenanceListResultDto { Items = items, TotalCount = totalCount, OwnersCount = ownersCount });
     }
 
     public async Task<Result<MaintenanceRequestDetailsDto>> GetDetailsAsync(

@@ -35,6 +35,7 @@ public sealed class ChatService : IChatService
     private readonly IHttpContextAccessor _http;
     private readonly string _uploadsRoot;
     private readonly ILogger<ChatService> _logger;
+    private readonly PresenceTracker _presence;
 
     public ChatService(
         ModaarDbContext db,
@@ -44,8 +45,10 @@ public sealed class ChatService : IChatService
         TimeProvider time,
         IHttpContextAccessor http,
         IConfiguration config,
-        ILogger<ChatService> logger)
+        ILogger<ChatService> logger,
+        PresenceTracker presence)
     {
+        _presence = presence;
         _db = db;
         _access = access;
         _realtime = realtime;
@@ -129,7 +132,7 @@ public sealed class ChatService : IChatService
     {
         var mine = _db.ConversationParticipants.AsNoTracking().Where(p => p.UserId == userId);
 
-        return await shape(mine)
+        var rows = await shape(mine)
             .Select(me => new
             {
                 Conversation = _db.Conversations.First(c => c.Id == me.ConversationId),
@@ -145,12 +148,14 @@ public sealed class ChatService : IChatService
                     Role = x.Other.Role,
                     Name = _db.Users.Where(u => u.Id == x.Other.UserId).Select(u => u.FullName).FirstOrDefault(),
                     AvatarUrl = _db.Users.Where(u => u.Id == x.Other.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault(),
-                    PhoneNumber = _db.Users.Where(u => u.Id == x.Other.UserId).Select(u => u.CountryCode + u.PhoneNumber).FirstOrDefault()
+                    PhoneNumber = _db.Users.Where(u => u.Id == x.Other.UserId).Select(u => u.CountryCode + u.PhoneNumber).FirstOrDefault(),
+                    LastSeenAt = _db.Users.Where(u => u.Id == x.Other.UserId).Select(u => u.LastSeenAt).FirstOrDefault()
                 },
                 ContextType = x.Conversation.ContextType,
                 ContextId = x.Conversation.ContextId,
                 PropertyId = x.Conversation.PropertyId,
-                PropertyTitle = _db.Properties.Where(p => p.Id == x.Conversation.PropertyId).Select(p => p.Title).FirstOrDefault() ?? "",
+                PropertyTitle = x.Conversation.PropertyId == null ? ""
+                    : _db.Properties.Where(p => p.Id == x.Conversation.PropertyId).Select(p => p.Title).FirstOrDefault() ?? "",
                 LastMessage = x.Conversation.LastMessagePreview,
                 LastMessageAt = x.Conversation.LastMessageAt,
                 // Messages from the other side since I last opened it.
@@ -159,6 +164,11 @@ public sealed class ChatService : IChatService
                     && (x.LastReadAt == null || m.CreatedAt > x.LastReadAt))
             })
             .ToListAsync(ct);
+
+        // Online comes from live connections, not the database.
+        return rows
+            .Select(c => c with { Participant = c.Participant with { IsOnline = _presence.IsOnline(c.Participant.UserId) } })
+            .ToList();
     }
 
     // ---- messages ----

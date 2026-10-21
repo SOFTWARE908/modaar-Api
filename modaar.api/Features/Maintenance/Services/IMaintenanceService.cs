@@ -10,7 +10,7 @@ public interface IMaintenanceService
 {
     // Scoped by the caller's account type: a tenant sees their own, an owner sees requests on
     // properties they own, a broker sees the properties they manage.
-    Task<Result<PagedResultDto<MaintenanceRequestListItemDto>>> ListAsync(
+    Task<Result<MaintenanceListResultDto>> ListAsync(
         Guid callerUserId, MaintenanceListQueryDto query, AccountType activeRole, CancellationToken ct);
 
     Task<Result<MaintenanceRequestDetailsDto>> GetDetailsAsync(

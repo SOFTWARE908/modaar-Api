@@ -35,6 +35,7 @@ public sealed class PaymentService : IPaymentService
         if (types is null)
             return Result<PagedResultDto<PaymentDto>>.Fail(AppErrorCode.NotFound, "User not found.");
         var today = SaudiTime.Today(_time);
+        var dueBy = today.AddDays(PaymentDisplay.DueWindowDays);
         var payments = Scope(_db.Payments.AsNoTracking(), callerUserId, activeRole);
 
         if (!query.IncludeUpcoming)
@@ -81,7 +82,16 @@ public sealed class PaymentService : IPaymentService
                     p.Status == PaymentStatus.Paid ? PaymentDisplayStatus.Paid
                     : p.Status == PaymentStatus.UnderReview ? PaymentDisplayStatus.UnderReview
                     : p.DueDate != null && p.DueDate < today ? PaymentDisplayStatus.Overdue
-                    : PaymentDisplayStatus.Due,
+                    // Next to pay and close → due; anything later or queued behind another → scheduled.
+                    // Same rule as PaymentDisplayStatus documents; keep the two copies alike.
+                    : p.DueDate == null
+                      || (p.DueDate <= dueBy && !_db.Payments.Any(o => o.Id != p.Id && o.Type == p.Type
+                             && o.Status == PaymentStatus.Pending && o.DueDate != null && o.DueDate < p.DueDate
+                             && o.PayerUserId == p.PayerUserId
+                             && ((p.ContractId != null && o.ContractId == p.ContractId)
+                                 || (p.ContractId == null && o.ContractId == null && o.PropertyId == p.PropertyId))))
+                        ? PaymentDisplayStatus.Due
+                        : PaymentDisplayStatus.Scheduled,
                 DaysOverdue =
                     p.Status != PaymentStatus.Paid && p.DueDate != null && p.DueDate < today
                         ? EF.Functions.DateDiffDay(p.DueDate.Value, today)

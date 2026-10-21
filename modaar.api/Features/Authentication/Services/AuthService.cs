@@ -187,13 +187,21 @@ public sealed class AuthService : IAuthService
         if (user is null || !user.IsActive)
             return AuthResult<RefreshTokenResponseDto>.Fail(AuthErrorCode.AccountInactive, "Account is inactive.");
 
+        // The role was fixed when the session started; the account may have changed since. A role
+        // the user no longer holds is dropped — otherwise removing "owner" from a profile would
+        // leave owner access refreshing for days. Then the same rule as signing in: one role left
+        // is picked for them, more than one sends them back to the picker.
+        var activeRole = token.ActiveRole is { } held && user.AccountTypes.Contains(held) ? token.ActiveRole : null;
+        if (activeRole is null && user.AccountTypes.Count == 1)
+            activeRole = user.AccountTypes[0];
+
         var newRaw = _jwt.CreateRefreshToken();
         var newToken = new RefreshToken
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
             TokenHash = _jwt.HashToken(newRaw),
-            ActiveRole = token.ActiveRole,
+            ActiveRole = activeRole,
             ExpiresAt = now.AddDays(_jwtSettings.RefreshTokenExpiresDays)
         };
         _db.RefreshTokens.Add(newToken);
@@ -205,8 +213,10 @@ public sealed class AuthService : IAuthService
 
         return AuthResult<RefreshTokenResponseDto>.Ok(new RefreshTokenResponseDto
         {
-            AccessToken = _jwt.CreateAccessToken(user, token.ActiveRole),
-            RefreshToken = newRaw
+            AccessToken = _jwt.CreateAccessToken(user, activeRole),
+            RefreshToken = newRaw,
+            ActiveRole = activeRole,
+            AccountTypes = user.AccountTypes
         });
     }
 

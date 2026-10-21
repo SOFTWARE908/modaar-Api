@@ -3,13 +3,15 @@ using modaar.api.Features.Chat.Enums;
 
 namespace modaar.api.Features.Chat.Entities;
 
-// A two-person conversation. Every conversation hangs off a property — that is what makes the
-// two people related at all — and optionally off a maintenance request or a contract on it.
+// A two-person conversation. Usually it hangs off a property — that is what makes the two people
+// related — and optionally off a maintenance request or a contract on it. The one exception is a
+// broker and an owner who is their client: they can talk in general (PropertyId null), since the
+// client relationship itself relates them.
 public class Conversation
 {
     public Guid Id { get; set; }
 
-    public Guid PropertyId { get; set; }
+    public Guid? PropertyId { get; set; }
 
     public ConversationContextType? ContextType { get; set; }
     public Guid? ContextId { get; set; }

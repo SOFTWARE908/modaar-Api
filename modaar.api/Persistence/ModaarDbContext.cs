@@ -59,6 +59,7 @@ public class ModaarDbContext : DbContext
 
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
+    public DbSet<ReceiptShareLink> ReceiptShareLinks => Set<ReceiptShareLink>();
     public DbSet<Features.Wallets.Entities.Wallet> Wallets => Set<Features.Wallets.Entities.Wallet>();
     public DbSet<Features.Wallets.Entities.WalletTransaction> WalletTransactions => Set<Features.Wallets.Entities.WalletTransaction>();
     public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();

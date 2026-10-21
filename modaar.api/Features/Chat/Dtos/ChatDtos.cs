@@ -16,7 +16,12 @@ public record StartConversationDto
     public Guid? ContextId { get; init; }
 
     // For a general conversation (no context). A tenant with a single active contract can omit it.
+    // A broker and an owner can omit it too, to talk outside any one property.
     public Guid? PropertyId { get; init; }
+
+    // Which person, when the role alone doesn't say: a broker naming one of their client owners,
+    // or an owner with more than one broker naming which. Only for broker <-> owner without a property.
+    public Guid? UserId { get; init; }
 }
 
 public record ChatParticipantDto
@@ -29,6 +34,10 @@ public record ChatParticipantDto
     // "+9665…", for the call button in the chat header. Only ever the other side of a
     // conversation the caller is already allowed to be in.
     public string? PhoneNumber { get; init; }
+
+    // "متصل الآن" / "آخر ظهور". Live changes arrive over the hub as presenceChanged.
+    public bool IsOnline { get; init; }
+    public DateTimeOffset? LastSeenAt { get; init; }
 }
 
 // A row in the conversations tab.
@@ -42,7 +51,8 @@ public record ConversationDto
     public ConversationContextType? ContextType { get; init; }
     public Guid? ContextId { get; init; }
 
-    public required Guid PropertyId { get; init; }
+    // Null on a general broker <-> owner conversation.
+    public Guid? PropertyId { get; init; }
     public required string PropertyTitle { get; init; }
 
     public string? LastMessage { get; init; }

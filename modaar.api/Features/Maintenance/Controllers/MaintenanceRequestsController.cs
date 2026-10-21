@@ -65,7 +65,7 @@ namespace modaar.api.Features.Maintenance.Controllers
         // Scoped by account type: tenants see their own, owners see their properties', brokers
         // see the ones they manage.
         [HttpGet]
-        [ProducesResponseType(typeof(PagedResultDto<MaintenanceRequestListItemDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(MaintenanceListResultDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> List([FromQuery] MaintenanceListQueryDto query, CancellationToken ct)
         {

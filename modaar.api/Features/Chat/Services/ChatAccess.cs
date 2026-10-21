@@ -14,6 +14,8 @@ namespace modaar.api.Features.Chat.Services;
 //   tenant  ↔ broker       managing that unit
 //   tenant  ↔ technician   assigned to the tenant's maintenance request (that request only)
 //   owner   ↔ broker       managing the owner's property
+//   owner   ↔ broker       in general, with no property, when the owner is the broker's client
+//                          (owns at least one property that broker manages)
 //
 // Two checks, both required: the caller must be related to the property in their active role, and
 // the pair (caller role, With) must be one of the lines above. Everything else is refused.
@@ -33,7 +35,7 @@ public sealed class ChatAccess
     public ChatAccess(ModaarDbContext db) => _db = db;
 
     // The other person, resolved from the role the caller asked for.
-    public sealed record Counterpart(Guid PropertyId, Guid UserId, AccountType Role);
+    public sealed record Counterpart(Guid? PropertyId, Guid UserId, AccountType Role);
 
     public async Task<Result<Counterpart>> ResolveAsync(
         Guid callerUserId, AccountType callerRole, StartConversationDto request, CancellationToken ct)
@@ -97,6 +99,10 @@ public sealed class ChatAccess
                         return Fail(AppErrorCode.ValidationFailed,
                             leases.Count == 0 ? "You have no active contract." : "You rent more than one unit; send propertyId.");
                     propertyId = leases[0];
+                }
+                else if ((callerRole, request.With) is (AccountType.Broker, AccountType.Owner) or (AccountType.Owner, AccountType.Broker))
+                {
+                    return await ClientConversationAsync(callerUserId, callerRole, request, ct);
                 }
                 else
                 {
@@ -163,6 +169,44 @@ public sealed class ChatAccess
             return Fail(AppErrorCode.ValidationFailed, "You cannot start a conversation with yourself.");
 
         return Result<Counterpart>.Ok(new Counterpart(propertyId, counterpartId.Value, request.With));
+    }
+
+    // Broker <-> owner with no property: allowed when the owner is the broker's client.
+    private async Task<Result<Counterpart>> ClientConversationAsync(
+        Guid callerUserId, AccountType callerRole, StartConversationDto request, CancellationToken ct)
+    {
+        if (callerRole == AccountType.Broker)
+        {
+            if (request.UserId is not { } ownerId)
+                return Fail(AppErrorCode.ValidationFailed, "Send userId: which of your client owners.");
+
+            var isClient = await _db.Properties.AnyAsync(p => !p.IsDeleted && p.OwnerUserId == ownerId
+                && _db.Brokers.Any(b => b.Id == p.BrokerId && b.UserId == callerUserId), ct);
+
+            // Same answer for "no such user" and "not your client", so it can't be used to probe.
+            return isClient
+                ? Result<Counterpart>.Ok(new Counterpart(null, ownerId, AccountType.Owner))
+                : Fail(AppErrorCode.NotFound, "Client not found.");
+        }
+
+        // An owner: their broker(s) — whoever manages at least one of their properties.
+        var brokers = await _db.Properties.AsNoTracking()
+            .Where(p => !p.IsDeleted && p.OwnerUserId == callerUserId && p.BrokerId != null)
+            .Select(p => _db.Brokers.Where(b => b.Id == p.BrokerId).Select(b => b.UserId).First())
+            .Distinct()
+            .ToListAsync(ct);
+
+        if (request.UserId is { } chosen)
+            return brokers.Contains(chosen)
+                ? Result<Counterpart>.Ok(new Counterpart(null, chosen, AccountType.Broker))
+                : Fail(AppErrorCode.NotFound, "That broker does not manage any of your properties.");
+
+        return brokers.Count switch
+        {
+            1 => Result<Counterpart>.Ok(new Counterpart(null, brokers[0], AccountType.Broker)),
+            0 => Fail(AppErrorCode.NotFound, "None of your properties has a managing broker."),
+            _ => Fail(AppErrorCode.ValidationFailed, "You have more than one broker; send userId.")
+        };
     }
 
     private static Result<Counterpart> Fail(AppErrorCode code, string message) => Result<Counterpart>.Fail(code, message);

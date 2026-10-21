@@ -241,3 +241,10 @@ public record MaintenanceListQueryDto : PagedRequestDto
     public DateOnly? FromDate { get; init; }
     public DateOnly? ToDate { get; init; }
 }
+
+// GET /maintenance-requests: the page, plus how many different owners the whole filtered list
+// spans — "6 طلبات لدى 3 ملاك" — counted over every match, not just this page.
+public record MaintenanceListResultDto : PagedResultDto<MaintenanceRequestListItemDto>
+{
+    public required int OwnersCount { get; init; }
+}
