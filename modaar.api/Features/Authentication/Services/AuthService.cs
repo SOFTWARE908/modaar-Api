@@ -191,9 +191,17 @@ public sealed class AuthService : IAuthService
         // the user no longer holds is dropped — otherwise removing "owner" from a profile would
         // leave owner access refreshing for days. Then the same rule as signing in: one role left
         // is picked for them, more than one sends them back to the picker.
-        var activeRole = token.ActiveRole is { } held && user.AccountTypes.Contains(held) ? token.ActiveRole : null;
-        if (activeRole is null && user.AccountTypes.Count == 1)
-            activeRole = user.AccountTypes[0];
+        if (SignInBlocked(user))
+        {
+            token.RevokedAt = now;
+            await _db.SaveChangesAsync(ct);
+            return AuthResult<RefreshTokenResponseDto>.Fail(AuthErrorCode.SignInNotAvailable, TechnicianSignInMessage);
+        }
+
+        var roles = SignInRoles(user.AccountTypes);
+        var activeRole = token.ActiveRole is { } held && roles.Contains(held) ? token.ActiveRole : null;
+        if (activeRole is null && roles.Count == 1)
+            activeRole = roles[0];
 
         var newRaw = _jwt.CreateRefreshToken();
         var newToken = new RefreshToken
@@ -216,7 +224,7 @@ public sealed class AuthService : IAuthService
             AccessToken = _jwt.CreateAccessToken(user, activeRole),
             RefreshToken = newRaw,
             ActiveRole = activeRole,
-            AccountTypes = user.AccountTypes
+            AccountTypes = roles
         });
     }
 
@@ -427,6 +435,8 @@ public sealed class AuthService : IAuthService
         countryCode ??= latest?.CountryCode;
 
         var user = await FindUserForOtpAsync(method, identifier, countryCode, ct);
+        if (user is not null && SignInBlocked(user))
+            return AuthResult<SendOtpResponseDto>.Fail(AuthErrorCode.SignInNotAvailable, TechnicianSignInMessage);
         var deliveryTarget = method == LoginMethod.NationalIdOtp
             ? (user?.Email ?? identifier)
             : identifier;
@@ -483,9 +493,12 @@ public sealed class AuthService : IAuthService
 
     private async Task<AuthResult<AuthSuccessResponseDto>> SignInAsync(User user, bool isNewUser, CancellationToken ct)
     {
+        if (SignInBlocked(user))
+            return AuthResult<AuthSuccessResponseDto>.Fail(AuthErrorCode.SignInNotAvailable, TechnicianSignInMessage);
 
-        var activeRole = user.AccountTypes.Count == 1
-            ? user.AccountTypes[0]
+        var roles = SignInRoles(user.AccountTypes);
+        var activeRole = roles.Count == 1
+            ? roles[0]
             : (AccountType?)null;
 
         // No role yet: this token exists to reach the picker. Scoped endpoints refuse it.
@@ -510,7 +523,7 @@ public sealed class AuthService : IAuthService
             RefreshToken = refresh,
             AccountType = user.PrimaryAccountType,
             ActiveRole = activeRole,
-            AccountTypes = user.AccountTypes,
+            AccountTypes = roles,
             IsNewUser = isNewUser,
             ProfileStatus = user.ProfileStatus
         });
@@ -567,10 +580,14 @@ public sealed class AuthService : IAuthService
             return AuthResult<AccountTypesResponseDto>.Fail(
                 AuthErrorCode.AccountTypeNotAllowed, "This account has no roles assigned.");
 
+        var roles = SignInRoles(user.AccountTypes);
+        if (roles.Count == 0)
+            return AuthResult<AccountTypesResponseDto>.Fail(AuthErrorCode.SignInNotAvailable, TechnicianSignInMessage);
+
         return AuthResult<AccountTypesResponseDto>.Ok(new AccountTypesResponseDto
         {
-            AccountTypes = user.AccountTypes,
-            Suggested = user.AccountTypes[0]
+            AccountTypes = roles,
+            Suggested = roles[0]
         });
     }
 
@@ -591,6 +608,9 @@ public sealed class AuthService : IAuthService
         if (!user.AccountTypes.Contains(accountType))
             return AuthResult<AuthSuccessResponseDto>.Fail(
                 AuthErrorCode.AccountTypeNotAllowed, "You do not hold that account type.");
+
+        if (!SignInRoles([accountType]).Any())
+            return AuthResult<AuthSuccessResponseDto>.Fail(AuthErrorCode.SignInNotAvailable, TechnicianSignInMessage);
 
         var now = _time.GetUtcNow();
 
@@ -625,11 +645,22 @@ public sealed class AuthService : IAuthService
             RefreshToken = refresh,
             AccountType = accountType,
             ActiveRole = accountType,
-            AccountTypes = user.AccountTypes,
+            AccountTypes = SignInRoles(user.AccountTypes),
             IsNewUser = false,
             ProfileStatus = user.ProfileStatus
         });
     }
+
+    // Technicians have no screens in the app yet, so the role can't be signed into: an account
+    // holding only that role can't sign in at all, and one holding others isn't offered it.
+    // Tenant ↔ technician chat stays; it just has no one answering on that side for now.
+    private const string TechnicianSignInMessage = "Technician accounts can't sign in to the app yet.";
+
+    private static List<AccountType> SignInRoles(IEnumerable<AccountType> held) =>
+        held.Where(t => t != AccountType.Technician).ToList();
+
+    private static bool SignInBlocked(User user) =>
+        user.AccountTypes.Count > 0 && SignInRoles(user.AccountTypes).Count == 0;
 
     private static AuthResult<ResendOtpResponseDto> Map(AuthResult<SendOtpResponseDto> source, string successMessage)
     {

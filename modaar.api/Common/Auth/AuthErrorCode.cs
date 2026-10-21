@@ -16,5 +16,6 @@ public enum AuthErrorCode
     RoleNotSelected,
     BiometricKeyInvalid,
     BiometricNotRegistered,
-    BiometricChallengeFailed
+    BiometricChallengeFailed,
+    SignInNotAvailable
 }

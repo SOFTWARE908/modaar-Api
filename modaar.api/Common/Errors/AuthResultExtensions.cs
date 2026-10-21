@@ -42,6 +42,7 @@ public static class AuthResultExtensions
         AuthErrorCode.BiometricKeyInvalid      => (StatusCodes.Status400BadRequest,    "Invalid biometric key"),
         AuthErrorCode.BiometricNotRegistered   => (StatusCodes.Status404NotFound,      "Biometric login not set up"),
         AuthErrorCode.BiometricChallengeFailed => (StatusCodes.Status401Unauthorized,  "Biometric verification failed"),
+        AuthErrorCode.SignInNotAvailable       => (StatusCodes.Status403Forbidden,     "Sign-in not available"),
         _                                      => (StatusCodes.Status500InternalServerError, "Authentication error")
     };
 }
