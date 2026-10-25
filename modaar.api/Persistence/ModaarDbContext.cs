@@ -66,6 +66,9 @@ public class ModaarDbContext : DbContext
     public DbSet<Features.Agreements.Entities.ManagementAgreement> ManagementAgreements => Set<Features.Agreements.Entities.ManagementAgreement>();
     public DbSet<Features.Agreements.Entities.AgreementProperty> AgreementProperties => Set<Features.Agreements.Entities.AgreementProperty>();
     public DbSet<Features.Agreements.Entities.AgreementEvent> AgreementEvents => Set<Features.Agreements.Entities.AgreementEvent>();
+    public DbSet<Features.Announcements.Entities.Announcement> Announcements => Set<Features.Announcements.Entities.Announcement>();
+    public DbSet<Features.Announcements.Entities.AnnouncementRecipient> AnnouncementRecipients => Set<Features.Announcements.Entities.AnnouncementRecipient>();
+    public DbSet<Features.Announcements.Entities.AnnouncementCategory> AnnouncementCategories => Set<Features.Announcements.Entities.AnnouncementCategory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

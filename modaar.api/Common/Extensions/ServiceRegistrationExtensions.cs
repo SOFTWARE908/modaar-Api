@@ -52,6 +52,7 @@ public static class ServiceRegistrationExtensions
         services.AddScoped<IOwnerSubscriptionService, OwnerSubscriptionService>();
         services.AddScoped<IBrokerClientService, BrokerClientService>();
         services.AddScoped<Features.Agreements.Services.IManagementAgreementService, Features.Agreements.Services.ManagementAgreementService>();
+        services.AddScoped<Features.Announcements.Services.IAnnouncementService, Features.Announcements.Services.AnnouncementService>();
 
 
         services.AddHttpContextAccessor();

@@ -9,7 +9,8 @@ public enum NotificationType
     Maintenance,
     Payments,
     Messages,
-    Contracts
+    Contracts,
+    Announcements
 }
 
 // What tapping the notification opens. The app pairs it with TargetId to navigate.
@@ -20,5 +21,6 @@ public enum NotificationTargetType
     Payment,
     Conversation,
     Contract,
-    ManagementAgreement
+    ManagementAgreement,
+    Announcement
 }

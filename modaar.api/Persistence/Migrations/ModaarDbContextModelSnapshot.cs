@@ -243,6 +243,231 @@ namespace modaar.api.Persistence.Migrations
                     b.ToTable("ManagementAgreements", (string)null);
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Announcements.Entities.Announcement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<Guid?>("BuildingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.Property<DateTimeOffset?>("EndsAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.PrimitiveCollection<string>("PropertyIds")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset?>("StartsAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuildingId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("OwnerUserId", "CreatedAt");
+
+                    b.ToTable("Announcements", (string)null);
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Announcements.Entities.AnnouncementCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "SortOrder");
+
+                    b.ToTable("AnnouncementCategories", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a7c1e7a0-0001-4c1a-9a01-000000000001"),
+                            Code = "elevator_maintenance",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            NameAr = "صيانة المصعد",
+                            NameEn = "Elevator maintenance",
+                            SortOrder = 10,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a7c1e7a0-0001-4c1a-9a01-000000000002"),
+                            Code = "stairs_cleaning",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            NameAr = "غسيل السلالم",
+                            NameEn = "Stairwell cleaning",
+                            SortOrder = 20,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a7c1e7a0-0001-4c1a-9a01-000000000003"),
+                            Code = "painting",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            NameAr = "دهان",
+                            NameEn = "Painting",
+                            SortOrder = 30,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a7c1e7a0-0001-4c1a-9a01-000000000004"),
+                            Code = "water_outage",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            NameAr = "انقطاع المياه",
+                            NameEn = "Water outage",
+                            SortOrder = 40,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a7c1e7a0-0001-4c1a-9a01-000000000005"),
+                            Code = "power_outage",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            NameAr = "انقطاع الكهرباء",
+                            NameEn = "Power outage",
+                            SortOrder = 50,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a7c1e7a0-0001-4c1a-9a01-000000000006"),
+                            Code = "water_tank_cleaning",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            NameAr = "تنظيف خزانات المياه",
+                            NameEn = "Water tank cleaning",
+                            SortOrder = 60,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a7c1e7a0-0001-4c1a-9a01-000000000007"),
+                            Code = "pest_control",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            NameAr = "مكافحة الحشرات",
+                            NameEn = "Pest control",
+                            SortOrder = 70,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("a7c1e7a0-0001-4c1a-9a01-000000000008"),
+                            Code = "general",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            NameAr = "إعلان عام",
+                            NameEn = "General notice",
+                            SortOrder = 100,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Announcements.Entities.AnnouncementRecipient", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("AcknowledgedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("AnnouncementId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PropertyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PropertyId");
+
+                    b.HasIndex("TenantUserId");
+
+                    b.HasIndex("AnnouncementId", "TenantUserId")
+                        .IsUnique();
+
+                    b.ToTable("AnnouncementRecipients", (string)null);
+                });
+
             modelBuilder.Entity("modaar.api.Features.Authentication.Entities.OtpCode", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2158,6 +2383,47 @@ namespace modaar.api.Persistence.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Announcements.Entities.Announcement", b =>
+                {
+                    b.HasOne("modaar.api.Features.Buildings.Entities.Building", null)
+                        .WithMany()
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("modaar.api.Features.Announcements.Entities.AnnouncementCategory", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Announcements.Entities.AnnouncementRecipient", b =>
+                {
+                    b.HasOne("modaar.api.Features.Announcements.Entities.Announcement", null)
+                        .WithMany("Recipients")
+                        .HasForeignKey("AnnouncementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("modaar.api.Features.Properties.Entities.Property", null)
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("TenantUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("modaar.api.Features.Authentication.Entities.RefreshToken", b =>
                 {
                     b.HasOne("modaar.api.Features.Users.Entities.User", null)
@@ -2754,6 +3020,11 @@ namespace modaar.api.Persistence.Migrations
             modelBuilder.Entity("modaar.api.Features.Agreements.Entities.ManagementAgreement", b =>
                 {
                     b.Navigation("Properties");
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Announcements.Entities.Announcement", b =>
+                {
+                    b.Navigation("Recipients");
                 });
 #pragma warning restore 612, 618
         }
