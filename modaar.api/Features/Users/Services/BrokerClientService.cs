@@ -75,7 +75,7 @@ public sealed class BrokerClientService : IBrokerClientService
         }
 
         var people = await owners
-            .Select(u => new { u.Id, u.FullName, Phone = u.CountryCode + u.PhoneNumber, u.ProfileImageUrl, u.SubscriptionPlan, u.AutoApproveLimit })
+            .Select(u => new { u.Id, u.FullName, Phone = u.CountryCode + u.PhoneNumber, u.ProfileImageUrl })
             .ToListAsync(ct);
 
         var rows = people
@@ -96,8 +96,6 @@ public sealed class BrokerClientService : IBrokerClientService
                     RentedUnits = rented,
                     VacantUnits = mine.Count - rented,
                     MonthlyIncome = Math.Round(mine.Sum(x => x.MonthlyRent), 2),
-                    Plan = u.SubscriptionPlan,
-                    AutoApproveLimit = u.AutoApproveLimit,
                     MandateStatus = mandate.Status,
                     UnitsEndingSoon = mandate.UnitsEndingSoon,
                     CommissionPercent = mandate.Current?.ManagementFeePercent
@@ -127,7 +125,7 @@ public sealed class BrokerClientService : IBrokerClientService
         var owner = units.Count == 0 && agreements.Count == 0 ? null : await _db.Users
             .AsNoTracking()
             .Where(u => u.Id == ownerUserId && !u.IsDeleted)
-            .Select(u => new { u.FullName, Phone = u.CountryCode + u.PhoneNumber, u.ProfileImageUrl, u.SubscriptionPlan, u.AutoApproveLimit })
+            .Select(u => new { u.FullName, Phone = u.CountryCode + u.PhoneNumber, u.ProfileImageUrl })
             .FirstOrDefaultAsync(ct);
 
         // One answer for "no such owner" and "not your client", so a broker can't probe for users.
@@ -171,6 +169,12 @@ public sealed class BrokerClientService : IBrokerClientService
 
         var rented = units.Count(u => u.Rented);
 
+        var buildingIds = units.Where(u => u.BuildingId != null).Select(u => u.BuildingId!.Value).Distinct().ToList();
+        var plans = await _db.BuildingOwnerSubscriptions
+            .AsNoTracking()
+            .Where(s => s.OwnerUserId == ownerUserId && buildingIds.Contains(s.BuildingId))
+            .ToDictionaryAsync(s => s.BuildingId, ct);
+
         var properties = units
             .GroupBy(u => u.BuildingId ?? u.Id)
             .Select(g =>
@@ -186,7 +190,9 @@ public sealed class BrokerClientService : IBrokerClientService
                     TotalUnits = g.Count(),
                     RentedUnits = r,
                     OccupancyPercent = Percent(r, g.Count()),
-                    EndsOn = g.Select(u => endsOn.GetValueOrDefault(u.Id)).Where(d => d != null).Min()
+                    EndsOn = g.Select(u => endsOn.GetValueOrDefault(u.Id)).Where(d => d != null).Min(),
+                    Plan = plans.TryGetValue(g.Key, out var s) ? s.Plan : BuildingSubscriptions.Default.Plan,
+                    AutoApproveLimit = plans.TryGetValue(g.Key, out var l) ? l.AutoApproveLimit : null
                 };
             })
             .OrderByDescending(p => p.TotalUnits)
@@ -220,8 +226,6 @@ public sealed class BrokerClientService : IBrokerClientService
                 IsRenewal = pending.RenewedFromId != null,
                 CreatedAt = pending.CreatedAt
             },
-            Plan = owner.SubscriptionPlan,
-            AutoApproveLimit = owner.AutoApproveLimit,
             TotalUnits = units.Count,
             RentedUnits = rented,
             VacantUnits = units.Count - rented,

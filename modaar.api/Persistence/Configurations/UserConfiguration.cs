@@ -39,15 +39,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasDefaultValue("ar");
 
-        // No HasDefaultValue: SelfManaged is the enum's zero, and EF would read it as "unset" and
-        // let a database default overwrite it. Existing rows got Managed from the migration.
-        b.Property(u => u.SubscriptionPlan)
-            .HasConversion<string>()
-            .HasMaxLength(20)
-            .IsRequired();
-
-        b.Property(u => u.AutoApproveLimit).HasPrecision(18, 2);
-
         b.Property(u => u.RememberMe).HasDefaultValue(false);
         b.Property(u => u.FaceIdEnabled).HasDefaultValue(false);
         b.Property(u => u.BiometricEnabled).HasDefaultValue(false);

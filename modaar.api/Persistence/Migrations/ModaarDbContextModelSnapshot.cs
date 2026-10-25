@@ -2082,6 +2082,49 @@ namespace modaar.api.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Users.Entities.BuildingOwnerSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("AutoApproveLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("BuildingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Plan")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerUserId");
+
+                    b.HasIndex("BuildingId", "OwnerUserId")
+                        .IsUnique();
+
+                    b.ToTable("BuildingOwnerSubscriptions", (string)null);
+                });
+
             modelBuilder.Entity("modaar.api.Features.Users.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2091,10 +2134,6 @@ namespace modaar.api.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<decimal?>("AutoApproveLimit")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("BiometricEnabled")
                         .ValueGeneratedOnAdd()
@@ -2185,11 +2224,6 @@ namespace modaar.api.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
-
-                    b.Property<string>("SubscriptionPlan")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -2997,6 +3031,21 @@ namespace modaar.api.Persistence.Migrations
                     b.Navigation("Broker");
 
                     b.Navigation("Reviewer");
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Users.Entities.BuildingOwnerSubscription", b =>
+                {
+                    b.HasOne("modaar.api.Features.Buildings.Entities.Building", null)
+                        .WithMany()
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("modaar.api.Features.Wallets.Entities.Wallet", b =>

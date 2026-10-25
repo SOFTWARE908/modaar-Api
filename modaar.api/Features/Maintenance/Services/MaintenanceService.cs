@@ -10,6 +10,7 @@ using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Features.Notifications.Services;
 using modaar.api.Features.Users.Dtos;
 using modaar.api.Features.Users.Enums;
+using modaar.api.Features.Users.Services;
 using modaar.api.Persistence;
 using modaar.api.Common.Localization;
 using modaar.api.Features.Maintenance;
@@ -161,13 +162,15 @@ public sealed class MaintenanceService : IMaintenanceService
             })
             .FirstOrDefaultAsync(ct);
 
-        // The owner as the broker sees them, and the owner's auto-approve limit for both sides.
+        // The owner as the broker sees them, and the owner's auto-approve limit in this building for
+        // both sides.
         var owner = isBroker || isOwner
             ? await _db.Users.AsNoTracking()
                 .Where(u => u.Id == property.OwnerUserId)
-                .Select(u => new { u.Id, u.FullName, u.CountryCode, u.PhoneNumber, u.ProfileImageUrl, u.AutoApproveLimit })
+                .Select(u => new { u.Id, u.FullName, u.CountryCode, u.PhoneNumber, u.ProfileImageUrl })
                 .FirstOrDefaultAsync(ct)
             : null;
+        var ownerLimit = owner is null ? null : (await BuildingSubscriptions.ForPropertyAsync(_db, property.Id, ct)).AutoApproveLimit;
 
         var attachments = await _db.MaintenanceAttachments
             .AsNoTracking()
@@ -299,7 +302,7 @@ public sealed class MaintenanceService : IMaintenanceService
                 PhoneNumber = owner.CountryCode + owner.PhoneNumber,
                 AvatarUrl = owner.ProfileImageUrl
             } : null,
-            AutoApproveLimit = facts.NeedsOwnerApproval ? owner?.AutoApproveLimit : null
+            AutoApproveLimit = facts.NeedsOwnerApproval ? ownerLimit : null
         });
     }
 
@@ -379,17 +382,10 @@ public sealed class MaintenanceService : IMaintenanceService
                     AppErrorCode.ValidationFailed, "One or more attachments are unknown or already used.");
         }
 
-        // The owner's plan at this moment decides the workflow for the life of the request. With no
-        // broker on the property there is no one else to run it, whatever the plan says.
-        var handling = await _db.Properties
-            .AsNoTracking()
-            .Where(p => p.Id == lease.PropertyId)
-            .Select(p => new
-            {
-                HasBroker = p.BrokerId != null,
-                Plan = _db.Users.Where(u => u.Id == p.OwnerUserId).Select(u => u.SubscriptionPlan).FirstOrDefault()
-            })
-            .FirstAsync(ct);
+        // The owner's plan in this building at this moment decides the workflow for the life of the
+        // request. With no broker on the property there is no one else to run it, whatever the plan says.
+        var hasBroker = await _db.Properties.AnyAsync(p => p.Id == lease.PropertyId && p.BrokerId != null, ct);
+        var plan = (await BuildingSubscriptions.ForPropertyAsync(_db, lease.PropertyId, ct)).Plan;
 
         var now = _time.GetUtcNow();
 
@@ -408,7 +404,7 @@ public sealed class MaintenanceService : IMaintenanceService
             Priority = request.Priority ?? MaintenancePriority.Normal,
             PreferredVisitDate = request.PreferredVisitDate,
             PreferredTimeSlot = request.VisitTimeSlot,
-            SubscriptionPlan = handling.HasBroker ? handling.Plan : OwnerSubscriptionPlan.SelfManaged,
+            SubscriptionPlan = hasBroker ? plan : OwnerSubscriptionPlan.SelfManaged,
             CreatedAt = now,
             UpdatedAt = now
         };

@@ -38,6 +38,7 @@ public class ModaarDbContext : DbContext
     // Properties
     public DbSet<Property> Properties => Set<Property>();
     public DbSet<Features.Buildings.Entities.Building> Buildings => Set<Features.Buildings.Entities.Building>();
+    public DbSet<Features.Users.Entities.BuildingOwnerSubscription> BuildingOwnerSubscriptions => Set<Features.Users.Entities.BuildingOwnerSubscription>();
     public DbSet<PropertyHandover> PropertyHandovers => Set<PropertyHandover>();
 
     // Contracts

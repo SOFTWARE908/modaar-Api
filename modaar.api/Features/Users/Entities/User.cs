@@ -29,12 +29,6 @@ public class User
 
     public ProfileStatus ProfileStatus { get; set; } = ProfileStatus.Incomplete;
 
-    // Owner accounts only: the subscription the managing broker set for them, and the quote
-    // amount at or under which the broker may approve maintenance without asking (Managed plan;
-    // null = every quote needs the owner). Set by the broker, read-only to the owner.
-    public OwnerSubscriptionPlan SubscriptionPlan { get; set; } = OwnerSubscriptionPlan.Managed;
-    public decimal? AutoApproveLimit { get; set; }
-
     // Nullable: OTP-only users may never set a password.
     public string? PasswordHash { get; set; }
     public string? ProfileImageUrl { get; set; }

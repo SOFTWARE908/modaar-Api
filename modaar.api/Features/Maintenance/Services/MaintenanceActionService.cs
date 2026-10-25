@@ -6,6 +6,7 @@ using modaar.api.Features.Maintenance.Entities;
 using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Features.Notifications.Services;
 using modaar.api.Features.Users.Enums;
+using modaar.api.Features.Users.Services;
 using modaar.api.Persistence;
 
 namespace modaar.api.Features.Maintenance.Services;
@@ -180,11 +181,9 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
 
         if (ctx.Facts.NeedsOwnerApproval)
         {
-            // Read live, not snapshotted: the limit is the owner's standing instruction to the broker.
-            var limit = await _db.Users
-                .Where(u => u.Id == ctx.Property.OwnerUserId)
-                .Select(u => u.AutoApproveLimit)
-                .FirstOrDefaultAsync(ct);
+            // Read live, not snapshotted: the limit is the owner's standing instruction to the broker
+            // for this building.
+            var limit = (await BuildingSubscriptions.ForPropertyAsync(_db, ctx.Property.Id, ct)).AutoApproveLimit;
 
             if (limit is { } max && total <= max)
             {

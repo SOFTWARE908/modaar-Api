@@ -31,9 +31,6 @@ public record BrokerClientListItemDto
     // Rent per month of the active leases (annual rent / 12, or the installment spread over its period).
     public required decimal MonthlyIncome { get; init; }
 
-    public required OwnerSubscriptionPlan Plan { get; init; }
-    public decimal? AutoApproveLimit { get; init; }
-
     // The relationship as a whole: pending (waiting for the owner), active, endingSoon (every
     // unit still held leaves within 30 days) or expired.
     public required AgreementDisplayStatus MandateStatus { get; init; }
@@ -66,9 +63,6 @@ public record BrokerClientDetailsDto
     // Waiting for the owner: a first agreement or a renewal.
     public BrokerClientPendingMandateDto? PendingMandate { get; init; }
 
-    public required OwnerSubscriptionPlan Plan { get; init; }
-    public decimal? AutoApproveLimit { get; init; }
-
     public required int TotalUnits { get; init; }
     public required int RentedUnits { get; init; }
     public required int VacantUnits { get; init; }
@@ -98,6 +92,10 @@ public record BrokerClientPropertyDto
 
     // When the first of these units leaves the agreement. Null if none has a lease to leave with.
     public DateOnly? EndsOn { get; init; }
+
+    // This owner's subscription in this building (default managed when never set).
+    public required OwnerSubscriptionPlan Plan { get; init; }
+    public decimal? AutoApproveLimit { get; init; }
 }
 
 public record BrokerClientMandateDto

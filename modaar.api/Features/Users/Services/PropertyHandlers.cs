@@ -4,8 +4,8 @@ using modaar.api.Persistence;
 
 namespace modaar.api.Features.Users.Services;
 
-// Who runs a property day to day, by the owner's subscription: the owner on SelfManaged (or when
-// the property has no broker), the managing broker otherwise. The same rule maintenance follows,
+// Who runs a property day to day, by the owner's subscription in that building: the owner on
+// SelfManaged (or when the property has no broker), the managing broker otherwise. The same rule maintenance follows,
 // for notices that go "to the owner or the broker".
 public static class PropertyHandlers
 {
@@ -19,13 +19,18 @@ public static class PropertyHandlers
             {
                 p.Id,
                 p.OwnerUserId,
-                Plan = db.Users.Where(u => u.Id == p.OwnerUserId).Select(u => u.SubscriptionPlan).FirstOrDefault(),
+                Plan = db.BuildingOwnerSubscriptions
+                    .Where(s => s.BuildingId == p.BuildingId && s.OwnerUserId == p.OwnerUserId)
+                    .Select(s => (OwnerSubscriptionPlan?)s.Plan)
+                    .FirstOrDefault(),
                 BrokerUserId = db.Brokers.Where(b => b.Id == p.BrokerId).Select(b => (Guid?)b.UserId).FirstOrDefault()
             })
             .ToListAsync(ct);
 
         return rows.ToDictionary(
             r => r.Id,
-            r => r.BrokerUserId is { } broker && r.Plan != OwnerSubscriptionPlan.SelfManaged ? broker : r.OwnerUserId);
+            r => r.BrokerUserId is { } broker && (r.Plan ?? BuildingSubscriptions.Default.Plan) != OwnerSubscriptionPlan.SelfManaged
+                ? broker
+                : r.OwnerUserId);
     }
 }

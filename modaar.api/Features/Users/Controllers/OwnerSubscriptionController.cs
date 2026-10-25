@@ -8,8 +8,9 @@ using modaar.api.Features.Users.Services;
 
 namespace modaar.api.Features.Users.Controllers;
 
-// The owner's subscription plan (selfManaged / managed / fullyManaged) and auto-approve limit.
-// The broker sets it for their clients; the owner can only see it.
+// The owner's subscription plan (selfManaged / managed / fullyManaged) and auto-approve limit,
+// per building: a building can hold several owners' units, each with their own plan. The broker
+// sets it for their clients; the owner can only see it.
 [ApiController]
 [Authorize]
 [Produces("application/json")]
@@ -73,7 +74,8 @@ public class OwnerSubscriptionController : ControllerBase
         return (await _subscriptions.GetForBrokerAsync(userId, ownerUserId, ct)).ToActionResult();
     }
 
-    // Applies to requests raised from now on; open requests keep the plan they started under.
+    // Every building of the client's the broker runs units in. Applies to requests raised from now
+    // on; open requests keep the plan they started under.
     [HttpPut("api/brokers/me/clients/{ownerUserId:guid}/subscription")]
     [ProducesResponseType(typeof(OwnerSubscriptionDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -86,6 +88,21 @@ public class OwnerSubscriptionController : ControllerBase
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
         return (await _subscriptions.UpdateForBrokerAsync(userId, ownerUserId, request, ct)).ToActionResult();
+    }
+
+    // One building. 404 unless the broker runs at least one of this owner's units in it.
+    [HttpPut("api/brokers/me/clients/{ownerUserId:guid}/buildings/{buildingId:guid}/subscription")]
+    [ProducesResponseType(typeof(BuildingSubscriptionDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateBuildingForBroker(
+        Guid ownerUserId, Guid buildingId, [FromBody] UpdateOwnerSubscriptionDto request, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        return (await _subscriptions.UpdateBuildingForBrokerAsync(userId, ownerUserId, buildingId, request, ct)).ToActionResult();
     }
 
     [HttpGet("api/profile/subscription")]
