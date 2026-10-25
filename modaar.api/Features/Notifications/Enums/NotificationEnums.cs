@@ -19,5 +19,6 @@ public enum NotificationTargetType
     MaintenanceRequest,
     Payment,
     Conversation,
-    Contract
+    Contract,
+    ManagementAgreement
 }

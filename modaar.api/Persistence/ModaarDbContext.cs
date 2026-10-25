@@ -63,6 +63,9 @@ public class ModaarDbContext : DbContext
     public DbSet<Features.Wallets.Entities.Wallet> Wallets => Set<Features.Wallets.Entities.Wallet>();
     public DbSet<Features.Wallets.Entities.WalletTransaction> WalletTransactions => Set<Features.Wallets.Entities.WalletTransaction>();
     public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
+    public DbSet<Features.Agreements.Entities.ManagementAgreement> ManagementAgreements => Set<Features.Agreements.Entities.ManagementAgreement>();
+    public DbSet<Features.Agreements.Entities.AgreementProperty> AgreementProperties => Set<Features.Agreements.Entities.AgreementProperty>();
+    public DbSet<Features.Agreements.Entities.AgreementEvent> AgreementEvents => Set<Features.Agreements.Entities.AgreementEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

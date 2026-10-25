@@ -51,6 +51,7 @@ public static class ServiceRegistrationExtensions
         services.AddScoped<IBrokerService, Features.Users.Services.BrokerService>();
         services.AddScoped<IOwnerSubscriptionService, OwnerSubscriptionService>();
         services.AddScoped<IBrokerClientService, BrokerClientService>();
+        services.AddScoped<Features.Agreements.Services.IManagementAgreementService, Features.Agreements.Services.ManagementAgreementService>();
 
 
         services.AddHttpContextAccessor();
@@ -194,6 +195,8 @@ public static class ServiceRegistrationExtensions
         // Once-a-day work. Registration order is run order: expiry before renewal reminders.
         services.Configure<Jobs.JobsSettings>(configuration.GetSection(Jobs.JobsSettings.SectionName));
         services.AddScoped<Jobs.IDailyJob, Features.Contracts.Jobs.ContractExpiryJob>();
+        services.AddScoped<Jobs.IDailyJob, Features.Agreements.Jobs.AgreementUnitExitJob>();
+        services.AddScoped<Jobs.IDailyJob, Features.Agreements.Jobs.AgreementExitReminderJob>();
         services.AddScoped<Jobs.IDailyJob, Features.Contracts.Jobs.ContractRenewalReminderJob>();
         services.AddScoped<Jobs.IDailyJob, Features.Payments.Jobs.RentReminderJob>();
         services.AddHostedService<Jobs.DailyJobsRunner>();

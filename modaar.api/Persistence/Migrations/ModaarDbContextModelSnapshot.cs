@@ -76,6 +76,173 @@ namespace modaar.api.Persistence.Migrations
                     b.ToTable("BrokerManagementRequests", (string)null);
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Agreements.Entities.AgreementEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AgreementId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("At")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid?>("PropertyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgreementId", "At");
+
+                    b.ToTable("AgreementEvents", (string)null);
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Agreements.Entities.AgreementProperty", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("ActiveFrom")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("AgreementId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ContractId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("EndsOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ExitReason")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateOnly?>("ExitedOn")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("PropertyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContractId");
+
+                    b.HasIndex("PropertyId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_AgreementProperties_PropertyId_Held")
+                        .HasFilter("[ActiveFrom] IS NOT NULL AND [ExitedOn] IS NULL");
+
+                    b.HasIndex("AgreementId", "PropertyId")
+                        .IsUnique();
+
+                    b.ToTable("AgreementProperties", (string)null);
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Agreements.Entities.ManagementAgreement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("BrokerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DocumentUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("EndReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid?>("EndedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("EndedOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("LeasingFeeType")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal?>("LeasingFeeValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("ManagementFeePercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("RenewedFromId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("RenewedFromId");
+
+                    b.HasIndex("RequestId");
+
+                    b.HasIndex("BrokerId", "Status");
+
+                    b.HasIndex("OwnerUserId", "Status");
+
+                    b.ToTable("ManagementAgreements", (string)null);
+                });
+
             modelBuilder.Entity("modaar.api.Features.Authentication.Entities.OtpCode", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1931,6 +2098,66 @@ namespace modaar.api.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Agreements.Entities.AgreementEvent", b =>
+                {
+                    b.HasOne("modaar.api.Features.Agreements.Entities.ManagementAgreement", null)
+                        .WithMany()
+                        .HasForeignKey("AgreementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Agreements.Entities.AgreementProperty", b =>
+                {
+                    b.HasOne("modaar.api.Features.Agreements.Entities.ManagementAgreement", null)
+                        .WithMany("Properties")
+                        .HasForeignKey("AgreementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("modaar.api.Features.Contracts.Entities.Contract", null)
+                        .WithMany()
+                        .HasForeignKey("ContractId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("modaar.api.Features.Properties.Entities.Property", null)
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Agreements.Entities.ManagementAgreement", b =>
+                {
+                    b.HasOne("modaar.api.Features.Users.Entities.Broker", null)
+                        .WithMany()
+                        .HasForeignKey("BrokerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("modaar.api.Features.Agreements.Entities.ManagementAgreement", null)
+                        .WithMany()
+                        .HasForeignKey("RenewedFromId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("BrokerManagementRequest", null)
+                        .WithMany()
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.NoAction);
+                });
+
             modelBuilder.Entity("modaar.api.Features.Authentication.Entities.RefreshToken", b =>
                 {
                     b.HasOne("modaar.api.Features.Users.Entities.User", null)
@@ -2522,6 +2749,11 @@ namespace modaar.api.Persistence.Migrations
                         .HasForeignKey("WalletId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Agreements.Entities.ManagementAgreement", b =>
+                {
+                    b.Navigation("Properties");
                 });
 #pragma warning restore 612, 618
         }

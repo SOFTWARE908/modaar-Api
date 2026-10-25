@@ -22,17 +22,20 @@ public sealed class ContractService : IContractService
     private readonly TimeProvider _time;
     private readonly IRequestLanguage _language;
     private readonly ILogger<ContractService> _logger;
+    private readonly Features.Agreements.Services.IManagementAgreementService _agreements;
 
     public ContractService(
         ModaarDbContext db,
         TimeProvider time,
         IRequestLanguage language,
-        ILogger<ContractService> logger)
+        ILogger<ContractService> logger,
+        Features.Agreements.Services.IManagementAgreementService agreements)
     {
         _db = db;
         _time = time;
         _language = language;
         _logger = logger;
+        _agreements = agreements;
     }
 
     public async Task<Result<PagedResultDto<ContractDto>>> ListAsync(
@@ -322,6 +325,9 @@ public sealed class ContractService : IContractService
 
         _logger.LogInformation("Contract {Number} terminated by owner {UserId}; {Count} open request(s) cancelled.",
             contract.ContractNumber, callerUserId, openRequests.Count);
+
+        // A unit under a management agreement leaves it the day its lease is ended early.
+        await _agreements.SyncPropertiesAsync([contract.PropertyId], ct);
 
         // Nothing to return: the lease was ended, not requested.
         return Result<ContractRequestHistoryItemDto?>.Ok(null);

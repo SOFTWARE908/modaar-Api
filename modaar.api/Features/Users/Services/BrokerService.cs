@@ -20,17 +20,20 @@ public sealed class BrokerService : IBrokerService
     private readonly TimeProvider _time;
     private readonly IRequestLanguage _language;
     private readonly ILogger<BrokerService> _logger;
+    private readonly Features.Notifications.Services.INotificationService _notifications;
 
     public BrokerService(
         ModaarDbContext db,
         TimeProvider time,
         IRequestLanguage language,
-        ILogger<BrokerService> logger)
+        ILogger<BrokerService> logger,
+        Features.Notifications.Services.INotificationService notifications)
     {
         _db = db;
         _time = time;
         _language = language;
         _logger = logger;
+        _notifications = notifications;
     }
 
     public async Task<Result<BrokerDto>> GetProfileAsync(
@@ -176,6 +179,10 @@ public sealed class BrokerService : IBrokerService
         _logger.LogInformation(
             "Management request from owner {OwnerId} to broker {BrokerId} over {Count} propert(ies).",
             ownerUserId, brokerId, propertyIds.Count == 0 ? -1 : propertyIds.Count);
+
+        var brokerUserId = await _db.Brokers.Where(b => b.Id == brokerId).Select(b => b.UserId).FirstAsync(ct);
+        var ownerName = await _db.Users.Where(u => u.Id == ownerUserId).Select(u => u.FullName).FirstOrDefaultAsync(ct);
+        await _notifications.NotifyAsync([brokerUserId], Features.Agreements.AgreementNotifications.NewRequest(ownerName), ct);
 
         return Result<bool>.Ok(true);
     }
