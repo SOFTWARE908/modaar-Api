@@ -327,8 +327,9 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
         };
     }
 
-    // A technician must belong to the property's brokerage, or be independent. Otherwise one
-    // brokerage could send another's staff to a job.
+    // Who may be sent depends on who runs the request. The owner (selfManaged, or no broker):
+    // only technicians linked to them. The broker: their own staff, or independents (no brokerage
+    // and no owner) — never another brokerage's staff or an owner's private technicians.
     private async Task<TechnicianRef> LoadTechnicianAsync(Guid technicianId, ActionContext ctx, CancellationToken ct)
     {
         var technician = await _db.Technicians
@@ -339,7 +340,9 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
                 t.BrokerId,
                 t.IsAvailable,
                 t.UserId,
-                Name = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault()
+                Name = _db.Users.Where(u => u.Id == t.UserId).Select(u => u.FullName).FirstOrDefault(),
+                LinkedToOwner = _db.OwnerTechnicians.Any(o => o.TechnicianId == t.Id && o.OwnerUserId == ctx.Property.OwnerUserId),
+                LinkedToAnyOwner = _db.OwnerTechnicians.Any(o => o.TechnicianId == t.Id)
             })
             .FirstOrDefaultAsync(ct);
 
@@ -349,8 +352,19 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
         if (!technician.IsAvailable)
             return TechnicianRef.Failed(Result<bool>.Fail(AppErrorCode.Conflict, "That technician is not available."));
 
-        if (technician.BrokerId is not null && technician.BrokerId != ctx.Property.BrokerId)
+        if (!ctx.Facts.BrokerHandles)
+        {
+            if (!technician.LinkedToOwner)
+                return TechnicianRef.Failed(Forbidden("Pick one of your own technicians."));
+        }
+        else if (technician.BrokerId is not null && technician.BrokerId != ctx.Property.BrokerId)
+        {
             return TechnicianRef.Failed(Forbidden("That technician belongs to a different brokerage."));
+        }
+        else if (technician.BrokerId is null && technician.LinkedToAnyOwner)
+        {
+            return TechnicianRef.Failed(Forbidden("That technician works privately for an owner."));
+        }
 
         return new TechnicianRef { Name = technician.Name, UserId = technician.UserId };
     }

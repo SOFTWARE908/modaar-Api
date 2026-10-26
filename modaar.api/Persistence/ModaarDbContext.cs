@@ -48,6 +48,7 @@ public class ModaarDbContext : DbContext
     // Maintenance
     public DbSet<Technician> Technicians => Set<Technician>();
     public DbSet<TechnicianServiceType> TechnicianServiceTypes => Set<TechnicianServiceType>();
+    public DbSet<OwnerTechnician> OwnerTechnicians => Set<OwnerTechnician>();
     public DbSet<TechnicianWorkingHours> TechnicianWorkingHours => Set<TechnicianWorkingHours>();
 
     public DbSet<MaintenanceRequest> MaintenanceRequests => Set<MaintenanceRequest>();

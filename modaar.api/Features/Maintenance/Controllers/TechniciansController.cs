@@ -27,7 +27,7 @@ public class TechniciansController : ControllerBase
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
-        return (await _technicians.ListAsync(userId, serviceTypeId, ct)).ToActionResult();
+        return (await _technicians.ListAsync(userId, User.GetActiveRole(), serviceTypeId, ct)).ToActionResult();
     }
 
     // The technician's week. Days not listed are days off.

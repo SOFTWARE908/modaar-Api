@@ -61,6 +61,7 @@ public static class ServiceRegistrationExtensions
 
         services.AddScoped<IMaintenanceActionService, MaintenanceActionService>();
         services.AddScoped<ITechnicianService, TechnicianService>();
+        services.AddScoped<IOwnerTechnicianService, OwnerTechnicianService>();
 
         services.AddScoped<IMaintenanceFeedbackService, MaintenanceFeedbackService>();
 

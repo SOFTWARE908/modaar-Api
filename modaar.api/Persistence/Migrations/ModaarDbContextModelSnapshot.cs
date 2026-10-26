@@ -17,7 +17,7 @@ namespace modaar.api.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.21")
+                .HasAnnotation("ProductVersion", "9.0.22")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -1417,6 +1417,35 @@ namespace modaar.api.Persistence.Migrations
                     b.ToTable("MaintenanceServiceTypes", (string)null);
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.OwnerTechnician", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TechnicianId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TechnicianId");
+
+                    b.HasIndex("OwnerUserId", "TechnicianId")
+                        .IsUnique();
+
+                    b.ToTable("OwnerTechnicians", (string)null);
+                });
+
             modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.Technician", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2696,6 +2725,21 @@ namespace modaar.api.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("RequestId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.OwnerTechnician", b =>
+                {
+                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("modaar.api.Features.Maintenance.Entities.Technician", null)
+                        .WithMany()
+                        .HasForeignKey("TechnicianId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 

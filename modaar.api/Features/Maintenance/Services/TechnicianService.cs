@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using modaar.api.Common.Localization;
 using modaar.api.Common.Results;
+using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Maintenance.Dtos;
 using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Persistence;
@@ -9,7 +10,7 @@ namespace modaar.api.Features.Maintenance.Services;
 
 public interface ITechnicianService
 {
-    Task<Result<List<TechnicianListItemDto>>> ListAsync(Guid callerUserId, Guid? serviceTypeId, CancellationToken ct);
+    Task<Result<List<TechnicianListItemDto>>> ListAsync(Guid callerUserId, AccountType? role, Guid? serviceTypeId, CancellationToken ct);
     Task<Result<List<WorkingHoursDto>>> GetWorkingHoursAsync(Guid technicianId, CancellationToken ct);
     Task<Result<List<WorkingHoursDto>>> SetWorkingHoursAsync(Guid technicianId, Guid callerUserId, SetWorkingHoursDto request, CancellationToken ct);
     Task<Result<TechnicianAvailabilityDto>> GetAvailabilityAsync(Guid technicianId, DateOnly? from, int days, CancellationToken ct);
@@ -31,23 +32,30 @@ public sealed class TechnicianService : ITechnicianService
         _time = time;
     }
 
-    // Only technicians the caller could actually assign — the same rule assign-technician checks:
-    // independents, plus a brokerage's own staff for that brokerage (a broker caller) or for the
-    // brokerages managing the caller's properties (an owner caller).
+    // Only technicians the caller could actually assign — the same rule assign-technician checks.
+    // An owner assigns only on units they run themselves, from their own linked technicians. A
+    // broker gets their own staff plus independents (no brokerage, no owner): an owner's private
+    // technicians are never theirs to send.
     public async Task<Result<List<TechnicianListItemDto>>> ListAsync(
-        Guid callerUserId, Guid? serviceTypeId, CancellationToken ct)
+        Guid callerUserId, AccountType? role, Guid? serviceTypeId, CancellationToken ct)
     {
-        var brokerIds = await _db.Brokers
-            .Where(b => b.UserId == callerUserId)
-            .Select(b => b.Id)
-            .Union(_db.Properties
-                .Where(p => p.OwnerUserId == callerUserId && p.BrokerId != null)
-                .Select(p => p.BrokerId!.Value))
-            .ToListAsync(ct);
+        var available = _db.Technicians.AsNoTracking().Where(t => t.IsAvailable);
+        IQueryable<Entities.Technician> technicians;
 
-        var technicians = _db.Technicians
-            .AsNoTracking()
-            .Where(t => t.IsAvailable && (t.BrokerId == null || brokerIds.Contains(t.BrokerId.Value)));
+        if (role == AccountType.Owner)
+        {
+            technicians = available.Where(t => _db.OwnerTechnicians.Any(o => o.TechnicianId == t.Id && o.OwnerUserId == callerUserId));
+        }
+        else
+        {
+            var brokerIds = role == AccountType.Broker
+                ? await _db.Brokers.Where(b => b.UserId == callerUserId).Select(b => b.Id).ToListAsync(ct)
+                : [];
+
+            technicians = available.Where(t =>
+                (t.BrokerId != null && brokerIds.Contains(t.BrokerId.Value)) ||
+                (t.BrokerId == null && !_db.OwnerTechnicians.Any(o => o.TechnicianId == t.Id)));
+        }
 
         if (serviceTypeId is { } typeId)
             technicians = technicians.Where(t =>
