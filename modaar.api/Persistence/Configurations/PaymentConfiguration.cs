@@ -46,9 +46,9 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         // NoAction throughout: SQL Server rejects multiple cascade paths into this table, and a
         // payment must outlive a delisted property or a soft-deleted account regardless — it is
         // a financial record.
-        b.HasOne<User>().WithMany().HasForeignKey(x => x.PayerUserId).OnDelete(DeleteBehavior.NoAction);
-        b.HasOne<Property>().WithMany().HasForeignKey(x => x.PropertyId).OnDelete(DeleteBehavior.NoAction);
-        b.HasOne<Contract>().WithMany().HasForeignKey(x => x.ContractId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Payer).WithMany().HasForeignKey(x => x.PayerUserId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Property).WithMany().HasForeignKey(x => x.PropertyId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Contract).WithMany().HasForeignKey(x => x.ContractId).OnDelete(DeleteBehavior.NoAction);
         b.HasOne<MaintenanceRequest>().WithMany().HasForeignKey(x => x.MaintenanceRequestId).OnDelete(DeleteBehavior.NoAction);
     }
 }

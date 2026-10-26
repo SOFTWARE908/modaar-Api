@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using modaar.api.Features.Users.Entities;
+using PropertyEntity = modaar.api.Features.Properties.Entities.Property;
 
 namespace modaar.api.Features.Announcements.Entities;
 
@@ -10,6 +12,10 @@ public class Announcement
     public Guid Id { get; set; }
     public Guid OwnerUserId { get; set; }
     public Guid CategoryId { get; set; }
+
+    // Navigation, never lazy-loaded: Include it or project through it.
+    public User Owner { get; set; } = null!;
+    public AnnouncementCategory Category { get; set; } = null!;
 
     public string Title { get; set; } = null!;
     public string Body { get; set; } = null!;
@@ -39,9 +45,11 @@ public class AnnouncementRecipient
     public Guid Id { get; set; }
     public Guid AnnouncementId { get; set; }
     public Guid TenantUserId { get; set; }
+    public User Tenant { get; set; } = null!;
 
     // The unit that put them on the list (the first one, if several).
     public Guid PropertyId { get; set; }
+    public PropertyEntity Property { get; set; } = null!;
 
     // "تم الاطلاع".
     public DateTimeOffset? AcknowledgedAt { get; set; }

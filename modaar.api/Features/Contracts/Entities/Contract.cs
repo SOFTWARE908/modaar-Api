@@ -1,4 +1,6 @@
 using modaar.api.Features.Contracts.Enums;
+using modaar.api.Features.Properties.Entities;
+using modaar.api.Features.Users.Entities;
 
 namespace modaar.api.Features.Contracts.Entities;
 
@@ -17,6 +19,11 @@ public class Contract
     // Snapshot of the managing brokerage at signing. Deliberately not read through the property:
     // the owner can reassign the property to a different broker without rewriting old leases.
     public Guid? BrokerId { get; set; }
+
+    // Navigation, never lazy-loaded: Include it or project through it.
+    public Property Property { get; set; } = null!;
+    public User Tenant { get; set; } = null!;
+    public Broker? Broker { get; set; }
 
     public string? Title { get; set; }
     public string? Description { get; set; }

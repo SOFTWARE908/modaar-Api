@@ -1,4 +1,7 @@
+using modaar.api.Features.Contracts.Entities;
 using modaar.api.Features.Maintenance.Enums;
+using modaar.api.Features.Properties.Entities;
+using modaar.api.Features.Users.Entities;
 using modaar.api.Features.Users.Enums;
 
 namespace modaar.api.Features.Maintenance.Entities;
@@ -19,6 +22,12 @@ public class MaintenanceRequest
     public Guid? ContractId { get; set; }
 
     public Guid ServiceTypeId { get; set; }
+
+    // Navigation, never lazy-loaded: Include it or project through it.
+    public Property Property { get; set; } = null!;
+    public User Tenant { get; set; } = null!;
+    public Contract? Contract { get; set; }
+    public MaintenanceServiceType ServiceType { get; set; } = null!;
 
     // Short headline the tenant gives the problem, e.g. "تسرّب مياه أسفل مغسلة المطبخ". Null on
     // requests raised before it existed; readers fall back to the category name.
@@ -46,6 +55,7 @@ public class MaintenanceRequest
     public MaintenanceTimeSlot? ScheduledTimeSlot { get; set; }
 
     public Guid? AssignedTechnicianId { get; set; }
+    public Technician? AssignedTechnician { get; set; }
 
     // Set on accept when the job needs pricing before work starts. The request then sits at the
     // awaitingQuote stage until a quote is submitted.

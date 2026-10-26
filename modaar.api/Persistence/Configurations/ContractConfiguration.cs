@@ -54,17 +54,17 @@ public class ContractConfiguration : IEntityTypeConfiguration<Contract>
 
         // NoAction throughout: SQL Server rejects multiple cascade paths into this table, and a
         // lease should outlive a soft-deleted account or a delisted property regardless.
-        b.HasOne<Property>()
-            .WithMany()
+        b.HasOne(x => x.Property)
+            .WithMany(p => p.Contracts)
             .HasForeignKey(x => x.PropertyId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        b.HasOne<User>()
+        b.HasOne(x => x.Tenant)
             .WithMany()
             .HasForeignKey(x => x.TenantUserId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        b.HasOne<Broker>()
+        b.HasOne(x => x.Broker)
             .WithMany()
             .HasForeignKey(x => x.BrokerId)
             .OnDelete(DeleteBehavior.SetNull);

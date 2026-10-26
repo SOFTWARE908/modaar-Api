@@ -1,4 +1,7 @@
+using modaar.api.Features.Buildings.Entities;
+using modaar.api.Features.Contracts.Entities;
 using modaar.api.Features.Properties.Enums;
+using modaar.api.Features.Users.Entities;
 
 namespace modaar.api.Features.Properties.Entities;
 
@@ -17,6 +20,12 @@ public class Property
     // The building it is in. Null only on units added before buildings existed and deleted since;
     // the migration grouped every live unit into one.
     public Guid? BuildingId { get; set; }
+
+    // Navigation, never lazy-loaded: Include it or project through it.
+    public User Owner { get; set; } = null!;
+    public Broker? Broker { get; set; }
+    public Building? Building { get; set; }
+    public List<Contract> Contracts { get; set; } = [];
 
     public string? UnitNumber { get; set; }
 

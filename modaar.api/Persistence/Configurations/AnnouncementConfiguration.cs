@@ -26,8 +26,8 @@ public class AnnouncementConfiguration : IEntityTypeConfiguration<Announcement>
 
         b.HasIndex(x => new { x.OwnerUserId, x.CreatedAt });
 
-        b.HasOne<User>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.NoAction);
-        b.HasOne<AnnouncementCategory>().WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Owner).WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Category).WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.NoAction);
         b.HasOne<Building>().WithMany().HasForeignKey(x => x.BuildingId).OnDelete(DeleteBehavior.NoAction);
 
         b.HasMany(x => x.Recipients).WithOne().HasForeignKey(x => x.AnnouncementId).OnDelete(DeleteBehavior.Cascade);
@@ -45,8 +45,8 @@ public class AnnouncementRecipientConfiguration : IEntityTypeConfiguration<Annou
         b.HasIndex(x => new { x.AnnouncementId, x.TenantUserId }).IsUnique();
         b.HasIndex(x => x.TenantUserId);
 
-        b.HasOne<User>().WithMany().HasForeignKey(x => x.TenantUserId).OnDelete(DeleteBehavior.NoAction);
-        b.HasOne<Property>().WithMany().HasForeignKey(x => x.PropertyId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantUserId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Property).WithMany().HasForeignKey(x => x.PropertyId).OnDelete(DeleteBehavior.NoAction);
     }
 }
 

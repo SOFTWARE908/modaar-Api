@@ -1,3 +1,4 @@
+using modaar.api.Features.Buildings.Entities;
 using modaar.api.Features.Users.Enums;
 
 namespace modaar.api.Features.Users.Entities;
@@ -14,6 +15,10 @@ public class BuildingOwnerSubscription
     public Guid Id { get; set; }
     public Guid BuildingId { get; set; }
     public Guid OwnerUserId { get; set; }
+
+    // Navigation, never lazy-loaded: Include it or project through it.
+    public Building Building { get; set; } = null!;
+    public User Owner { get; set; } = null!;
 
     public OwnerSubscriptionPlan Plan { get; set; } = DefaultPlan;
 

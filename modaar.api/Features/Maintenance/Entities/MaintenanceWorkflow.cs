@@ -1,4 +1,5 @@
 using modaar.api.Features.Maintenance.Enums;
+using modaar.api.Features.Users.Entities;
 
 namespace modaar.api.Features.Maintenance.Entities;
 
@@ -84,6 +85,10 @@ public class Technician
 
     // The brokerage this technician works for. Null for an independent or platform-wide one.
     public Guid? BrokerId { get; set; }
+
+    // Navigation, never lazy-loaded: Include it or project through it.
+    public User User { get; set; } = null!;
+    public Broker? Broker { get; set; }
 
     // Localized job title shown under the name — "Painter", "سبّاك".
     public string RoleAr { get; set; } = null!;

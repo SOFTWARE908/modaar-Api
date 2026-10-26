@@ -1,4 +1,7 @@
+using modaar.api.Features.Contracts.Entities;
 using modaar.api.Features.Payments.Enums;
+using modaar.api.Features.Properties.Entities;
+using modaar.api.Features.Users.Entities;
 
 namespace modaar.api.Features.Payments.Entities;
 
@@ -38,6 +41,11 @@ public class Payment
 
     // Set when the payment settles a maintenance job rather than rent.
     public Guid? MaintenanceRequestId { get; set; }
+
+    // Navigation, never lazy-loaded: Include it or project through it.
+    public User Payer { get; set; } = null!;
+    public Property? Property { get; set; }
+    public Contract? Contract { get; set; }
 
     // Display text only, e.g. "**** 4679". Never a card number: storing one would pull the
     // project into PCI scope for no benefit, since nothing here charges a card.

@@ -19,7 +19,7 @@ public class OwnerTechnicianConfiguration : IEntityTypeConfiguration<OwnerTechni
 
         // NoAction: Users already cascade into Technicians, and a second path is what SQL Server
         // rejects.
-        b.HasOne<User>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.NoAction);
-        b.HasOne<Technician>().WithMany().HasForeignKey(x => x.TechnicianId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Owner).WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Technician).WithMany().HasForeignKey(x => x.TechnicianId).OnDelete(DeleteBehavior.NoAction);
     }
 }

@@ -32,8 +32,8 @@ public class ManagementAgreementConfiguration : IEntityTypeConfiguration<Managem
         b.HasIndex(x => new { x.BrokerId, x.Status });
         b.HasIndex(x => new { x.OwnerUserId, x.Status });
 
-        b.HasOne<Broker>().WithMany().HasForeignKey(x => x.BrokerId).OnDelete(DeleteBehavior.NoAction);
-        b.HasOne<User>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Broker).WithMany().HasForeignKey(x => x.BrokerId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Owner).WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.NoAction);
         b.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.NoAction);
         b.HasOne<BrokerManagementRequest>().WithMany().HasForeignKey(x => x.RequestId).OnDelete(DeleteBehavior.NoAction);
         b.HasOne<ManagementAgreement>().WithMany().HasForeignKey(x => x.RenewedFromId).OnDelete(DeleteBehavior.NoAction);
@@ -60,8 +60,8 @@ public class AgreementPropertyConfiguration : IEntityTypeConfiguration<Agreement
             .HasFilter("[ActiveFrom] IS NOT NULL AND [ExitedOn] IS NULL")
             .HasDatabaseName("IX_AgreementProperties_PropertyId_Held");
 
-        b.HasOne<Property>().WithMany().HasForeignKey(x => x.PropertyId).OnDelete(DeleteBehavior.NoAction);
-        b.HasOne<Features.Contracts.Entities.Contract>().WithMany().HasForeignKey(x => x.ContractId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Property).WithMany().HasForeignKey(x => x.PropertyId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Contract).WithMany().HasForeignKey(x => x.ContractId).OnDelete(DeleteBehavior.NoAction);
     }
 }
 

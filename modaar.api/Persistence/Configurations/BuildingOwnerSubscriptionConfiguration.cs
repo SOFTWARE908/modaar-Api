@@ -25,7 +25,7 @@ public class BuildingOwnerSubscriptionConfiguration : IEntityTypeConfiguration<B
 
         // NoAction: Users already cascade into Buildings (CreatedByUserId), and a second path is
         // what SQL Server rejects.
-        b.HasOne<Building>().WithMany().HasForeignKey(x => x.BuildingId).OnDelete(DeleteBehavior.NoAction);
-        b.HasOne<User>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Building).WithMany().HasForeignKey(x => x.BuildingId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Owner).WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.NoAction);
     }
 }

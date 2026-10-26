@@ -41,17 +41,17 @@ public class PropertyConfiguration : IEntityTypeConfiguration<Property>
         b.HasIndex(x => new { x.OwnerUserId, x.IsDeleted });
         b.HasIndex(x => x.BrokerId);
         b.HasIndex(x => x.BuildingId);
-        b.HasOne<Features.Buildings.Entities.Building>().WithMany().HasForeignKey(x => x.BuildingId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.Building).WithMany().HasForeignKey(x => x.BuildingId).OnDelete(DeleteBehavior.Restrict);
 
         // NoAction, not Cascade: users are soft-deleted, and a property outliving a deactivated
         // owner account is the behaviour we want anyway.
-        b.HasOne<User>()
+        b.HasOne(x => x.Owner)
             .WithMany()
             .HasForeignKey(x => x.OwnerUserId)
             .OnDelete(DeleteBehavior.NoAction);
 
         // Dropping a brokerage unassigns its properties rather than destroying them.
-        b.HasOne<Broker>()
+        b.HasOne(x => x.Broker)
             .WithMany()
             .HasForeignKey(x => x.BrokerId)
             .OnDelete(DeleteBehavior.SetNull);

@@ -5,8 +5,10 @@ using modaar.api.Common.Time;
 using modaar.api.Features.Agreements.Dtos;
 using modaar.api.Features.Agreements.Entities;
 using modaar.api.Features.Authentication.Enums;
+using modaar.api.Features.Contracts.Entities;
 using modaar.api.Features.Contracts.Enums;
 using modaar.api.Features.Notifications.Services;
+using modaar.api.Features.Properties.Entities;
 using modaar.api.Features.Users.Entities;
 using modaar.api.Features.Users.Enums;
 using modaar.api.Persistence;
@@ -292,7 +294,11 @@ public sealed class ManagementAgreementService : IManagementAgreementService
         }
 
         var propertyIds = agreement.Properties.Select(p => p.PropertyId).ToList();
-        var properties = await _db.Properties.Where(p => propertyIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id, ct);
+        var properties = await _db.Properties
+            .Include(p => p.Contracts)
+            .Where(p => propertyIds.Contains(p.Id))
+            .AsSplitQuery()
+            .ToDictionaryAsync(p => p.Id, ct);
 
         // Units no longer the owner's drop out of the proposal.
         foreach (var unit in agreement.Properties.ToList())
@@ -330,7 +336,7 @@ public sealed class ManagementAgreementService : IManagementAgreementService
         foreach (var unit in agreement.Properties)
         {
             unit.ActiveFrom = today;
-            var lease = await EvaluateAsync(unit.PropertyId, contractId: null, agreement.BrokerId, today, ct);
+            var lease = Evaluate(properties[unit.PropertyId].Contracts, contractId: null, agreement.BrokerId, today);
             unit.ContractId = lease.ContractId;
             unit.EndsOn = lease.EndsOn;
             properties[unit.PropertyId].BrokerId = agreement.BrokerId;
@@ -407,8 +413,11 @@ public sealed class ManagementAgreementService : IManagementAgreementService
             return Fail(AppErrorCode.Conflict, "This agreement has already ended.");
 
         var today = SaudiTime.Today(_time);
-        foreach (var unit in agreement.Properties.Where(p => p.ActiveFrom != null && p.ExitedOn == null))
-            await ExitAsync(agreement, unit, AgreementUnitExitReason.AgreementTerminated, today, notify: false, ct);
+        var held = agreement.Properties.Where(p => p.ActiveFrom != null && p.ExitedOn == null).ToList();
+        var heldIds = held.Select(u => u.PropertyId).ToList();
+        var properties = await _db.Properties.Where(p => heldIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id, ct);
+        foreach (var unit in held)
+            Exit(agreement, unit, properties[unit.PropertyId], AgreementUnitExitReason.AgreementTerminated, today);
 
         End(agreement, ManagementAgreementStatus.Terminated, callerUserId, reason);
         AddEvent(agreement.Id, AgreementEventType.Terminated, callerUserId, note: reason.Trim());
@@ -476,29 +485,39 @@ public sealed class ManagementAgreementService : IManagementAgreementService
         if (agreementIds.Count == 0)
             return;
 
+        // Everything the decisions need, in a few queries: the held units, each with its property
+        // and that property's leases. The loop below then runs from memory.
         var agreements = await _db.ManagementAgreements
-            .Include(a => a.Properties)
+            .Include(a => a.Broker)
+            .Include(a => a.Properties.Where(u => u.ActiveFrom != null && u.ExitedOn == null))
+                .ThenInclude(u => u.Property)
+                    .ThenInclude(p => p.Contracts)
             .Where(a => agreementIds.Contains(a.Id) && a.Status == ManagementAgreementStatus.Active)
+            .AsSplitQuery()
             .ToListAsync(ct);
 
+        // Sent after saving, so nobody is told about a change that didn't stick.
+        var notices = new List<(Guid[] To, NewNotification Notification)>();
         var exits = 0;
+
         foreach (var agreement in agreements)
         {
-            foreach (var unit in agreement.Properties.Where(p => p.ActiveFrom != null && p.ExitedOn == null))
+            var recipients = new[] { agreement.OwnerUserId, agreement.Broker.UserId };
+
+            foreach (var unit in agreement.Properties)
             {
                 if (propertyIds is not null && !propertyIds.Contains(unit.PropertyId))
                     continue;
 
-                var property = await _db.Properties.AsNoTracking()
-                    .Where(p => p.Id == unit.PropertyId).Select(p => new { p.IsDeleted, p.OwnerUserId }).FirstOrDefaultAsync(ct);
-
-                var lease = property is null || property.IsDeleted || property.OwnerUserId != agreement.OwnerUserId
+                var property = unit.Property;
+                var lease = property.IsDeleted || property.OwnerUserId != agreement.OwnerUserId
                     ? new LeaseState(true, AgreementUnitExitReason.Removed, unit.ContractId, unit.EndsOn)
-                    : await EvaluateAsync(unit.PropertyId, unit.ContractId, agreement.BrokerId, today, ct);
+                    : Evaluate(property.Contracts, unit.ContractId, agreement.BrokerId, today);
 
                 if (lease.Leave)
                 {
-                    await ExitAsync(agreement, unit, lease.Reason!.Value, today, notify: true, ct);
+                    Exit(agreement, unit, property, lease.Reason!.Value, today);
+                    notices.Add((recipients, AgreementNotifications.UnitLeft(agreement.Id, agreement.Number, UnitTitle(property.Title, property.UnitNumber))));
                     exits++;
                 }
                 else
@@ -508,19 +527,18 @@ public sealed class ManagementAgreementService : IManagementAgreementService
                 }
             }
 
-            if (agreement.Properties.All(p => p.ActiveFrom == null || p.ExitedOn != null))
+            if (agreement.Properties.All(u => u.ExitedOn != null))
             {
                 End(agreement, ManagementAgreementStatus.Expired, actorUserId: null, reason: "Every unit has left.");
-                agreement.EndedOn = today;
                 AddEvent(agreement.Id, AgreementEventType.Expired, actorUserId: null);
-                await _db.SaveChangesAsync(ct);
-
-                var expired = AgreementNotifications.Expired(agreement.Id, agreement.Number);
-                await _notifications.NotifyAsync([agreement.OwnerUserId, await BrokerUserAsync(agreement.BrokerId, ct)], expired, ct);
+                notices.Add((recipients, AgreementNotifications.Expired(agreement.Id, agreement.Number)));
             }
         }
 
         await _db.SaveChangesAsync(ct);
+
+        foreach (var (to, notification) in notices)
+            await _notifications.NotifyAsync(to, notification, ct);
 
         if (exits > 0)
             _logger.LogInformation("Agreements: {Count} unit(s) left their agreement.", exits);
@@ -549,15 +567,10 @@ public sealed class ManagementAgreementService : IManagementAgreementService
 
     private sealed record LeaseState(bool Leave, AgreementUnitExitReason? Reason, Guid? ContractId, DateOnly? EndsOn);
 
-    // Which lease the unit is tied to now, and whether it has run out.
-    private async Task<LeaseState> EvaluateAsync(Guid propertyId, Guid? contractId, Guid brokerId, DateOnly today, CancellationToken ct)
+    // Which lease the unit is tied to now, and whether it has run out. Works on the unit's leases
+    // as loaded, so callers fetch them up front rather than per unit.
+    private static LeaseState Evaluate(IReadOnlyCollection<Contract> leases, Guid? contractId, Guid brokerId, DateOnly today)
     {
-        var leases = await _db.Contracts
-            .AsNoTracking()
-            .Where(c => c.PropertyId == propertyId)
-            .Select(c => new { c.Id, c.BrokerId, c.Status, c.StartDate, c.EndDate, c.TerminatedOn })
-            .ToListAsync(ct);
-
         var tracked = contractId is { } cid ? leases.FirstOrDefault(c => c.Id == cid) : null;
 
         if (tracked is null)
@@ -595,27 +608,19 @@ public sealed class ManagementAgreementService : IManagementAgreementService
         return new LeaseState(false, null, tracked.Id, tracked.TerminatedOn ?? tracked.EndDate);
     }
 
-    private async Task ExitAsync(ManagementAgreement agreement, AgreementProperty unit, AgreementUnitExitReason reason,
-        DateOnly today, bool notify, CancellationToken ct)
+    // Takes the unit out and the broker off the property (both tracked). Saving is the caller's.
+    private void Exit(ManagementAgreement agreement, AgreementProperty unit, Property property, AgreementUnitExitReason reason, DateOnly today)
     {
         unit.ExitedOn = today;
         unit.ExitReason = reason;
 
-        var property = await _db.Properties.FirstOrDefaultAsync(p => p.Id == unit.PropertyId, ct);
-        if (property is not null && property.BrokerId == agreement.BrokerId)
+        if (property.BrokerId == agreement.BrokerId)
         {
             property.BrokerId = null;
             property.UpdatedAt = _time.GetUtcNow();
         }
 
         AddEvent(agreement.Id, AgreementEventType.UnitExited, actorUserId: null, unit.PropertyId, reason.ToString());
-
-        if (notify && property is not null)
-        {
-            await _db.SaveChangesAsync(ct);
-            var left = AgreementNotifications.UnitLeft(agreement.Id, agreement.Number, UnitTitle(property.Title, property.UnitNumber));
-            await _notifications.NotifyAsync([agreement.OwnerUserId, await BrokerUserAsync(agreement.BrokerId, ct)], left, ct);
-        }
     }
 
     // ── Shared ─────────────────────────────────────────────────────────────

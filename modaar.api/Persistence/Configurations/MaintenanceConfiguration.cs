@@ -29,7 +29,7 @@ public class MaintenanceRequestConfiguration : IEntityTypeConfiguration<Maintena
 
         // NoAction like everything else into this table, and the point here is stronger: a
         // category that has ever been used must not be deletable at all. Deactivate it instead.
-        b.HasOne<MaintenanceServiceType>()
+        b.HasOne(x => x.ServiceType)
             .WithMany()
             .HasForeignKey(x => x.ServiceTypeId)
             .OnDelete(DeleteBehavior.NoAction);
@@ -69,10 +69,10 @@ public class MaintenanceRequestConfiguration : IEntityTypeConfiguration<Maintena
         b.HasIndex(x => new { x.PropertyId, x.Status });
         b.HasIndex(x => new { x.AssignedTechnicianId, x.Status });
 
-        b.HasOne<Property>().WithMany().HasForeignKey(x => x.PropertyId).OnDelete(DeleteBehavior.NoAction);
-        b.HasOne<User>().WithMany().HasForeignKey(x => x.TenantUserId).OnDelete(DeleteBehavior.NoAction);
-        b.HasOne<Contract>().WithMany().HasForeignKey(x => x.ContractId).OnDelete(DeleteBehavior.NoAction);
-        b.HasOne<Technician>().WithMany().HasForeignKey(x => x.AssignedTechnicianId).OnDelete(DeleteBehavior.SetNull);
+        b.HasOne(x => x.Property).WithMany().HasForeignKey(x => x.PropertyId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantUserId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Contract).WithMany().HasForeignKey(x => x.ContractId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.AssignedTechnician).WithMany().HasForeignKey(x => x.AssignedTechnicianId).OnDelete(DeleteBehavior.SetNull);
     }
 }
 
@@ -203,7 +203,7 @@ public class TechnicianConfiguration : IEntityTypeConfiguration<Technician>
         b.HasIndex(x => x.UserId).IsUnique();
         b.HasIndex(x => x.BrokerId);
 
-        b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.NoAction);
-        b.HasOne<Broker>().WithMany().HasForeignKey(x => x.BrokerId).OnDelete(DeleteBehavior.SetNull);
+        b.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.NoAction);
+        b.HasOne(x => x.Broker).WithMany().HasForeignKey(x => x.BrokerId).OnDelete(DeleteBehavior.SetNull);
     }
 }
