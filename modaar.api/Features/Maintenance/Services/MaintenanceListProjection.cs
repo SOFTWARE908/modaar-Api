@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using modaar.api.Common.Localization;
 using modaar.api.Features.Maintenance.Dtos;
 using modaar.api.Features.Maintenance.Entities;
+using modaar.api.Features.Maintenance.Enums;
 using modaar.api.Persistence;
 
 namespace modaar.api.Features.Maintenance.Services;
@@ -36,6 +37,7 @@ public static class MaintenanceListProjection
                 HasQuote = m.QuotedAt != null,
                 QuoteTotal = m.QuotedAt != null ? (m.QuotePartsCost ?? 0) + (m.QuoteLaborCost ?? 0) : (decimal?)null,
                 QuoteApproved = m.QuoteApprovedAt != null,
+                TenantConfirmed = m.Status != MaintenanceRequestStatus.Completed || m.TenantConfirmedAt != null,
                 m.SubscriptionPlan,
                 m.TenantUserId,
                 TenantName = db.Users.Where(u => u.Id == m.TenantUserId).Select(u => u.FullName).FirstOrDefault(),
@@ -86,7 +88,7 @@ public static class MaintenanceListProjection
 
             var facts = new MaintenanceFacts(
                 m.Status, m.SubscriptionPlan, m.Property?.HasBroker ?? false, m.QuoteRequired, m.HasQuote,
-                m.QuoteApproved, m.Technician is not null, m.Rating is not null);
+                m.QuoteApproved, m.Technician is not null, m.Rating is not null, m.TenantConfirmed);
             var stage = MaintenanceStages.Derive(facts);
 
             var isTenant = m.TenantUserId == callerUserId;
@@ -111,7 +113,7 @@ public static class MaintenanceListProjection
                 Title = string.IsNullOrWhiteSpace(m.Title) ? categoryName : m.Title,
                 Status = m.Status,
                 Stage = stage,
-                NextActionLabel = MaintenanceStages.NextActionLabel(stage, date, m.Rating is not null, language),
+                NextActionLabel = MaintenanceStages.NextActionLabel(stage, date, m.Rating is not null, language, m.TenantConfirmed),
                 CreatedAt = m.CreatedAt,
                 PropertyId = m.PropertyId,
                 PropertyTitle = m.Property?.Title ?? string.Empty,

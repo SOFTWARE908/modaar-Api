@@ -48,8 +48,17 @@ public enum MaintenanceActionType
     RejectQuote,
     // A new visit date/time for the assigned technician.
     Reschedule,
-    // The handler confirmed the work is done; this is what opens rating.
-    Complete
+    // The handler marked the work done, with the repair report.
+    Complete,
+    // The tenant confirmed it; this is what opens rating.
+    ConfirmCompletion
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum MaintenanceAttachmentPurpose
+{
+    Request,
+    RepairReport
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -149,7 +158,8 @@ public enum MaintenanceHistoryStep
     OwnerApproved,
     TechnicianAssigned,
     Rescheduled,
-    Completed
+    Completed,
+    TenantConfirmed
 }
 
 // What the caller may do to the request right now — the buttons the app shows. Computed on the
@@ -168,5 +178,6 @@ public enum MaintenanceAvailableAction
     AssignTechnician,
     Reschedule,
     Complete,
+    ConfirmCompletion,
     Rate
 }

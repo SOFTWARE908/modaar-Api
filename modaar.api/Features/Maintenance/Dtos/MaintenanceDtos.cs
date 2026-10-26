@@ -134,6 +134,12 @@ public record MaintenanceRequestDetailsDto
     public required MaintenanceServiceTypeDto ServiceType { get; init; }
     public required IReadOnlyList<string> AttachmentImageUrls { get; init; }
 
+    // Written when the job was marked complete; null before.
+    public MaintenanceRepairReportDto? RepairReport { get; init; }
+
+    // When the tenant confirmed the work is done; null until then.
+    public DateTimeOffset? TenantConfirmedAt { get; init; }
+
     public required Guid PropertyId { get; init; }
     public required string PropertyTitle { get; init; }
 
@@ -154,6 +160,16 @@ public record MaintenanceOwnerDto
     public string? Name { get; init; }
     public string? PhoneNumber { get; init; }
     public string? AvatarUrl { get; init; }
+}
+
+// "تقرير الإصلاح".
+public record MaintenanceRepairReportDto
+{
+    public required string Number { get; init; }
+    public required string Text { get; init; }
+    public string? WrittenByName { get; init; }
+    public DateTimeOffset? At { get; init; }
+    public required IReadOnlyList<string> ImageUrls { get; init; }
 }
 
 public record MaintenanceStatusHistoryItemDto

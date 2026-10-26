@@ -50,6 +50,9 @@ public sealed class MaintenanceFeedbackService : IMaintenanceFeedbackService
         if (maintenanceRequest.Status != MaintenanceRequestStatus.Completed)
             return Result<bool>.Fail(AppErrorCode.Conflict, "This request is not completed yet.");
 
+        if (maintenanceRequest.TenantConfirmedAt is null)
+            return Result<bool>.Fail(AppErrorCode.Conflict, "Confirm the work is done before rating it.");
+
         if (maintenanceRequest.AssignedTechnicianId is null)
             return Result<bool>.Fail(AppErrorCode.Conflict, "No technician was assigned to this request.");
 

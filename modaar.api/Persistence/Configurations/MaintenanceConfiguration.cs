@@ -27,6 +27,10 @@ public class MaintenanceRequestConfiguration : IEntityTypeConfiguration<Maintena
 
         b.Property(x => x.ServiceTypeId).IsRequired();
 
+        b.Property(x => x.RepairReport).HasMaxLength(2000);
+        b.Property(x => x.RepairReportNumber).HasMaxLength(20);
+        b.HasIndex(x => x.RepairReportNumber).IsUnique().HasFilter("[RepairReportNumber] IS NOT NULL");
+
         // NoAction like everything else into this table, and the point here is stronger: a
         // category that has ever been used must not be deletable at all. Deactivate it instead.
         b.HasOne(x => x.ServiceType)
@@ -87,6 +91,8 @@ public class MaintenanceAttachmentConfiguration : IEntityTypeConfiguration<Maint
         b.Property(x => x.Url).HasMaxLength(500).IsRequired();
         b.Property(x => x.FileName).HasMaxLength(255).IsRequired();
         b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(10).IsRequired();
+        // No HasDefaultValue: Request is the enum's zero. Existing rows got "Request" from the migration.
+        b.Property(x => x.Purpose).HasConversion<string>().HasMaxLength(20).IsRequired();
 
         b.Property(x => x.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
 

@@ -103,6 +103,14 @@ public sealed class BuildingService : IBuildingService
             Latitude = building.Latitude,
             Longitude = building.Longitude,
             CoverImageUrl = building.CoverImageUrl,
+            DeedNumber = building.DeedNumber,
+            YearBuilt = building.YearBuilt,
+            ManagedByName = scope.BrokerId is null
+                ? await _db.Properties
+                    .Where(p => p.BuildingId == building.Id && p.OwnerUserId == callerUserId && !p.IsDeleted && p.BrokerId != null)
+                    .Select(p => p.Broker!.User.FullName)
+                    .FirstOrDefaultAsync(ct)
+                : null,
             CanEdit = building.CreatedByUserId == callerUserId,
             ExpectedMonthlyIncome = units.Sum(u => u.MonthlyRent),
             OccupancyPercent = Percent(rented, units.Count),
@@ -146,6 +154,8 @@ public sealed class BuildingService : IBuildingService
             Latitude = request.Latitude,
             Longitude = request.Longitude,
             CoverImageUrl = Clean(request.CoverImageUrl),
+            DeedNumber = Clean(request.DeedNumber),
+            YearBuilt = request.YearBuilt,
             CreatedByUserId = callerUserId,
             CreatedAt = now,
             UpdatedAt = now
@@ -175,6 +185,8 @@ public sealed class BuildingService : IBuildingService
         if (request.Latitude is { } lat) building.Latitude = lat;
         if (request.Longitude is { } lng) building.Longitude = lng;
         if (request.CoverImageUrl is not null) building.CoverImageUrl = Clean(request.CoverImageUrl);
+        if (request.DeedNumber is not null) building.DeedNumber = Clean(request.DeedNumber);
+        if (request.YearBuilt is { } year) building.YearBuilt = year;
         building.UpdatedAt = _time.GetUtcNow();
 
         await _db.SaveChangesAsync(ct);

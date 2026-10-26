@@ -52,6 +52,14 @@ namespace modaar.api.Features.Maintenance.Dtos
         public required TimeOnly VisitTime { get; init; }
     }
 
+    // "اكتمال العمل": what was done (required) and optional photos uploaded first through
+    // POST /api/maintenance-requests/attachments.
+    public record CompleteMaintenanceDto
+    {
+        public string Report { get; init; } = string.Empty;
+        public IReadOnlyList<Guid>? AttachmentIds { get; init; }
+    }
+
     // "تغيير الموعد": same technician, new date and time.
     public record RescheduleMaintenanceVisitDto
     {
@@ -96,6 +104,15 @@ namespace modaar.api.Features.Maintenance.Validation
                 .WithMessage("A quote must have a non-zero total.");
             RuleFor(x => x.CostBearer).IsInEnum();
             RuleFor(x => x.Description).MaximumLength(1000);
+        }
+    }
+
+    public sealed class CompleteMaintenanceValidator : AbstractValidator<CompleteMaintenanceDto>
+    {
+        public CompleteMaintenanceValidator()
+        {
+            RuleFor(x => x.Report).NotEmpty().MaximumLength(2000);
+            RuleFor(x => x.AttachmentIds!.Count).LessThanOrEqualTo(10).When(x => x.AttachmentIds is not null);
         }
     }
 

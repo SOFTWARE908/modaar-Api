@@ -39,6 +39,12 @@ namespace modaar.api.Features.Buildings.Dtos
         public decimal? Latitude { get; init; }
         public decimal? Longitude { get; init; }
         public string? CoverImageUrl { get; init; }
+        public string? DeedNumber { get; init; }
+        public int? YearBuilt { get; init; }
+
+        // Owner: the brokerage running their units here ("إدارة العقار"), or null if they run
+        // them themselves.
+        public string? ManagedByName { get; init; }
 
         // Only the one who added the building can rename it or change its address.
         public required bool CanEdit { get; init; }
@@ -82,6 +88,8 @@ namespace modaar.api.Features.Buildings.Dtos
         public decimal? Latitude { get; init; }
         public decimal? Longitude { get; init; }
         public string? CoverImageUrl { get; init; }
+        public string? DeedNumber { get; init; }
+        public int? YearBuilt { get; init; }
     }
 
     // Partial: omitted fields stay as they are.
@@ -95,6 +103,8 @@ namespace modaar.api.Features.Buildings.Dtos
         public decimal? Latitude { get; init; }
         public decimal? Longitude { get; init; }
         public string? CoverImageUrl { get; init; }
+        public string? DeedNumber { get; init; }
+        public int? YearBuilt { get; init; }
     }
 
     // A unit added inside a building. Address comes from the building.
@@ -128,6 +138,9 @@ namespace modaar.api.Features.Buildings.Validation
             RuleFor(x => x.District).MaximumLength(100);
             RuleFor(x => x.City).MaximumLength(100);
             RuleFor(x => x.CoverImageUrl).MaximumLength(500);
+            RuleFor(x => x.DeedNumber).Matches(@"^\d{6,30}$").When(x => !string.IsNullOrWhiteSpace(x.DeedNumber))
+                .WithMessage("deedNumber is digits only.");
+            RuleFor(x => x.YearBuilt!.Value).InclusiveBetween(1900, DateTime.UtcNow.Year + 5).When(x => x.YearBuilt is not null);
         }
     }
 
@@ -141,6 +154,9 @@ namespace modaar.api.Features.Buildings.Validation
             RuleFor(x => x.District).MaximumLength(100);
             RuleFor(x => x.City).MaximumLength(100);
             RuleFor(x => x.CoverImageUrl).MaximumLength(500);
+            RuleFor(x => x.DeedNumber).Matches(@"^\d{6,30}$").When(x => !string.IsNullOrWhiteSpace(x.DeedNumber))
+                .WithMessage("deedNumber is digits only.");
+            RuleFor(x => x.YearBuilt!.Value).InclusiveBetween(1900, DateTime.UtcNow.Year + 5).When(x => x.YearBuilt is not null);
         }
     }
 

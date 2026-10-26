@@ -21,6 +21,7 @@ public class BuildingConfiguration : IEntityTypeConfiguration<Building>
         b.Property(x => x.Latitude).HasPrecision(9, 6);
         b.Property(x => x.Longitude).HasPrecision(9, 6);
         b.Property(x => x.CoverImageUrl).HasMaxLength(500);
+        b.Property(x => x.DeedNumber).HasMaxLength(30);
 
         b.Property(x => x.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
         b.Property(x => x.UpdatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");

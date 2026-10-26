@@ -88,6 +88,15 @@ public class MaintenanceRequest
 
     public DateTimeOffset? CompletedAt { get; set; }
 
+    // What was done, written by whoever marked it complete (the technician has no app yet).
+    // RCPT-xxxxxxxx is the number the report is shown and shared under.
+    public string? RepairReport { get; set; }
+    public string? RepairReportNumber { get; set; }
+    public Guid? RepairReportedByUserId { get; set; }
+
+    // "تأكيد اكتمال العمل": the tenant agrees the job is done. Rating opens after it.
+    public DateTimeOffset? TenantConfirmedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 }
@@ -107,6 +116,9 @@ public class MaintenanceAttachment
     public string FileName { get; set; } = null!;
     public AttachmentKind Kind { get; set; }
     public long SizeBytes { get; set; }
+
+    // The tenant's photos of the problem, or the handler's photos in the repair report.
+    public MaintenanceAttachmentPurpose Purpose { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 }

@@ -23,6 +23,10 @@ public class Building
 
     public string? CoverImageUrl { get; set; }
 
+    // رقم الصك from the real-estate registry, as typed. Not verified until the registry is wired in.
+    public string? DeedNumber { get; set; }
+    public int? YearBuilt { get; set; }
+
     // Who added it. The only one who may edit its name and address, since others may share it.
     public Guid CreatedByUserId { get; set; }
 

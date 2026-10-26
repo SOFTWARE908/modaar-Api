@@ -22,7 +22,8 @@ public interface IMaintenanceActionService
     Task<Result<bool>> RejectQuoteAsync(Guid requestId, Guid callerUserId, RejectMaintenanceRequestDto request, CancellationToken ct);
     Task<Result<bool>> AssignTechnicianAsync(Guid requestId, Guid callerUserId, AssignTechnicianDto request, CancellationToken ct);
     Task<Result<bool>> RescheduleAsync(Guid requestId, Guid callerUserId, RescheduleMaintenanceVisitDto request, CancellationToken ct);
-    Task<Result<bool>> CompleteAsync(Guid requestId, Guid callerUserId, CancellationToken ct);
+    Task<Result<bool>> CompleteAsync(Guid requestId, Guid callerUserId, CompleteMaintenanceDto request, CancellationToken ct);
+    Task<Result<bool>> ConfirmCompletionAsync(Guid requestId, Guid callerUserId, CancellationToken ct);
 }
 
 // Every owner/broker action on a request. Which action is allowed, for whom, at which point, is
@@ -262,15 +263,53 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
             $"{request.VisitDate:yyyy-MM-dd} {request.VisitTime:HH\\:mm}", null, ct);
     }
 
-    public async Task<Result<bool>> CompleteAsync(Guid requestId, Guid callerUserId, CancellationToken ct)
+    public async Task<Result<bool>> CompleteAsync(Guid requestId, Guid callerUserId, CompleteMaintenanceDto request, CancellationToken ct)
     {
         var ctx = await ResolveAsync(requestId, callerUserId, MaintenanceAvailableAction.Complete, ct);
         if (ctx.Failure is { } failure) return failure;
 
-        // Completing is what opens rating for the tenant.
+        // Report photos: the caller's own uploads, not yet on any request.
+        var photoIds = request.AttachmentIds?.Distinct().ToList() ?? [];
+        var photos = photoIds.Count == 0 ? [] : await _db.MaintenanceAttachments
+            .Where(a => photoIds.Contains(a.Id) && a.RequestId == null && a.UploadedByUserId == callerUserId)
+            .ToListAsync(ct);
+        if (photos.Count != photoIds.Count)
+            return Result<bool>.Fail(AppErrorCode.ValidationFailed, "One or more attachments are unknown or already used.");
+
+        foreach (var photo in photos)
+        {
+            photo.RequestId = requestId;
+            photo.Purpose = MaintenanceAttachmentPurpose.RepairReport;
+        }
+
         ctx.Request.CompletedAt = _time.GetUtcNow();
+        ctx.Request.RepairReport = request.Report.Trim();
+        ctx.Request.RepairReportNumber = await NewReportNumberAsync(ct);
+        ctx.Request.RepairReportedByUserId = callerUserId;
+        ctx.Request.TenantConfirmedAt = null;
 
         return await TransitionAsync(ctx, MaintenanceRequestStatus.Completed, MaintenanceActionType.Complete, null, null, ct);
+    }
+
+    // "تأكيد اكتمال العمل". No deadline: the request waits for the tenant.
+    public async Task<Result<bool>> ConfirmCompletionAsync(Guid requestId, Guid callerUserId, CancellationToken ct)
+    {
+        var ctx = await ResolveAsync(requestId, callerUserId, MaintenanceAvailableAction.ConfirmCompletion, ct);
+        if (ctx.Failure is { } failure) return failure;
+
+        ctx.Request.TenantConfirmedAt = _time.GetUtcNow();
+        return await TransitionAsync(ctx, newStatus: null, MaintenanceActionType.ConfirmCompletion, null, null, ct);
+    }
+
+    private async Task<string> NewReportNumberAsync(CancellationToken ct)
+    {
+        for (var attempt = 0; attempt < 8; attempt++)
+        {
+            var candidate = $"RCPT-{Random.Shared.Next(10_000_000, 100_000_000)}";
+            if (!await _db.MaintenanceRequests.AnyAsync(m => m.RepairReportNumber == candidate, ct))
+                return candidate;
+        }
+        return $"RCPT-{Guid.NewGuid():N}"[..13].ToUpperInvariant();
     }
 
     // Loads the request, works out who the caller is to it, and checks the action against
@@ -301,7 +340,8 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
         var facts = new MaintenanceFacts(
             request.Status, request.SubscriptionPlan, property.BrokerId is not null, request.QuoteRequired,
             request.QuotedAt is not null, request.QuoteApprovedAt is not null,
-            request.AssignedTechnicianId is not null, isRated);
+            request.AssignedTechnicianId is not null, isRated,
+            TenantConfirmed: request.Status != MaintenanceRequestStatus.Completed || request.TenantConfirmedAt is not null);
 
         var caller = new MaintenanceCaller(request.TenantUserId == callerUserId, isOwner, isManagingBroker);
 
@@ -473,6 +513,7 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
     //   reject quote                     → broker and tenant
     //   assign technician / reschedule   → tenant and technician
     //   complete                         → tenant; owner too when the broker ran it
+    //   tenant confirms completion       → whoever ran it
     private async Task NotifyAsync(
         ActionContext ctx, MaintenanceActionType actionType, string? message, Guid? delegatedToBrokerId, CancellationToken ct)
     {
@@ -547,6 +588,11 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
                 await _notifications.NotifyAsync(tenant, MaintenanceNotifications.CompletedToTenant(subject), ct);
                 if (ctx.Facts.BrokerHandles)
                     await _notifications.NotifyAsync(owner, MaintenanceNotifications.CompletedToOwner(subject), ct);
+                break;
+
+            case MaintenanceActionType.ConfirmCompletion:
+                await _notifications.NotifyAsync(ctx.Facts.BrokerHandles ? await BrokerAsync(ctx, ct) : owner,
+                    MaintenanceNotifications.ConfirmedByTenant(subject), ct);
                 break;
 
             case MaintenanceActionType.Delegate:

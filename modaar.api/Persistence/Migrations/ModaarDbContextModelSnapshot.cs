@@ -638,6 +638,10 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DeedNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
                     b.Property<string>("District")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -664,6 +668,9 @@ namespace modaar.api.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetimeoffset")
                         .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.Property<int?>("YearBuilt")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -992,6 +999,11 @@ namespace modaar.api.Persistence.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<Guid?>("RequestId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1274,6 +1286,17 @@ namespace modaar.api.Persistence.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<string>("RepairReport")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("RepairReportNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid?>("RepairReportedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("RequestNumber")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -1302,6 +1325,9 @@ namespace modaar.api.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<DateTimeOffset?>("TenantConfirmedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<Guid>("TenantUserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1317,6 +1343,10 @@ namespace modaar.api.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ContractId");
+
+                    b.HasIndex("RepairReportNumber")
+                        .IsUnique()
+                        .HasFilter("[RepairReportNumber] IS NOT NULL");
 
                     b.HasIndex("RequestNumber")
                         .IsUnique();
@@ -2403,21 +2433,25 @@ namespace modaar.api.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("modaar.api.Features.Contracts.Entities.Contract", null)
+                    b.HasOne("modaar.api.Features.Contracts.Entities.Contract", "Contract")
                         .WithMany()
                         .HasForeignKey("ContractId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("modaar.api.Features.Properties.Entities.Property", null)
+                    b.HasOne("modaar.api.Features.Properties.Entities.Property", "Property")
                         .WithMany()
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("Contract");
+
+                    b.Navigation("Property");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Agreements.Entities.ManagementAgreement", b =>
                 {
-                    b.HasOne("modaar.api.Features.Users.Entities.Broker", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.Broker", "Broker")
                         .WithMany()
                         .HasForeignKey("BrokerId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -2429,7 +2463,7 @@ namespace modaar.api.Persistence.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.User", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -2444,6 +2478,10 @@ namespace modaar.api.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("RequestId")
                         .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Broker");
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Announcements.Entities.Announcement", b =>
@@ -2453,17 +2491,21 @@ namespace modaar.api.Persistence.Migrations
                         .HasForeignKey("BuildingId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("modaar.api.Features.Announcements.Entities.AnnouncementCategory", null)
+                    b.HasOne("modaar.api.Features.Announcements.Entities.AnnouncementCategory", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.User", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Announcements.Entities.AnnouncementRecipient", b =>
@@ -2474,17 +2516,21 @@ namespace modaar.api.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("modaar.api.Features.Properties.Entities.Property", null)
+                    b.HasOne("modaar.api.Features.Properties.Entities.Property", "Property")
                         .WithMany()
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.User", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("Property");
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Authentication.Entities.RefreshToken", b =>
@@ -2568,18 +2614,18 @@ namespace modaar.api.Persistence.Migrations
 
             modelBuilder.Entity("modaar.api.Features.Contracts.Entities.Contract", b =>
                 {
-                    b.HasOne("modaar.api.Features.Users.Entities.Broker", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.Broker", "Broker")
                         .WithMany()
                         .HasForeignKey("BrokerId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("modaar.api.Features.Properties.Entities.Property", null)
-                        .WithMany()
+                    b.HasOne("modaar.api.Features.Properties.Entities.Property", "Property")
+                        .WithMany("Contracts")
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.User", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantUserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -2616,7 +2662,13 @@ namespace modaar.api.Persistence.Migrations
                                 .HasForeignKey("ContractId");
                         });
 
+                    b.Navigation("Broker");
+
                     b.Navigation("Images");
+
+                    b.Navigation("Property");
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Contracts.Entities.ContractRequest", b =>
@@ -2679,33 +2731,43 @@ namespace modaar.api.Persistence.Migrations
 
             modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.MaintenanceRequest", b =>
                 {
-                    b.HasOne("modaar.api.Features.Maintenance.Entities.Technician", null)
+                    b.HasOne("modaar.api.Features.Maintenance.Entities.Technician", "AssignedTechnician")
                         .WithMany()
                         .HasForeignKey("AssignedTechnicianId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("modaar.api.Features.Contracts.Entities.Contract", null)
+                    b.HasOne("modaar.api.Features.Contracts.Entities.Contract", "Contract")
                         .WithMany()
                         .HasForeignKey("ContractId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("modaar.api.Features.Properties.Entities.Property", null)
+                    b.HasOne("modaar.api.Features.Properties.Entities.Property", "Property")
                         .WithMany()
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("modaar.api.Features.Maintenance.Entities.MaintenanceServiceType", null)
+                    b.HasOne("modaar.api.Features.Maintenance.Entities.MaintenanceServiceType", "ServiceType")
                         .WithMany()
                         .HasForeignKey("ServiceTypeId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.User", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("AssignedTechnician");
+
+                    b.Navigation("Contract");
+
+                    b.Navigation("Property");
+
+                    b.Navigation("ServiceType");
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.MaintenanceRequestAction", b =>
@@ -2730,31 +2792,39 @@ namespace modaar.api.Persistence.Migrations
 
             modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.OwnerTechnician", b =>
                 {
-                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.User", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("modaar.api.Features.Maintenance.Entities.Technician", null)
+                    b.HasOne("modaar.api.Features.Maintenance.Entities.Technician", "Technician")
                         .WithMany()
                         .HasForeignKey("TechnicianId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("Owner");
+
+                    b.Navigation("Technician");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.Technician", b =>
                 {
-                    b.HasOne("modaar.api.Features.Users.Entities.Broker", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.Broker", "Broker")
                         .WithMany()
                         .HasForeignKey("BrokerId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("Broker");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.TechnicianServiceType", b =>
@@ -2801,7 +2871,7 @@ namespace modaar.api.Persistence.Migrations
 
             modelBuilder.Entity("modaar.api.Features.Payments.Entities.Payment", b =>
                 {
-                    b.HasOne("modaar.api.Features.Contracts.Entities.Contract", null)
+                    b.HasOne("modaar.api.Features.Contracts.Entities.Contract", "Contract")
                         .WithMany()
                         .HasForeignKey("ContractId")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -2811,16 +2881,22 @@ namespace modaar.api.Persistence.Migrations
                         .HasForeignKey("MaintenanceRequestId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.User", "Payer")
                         .WithMany()
                         .HasForeignKey("PayerUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("modaar.api.Features.Properties.Entities.Property", null)
+                    b.HasOne("modaar.api.Features.Properties.Entities.Property", "Property")
                         .WithMany()
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Contract");
+
+                    b.Navigation("Payer");
+
+                    b.Navigation("Property");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Payments.Entities.PaymentTransaction", b =>
@@ -2843,17 +2919,17 @@ namespace modaar.api.Persistence.Migrations
 
             modelBuilder.Entity("modaar.api.Features.Properties.Entities.Property", b =>
                 {
-                    b.HasOne("modaar.api.Features.Users.Entities.Broker", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.Broker", "Broker")
                         .WithMany()
                         .HasForeignKey("BrokerId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("modaar.api.Features.Buildings.Entities.Building", null)
+                    b.HasOne("modaar.api.Features.Buildings.Entities.Building", "Building")
                         .WithMany()
                         .HasForeignKey("BuildingId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.User", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -2890,7 +2966,13 @@ namespace modaar.api.Persistence.Migrations
                                 .HasForeignKey("PropertyId");
                         });
 
+                    b.Navigation("Broker");
+
+                    b.Navigation("Building");
+
                     b.Navigation("Images");
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Properties.Entities.PropertyHandover", b =>
@@ -3079,17 +3161,21 @@ namespace modaar.api.Persistence.Migrations
 
             modelBuilder.Entity("modaar.api.Features.Users.Entities.BuildingOwnerSubscription", b =>
                 {
-                    b.HasOne("modaar.api.Features.Buildings.Entities.Building", null)
+                    b.HasOne("modaar.api.Features.Buildings.Entities.Building", "Building")
                         .WithMany()
                         .HasForeignKey("BuildingId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
+                    b.HasOne("modaar.api.Features.Users.Entities.User", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("Building");
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Wallets.Entities.Wallet", b =>
@@ -3118,6 +3204,11 @@ namespace modaar.api.Persistence.Migrations
             modelBuilder.Entity("modaar.api.Features.Announcements.Entities.Announcement", b =>
                 {
                     b.Navigation("Recipients");
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Properties.Entities.Property", b =>
+                {
+                    b.Navigation("Contracts");
                 });
 #pragma warning restore 612, 618
         }

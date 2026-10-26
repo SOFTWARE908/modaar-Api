@@ -23,6 +23,9 @@ public sealed class DashboardService : IDashboardService
     private const string DefaultCurrency = "SAR";
     private const int PreviewCount = 5;
 
+    // "Expiring" for leases (owner) and management agreements (broker).
+    private const int ExpiringWindowDays = 60;
+
     private readonly ModaarDbContext _db;
     private readonly TimeProvider _time;
     private readonly IRequestLanguage _language;
@@ -95,7 +98,7 @@ public sealed class DashboardService : IDashboardService
         var (_, expectedThisMonth) = await MonthAsync(payments, ct);
         var maintenanceCounts = await MaintenanceTaskCountsAsync(
             _db.MaintenanceRequests.AsNoTracking().Where(m => properties.Any(p => p.Id == m.PropertyId)), userId, ct);
-        var expiringBy = SaudiTime.Today(_time).AddDays(60);
+        var expiringBy = SaudiTime.Today(_time).AddDays(ExpiringWindowDays);
         var contractsExpiring = await _db.Contracts.AsNoTracking().CountAsync(c =>
             c.Status == ContractStatus.Active && c.EndDate <= expiringBy && properties.Any(p => p.Id == c.PropertyId), ct);
 
@@ -373,6 +376,18 @@ public sealed class DashboardService : IDashboardService
         var lateRent = payments.Where(p => p.Type == PaymentType.Rent && p.Status == PaymentStatus.Pending
                                            && p.DueDate != null && p.DueDate < today);
         var lateCount = await lateRent.CountAsync(ct);
+
+        // An agreement ends when its last held unit leaves, so it is "expiring" only when every
+        // held unit has a leaving date and the latest is within the window. One with a vacant unit
+        // (no lease yet, so no end) is not.
+        var mandatesBy = today.AddDays(ExpiringWindowDays);
+        var mandatesExpiring = await _db.ManagementAgreements
+            .AsNoTracking()
+            .Where(a => a.BrokerId == brokerId && a.Status == Features.Agreements.Entities.ManagementAgreementStatus.Active)
+            .Where(a => a.Properties.Any(u => u.ActiveFrom != null && u.ExitedOn == null)
+                        && !a.Properties.Any(u => u.ActiveFrom != null && u.ExitedOn == null && u.EndsOn == null)
+                        && a.Properties.Where(u => u.ActiveFrom != null && u.ExitedOn == null).Max(u => u.EndsOn) <= mandatesBy)
+            .CountAsync(ct);
         var lateAmount = await lateRent.SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
 
         return Result<BrokerDashboardDto>.Ok(new BrokerDashboardDto
@@ -385,7 +400,8 @@ public sealed class DashboardService : IDashboardService
                 new() { Type = DashboardTaskType.NeedsQuote, Count = counts.GetValueOrDefault(MaintenanceAvailableAction.SubmitQuote) },
                 new() { Type = DashboardTaskType.ReadyForTechnician, Count = counts.GetValueOrDefault(MaintenanceAvailableAction.AssignTechnician) },
                 new() { Type = DashboardTaskType.NewRequests, Count = counts.GetValueOrDefault(MaintenanceAvailableAction.Accept) },
-                new() { Type = DashboardTaskType.LateRents, Count = lateCount, Amount = lateAmount }
+                new() { Type = DashboardTaskType.LateRents, Count = lateCount, Amount = lateAmount },
+                new() { Type = DashboardTaskType.MandatesExpiring, Count = mandatesExpiring }
             ],
             ClosedDeals = new BrokerDealsSummaryDto { Count = closedThisMonth, PeriodLabel = DashboardLabels.ThisMonth(_language) },
             Stats = stats,

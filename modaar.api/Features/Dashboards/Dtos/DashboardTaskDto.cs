@@ -26,5 +26,8 @@ public enum DashboardTaskType
     ContractsExpiring,
 
     // Unpaid rent past its due date.
-    LateRents
+    LateRents,
+
+    // Broker: active management agreements whose last unit leaves within 60 days.
+    MandatesExpiring
 }

@@ -188,7 +188,7 @@ public class MaintenanceActionsController : ControllerBase
         return result.Success ? NoContent() : result.ToActionResult();
     }
 
-    // "تأكيد اكتمال العمل". Opens rating for the tenant.
+    // Handler: "اكتمال العمل" with the repair report (required text, optional photos).
     [HttpPost("complete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -197,12 +197,28 @@ public class MaintenanceActionsController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Complete(
-        Guid requestId, CancellationToken ct)
+        Guid requestId, [FromBody] CompleteMaintenanceDto request, CancellationToken ct)
     {
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
-        var result = await _actions.CompleteAsync(requestId, userId, ct);
+        var result = await _actions.CompleteAsync(requestId, userId, request, ct);
+        return result.Success ? NoContent() : result.ToActionResult();
+    }
+
+    // Tenant: "تأكيد اكتمال العمل" after reading the report. Opens rating.
+    [HttpPost("confirm-completion")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ConfirmCompletion(Guid requestId, CancellationToken ct)
+    {
+        if (User.GetUserId() is not { } userId)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
+
+        var result = await _actions.ConfirmCompletionAsync(requestId, userId, ct);
         return result.Success ? NoContent() : result.ToActionResult();
     }
 }

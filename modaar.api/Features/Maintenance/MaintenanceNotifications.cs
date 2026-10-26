@@ -89,7 +89,12 @@ public static class MaintenanceNotifications
     // To the tenant.
     public static NewNotification CompletedToTenant(Subject s) => New(s,
         "تم إصلاح العطل", "The repair is done",
-        $"{s.Ar} · قيّم الخدمة", $"{s.En} · Rate the service");
+        $"{s.Ar} · راجع التقرير وأكّد اكتمال العمل", $"{s.En} · Check the report and confirm the work is done");
+
+    // To whoever ran the job.
+    public static NewNotification ConfirmedByTenant(Subject s) => New(s,
+        "أكّد المستأجر اكتمال العمل", "The tenant confirmed the work is done",
+        s.Ar, s.En);
 
     // To the owner when the broker ran the job.
     public static NewNotification CompletedToOwner(Subject s) => New(s,

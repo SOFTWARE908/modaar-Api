@@ -14,7 +14,9 @@ public sealed record MaintenanceFacts(
     bool HasQuote,
     bool QuoteApproved,
     bool HasTechnician,
-    bool IsRated)
+    bool IsRated,
+    // True on every request before it is completed; after, until the tenant confirms, false.
+    bool TenantConfirmed = true)
 {
     // A property that has lost its broker can only be run by the owner, whatever the plan said.
     public OwnerSubscriptionPlan EffectivePlan =>
@@ -105,7 +107,10 @@ public static class MaintenanceStages
                 break;
 
             case MaintenanceStage.Completed:
-                if (caller.IsTenant && !f.IsRated) actions.Add(MaintenanceAvailableAction.Rate);
+                if (caller.IsTenant && !f.TenantConfirmed) actions.Add(MaintenanceAvailableAction.ConfirmCompletion);
+                // Rating follows the tenant's confirmation, and needs a technician to rate.
+                if (caller.IsTenant && f.TenantConfirmed && !f.IsRated && f.HasTechnician)
+                    actions.Add(MaintenanceAvailableAction.Rate);
                 break;
         }
 
@@ -113,7 +118,7 @@ public static class MaintenanceStages
     }
 
     public static string? NextActionLabel(
-        MaintenanceStage stage, DateOnly? visitDate, bool isRated, IRequestLanguage language)
+        MaintenanceStage stage, DateOnly? visitDate, bool isRated, IRequestLanguage language, bool tenantConfirmed = true)
     {
         return stage switch
         {
@@ -132,6 +137,8 @@ public static class MaintenanceStages
 
             MaintenanceStage.OnTheWay => language.Pick("الفني في الطريق إليك", "The technician is on the way"),
             MaintenanceStage.InProgress => language.Pick("جارٍ تنفيذ الإصلاح", "The repair is under way"),
+            MaintenanceStage.Completed when !tenantConfirmed =>
+                language.Pick("أكّد اكتمال العمل", "Confirm the work is done"),
             MaintenanceStage.Completed when !isRated => language.Pick("قيّم الخدمة", "Rate the service"),
 
             // Rated, rejected or cancelled: nothing left for the tenant to wait on.

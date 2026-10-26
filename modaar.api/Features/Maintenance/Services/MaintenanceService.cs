@@ -172,12 +172,17 @@ public sealed class MaintenanceService : IMaintenanceService
             : null;
         var ownerLimit = owner is null ? null : (await BuildingSubscriptions.ForPropertyAsync(_db, property.Id, ct)).AutoApproveLimit;
 
-        var attachments = await _db.MaintenanceAttachments
+        var allAttachments = await _db.MaintenanceAttachments
             .AsNoTracking()
             .Where(a => a.RequestId == requestId)
             .OrderBy(a => a.CreatedAt)
-            .Select(a => a.Url)
+            .Select(a => new { a.Url, a.Purpose })
             .ToListAsync(ct);
+        var attachments = allAttachments.Where(a => a.Purpose == MaintenanceAttachmentPurpose.Request).Select(a => a.Url).ToList();
+
+        var reportedByName = request.RepairReportedByUserId is { } reporter
+            ? await _db.Users.Where(u => u.Id == reporter).Select(u => u.FullName).FirstOrDefaultAsync(ct)
+            : null;
 
         var rating = await _db.MaintenanceRatings
             .AsNoTracking()
@@ -221,7 +226,8 @@ public sealed class MaintenanceService : IMaintenanceService
 
         var facts = new MaintenanceFacts(
             request.Status, request.SubscriptionPlan, property.BrokerId is not null, request.QuoteRequired,
-            request.QuotedAt is not null, request.QuoteApprovedAt is not null, technician is not null, rating is not null);
+            request.QuotedAt is not null, request.QuoteApprovedAt is not null, technician is not null, rating is not null,
+            TenantConfirmed: request.Status != MaintenanceRequestStatus.Completed || request.TenantConfirmedAt is not null);
 
         var (handledBy, handledByName) = await ResolveHandlerAsync(
             facts.BrokerHandles, property.OwnerUserId, property.BrokerId, ct);
@@ -243,7 +249,7 @@ public sealed class MaintenanceService : IMaintenanceService
             Location = request.Location,
             Status = request.Status,
             Stage = stage,
-            NextActionLabel = MaintenanceStages.NextActionLabel(stage, visitDate, rating is not null, _language),
+            NextActionLabel = MaintenanceStages.NextActionLabel(stage, visitDate, rating is not null, _language, facts.TenantConfirmed),
             RejectedBy = request.RejectedBy,
             RejectionReason = request.RejectionReason,
             HandledBy = handledBy,
@@ -292,6 +298,15 @@ public sealed class MaintenanceService : IMaintenanceService
                     SortOrder = serviceType.SortOrder
                 },
             AttachmentImageUrls = attachments,
+            RepairReport = request.RepairReport is null ? null : new MaintenanceRepairReportDto
+            {
+                Number = request.RepairReportNumber!,
+                Text = request.RepairReport,
+                WrittenByName = reportedByName,
+                At = request.CompletedAt,
+                ImageUrls = allAttachments.Where(a => a.Purpose == MaintenanceAttachmentPurpose.RepairReport).Select(a => a.Url).ToList()
+            },
+            TenantConfirmedAt = request.TenantConfirmedAt,
             PropertyId = property.Id,
             PropertyTitle = property.Title,
             Tenant = tenant,
@@ -527,6 +542,7 @@ public sealed class MaintenanceService : IMaintenanceService
                 MaintenanceActionType.RejectQuote => MaintenanceHistoryStep.Rejected,
                 MaintenanceActionType.Reschedule => MaintenanceHistoryStep.Rescheduled,
                 MaintenanceActionType.Complete => MaintenanceHistoryStep.Completed,
+                MaintenanceActionType.ConfirmCompletion => MaintenanceHistoryStep.TenantConfirmed,
                 _ => null
             };
 
