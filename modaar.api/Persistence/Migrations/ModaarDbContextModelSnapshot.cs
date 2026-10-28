@@ -659,6 +659,9 @@ namespace modaar.api.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<DateTimeOffset?>("RulesUpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -677,6 +680,52 @@ namespace modaar.api.Persistence.Migrations
                     b.HasIndex("CreatedByUserId");
 
                     b.ToTable("Buildings", (string)null);
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SectionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SectionId", "SortOrder");
+
+                    b.ToTable("BuildingRules", (string)null);
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingRuleSection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BuildingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuildingId", "SortOrder");
+
+                    b.ToTable("BuildingRuleSections", (string)null);
                 });
 
             modelBuilder.Entity("modaar.api.Features.Chat.Entities.ChatAttachment", b =>
@@ -2560,6 +2609,24 @@ namespace modaar.api.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingRule", b =>
+                {
+                    b.HasOne("modaar.api.Features.Buildings.Entities.BuildingRuleSection", null)
+                        .WithMany("Rules")
+                        .HasForeignKey("SectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingRuleSection", b =>
+                {
+                    b.HasOne("modaar.api.Features.Buildings.Entities.Building", null)
+                        .WithMany()
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("modaar.api.Features.Chat.Entities.ChatAttachment", b =>
                 {
                     b.HasOne("modaar.api.Features.Chat.Entities.ChatMessage", null)
@@ -3204,6 +3271,11 @@ namespace modaar.api.Persistence.Migrations
             modelBuilder.Entity("modaar.api.Features.Announcements.Entities.Announcement", b =>
                 {
                     b.Navigation("Recipients");
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingRuleSection", b =>
+                {
+                    b.Navigation("Rules");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Properties.Entities.Property", b =>

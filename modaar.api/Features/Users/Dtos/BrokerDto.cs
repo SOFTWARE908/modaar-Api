@@ -5,6 +5,9 @@ namespace modaar.api.Features.Users.Dtos;
 public record BrokerDto
 {
     public required Guid Id { get; init; }
+
+    // The broker's account id: what chat's userId expects, not Id above.
+    public required Guid UserId { get; init; }
     public required string Name { get; init; }
     public string? LogoUrl { get; init; }
     public string? Subtitle { get; init; }

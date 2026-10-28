@@ -61,6 +61,7 @@ public sealed class BrokerService : IBrokerService
         return Result<BrokerDto>.Ok(new BrokerDto
         {
             Id = broker.Id,
+            UserId = broker.UserId,
             Name = user?.FullName ?? string.Empty,
             LogoUrl = user?.ProfileImageUrl,
             Subtitle = _language.Pick(broker.SubtitleAr, broker.SubtitleEn),

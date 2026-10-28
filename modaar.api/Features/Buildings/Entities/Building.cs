@@ -27,6 +27,9 @@ public class Building
     public string? DeedNumber { get; set; }
     public int? YearBuilt { get; set; }
 
+    // "آخر تحديث" on the rules screen. Null until rules are first saved.
+    public DateTimeOffset? RulesUpdatedAt { get; set; }
+
     // Who added it. The only one who may edit its name and address, since others may share it.
     public Guid CreatedByUserId { get; set; }
 

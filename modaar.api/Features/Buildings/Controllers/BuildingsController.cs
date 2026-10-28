@@ -17,8 +17,13 @@ namespace modaar.api.Features.Buildings.Controllers;
 public class BuildingsController : ControllerBase
 {
     private readonly IBuildingService _buildings;
+    private readonly IBuildingRuleService _rules;
 
-    public BuildingsController(IBuildingService buildings) => _buildings = buildings;
+    public BuildingsController(IBuildingService buildings, IBuildingRuleService rules)
+    {
+        _buildings = buildings;
+        _rules = rules;
+    }
 
     // "عقاراتي". ?vacantOnly=true → buildings with at least one empty unit.
     [HttpGet]
@@ -78,6 +83,79 @@ public class BuildingsController : ControllerBase
     {
         if (Caller() is not { } c) return NoCaller();
         return (await _buildings.AddUnitAsync(buildingId, c.UserId, c.Role, request, ct)).ToActionResult();
+    }
+
+    // "أنظمة المبنى" for an owner or broker with units here. Tenants read them by unit:
+    // GET /api/properties/{propertyId}/rules.
+    [HttpGet("{buildingId:guid}/rules")]
+    [ProducesResponseType(typeof(BuildingRulesDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetRules(Guid buildingId, CancellationToken ct)
+    {
+        if (Caller() is not { } c) return NoCaller();
+        return (await _rules.GetForBuildingAsync(buildingId, c.UserId, c.Role, ct)).ToActionResult();
+    }
+
+    // The tenant's way in ("خدمات أخرى" → «أنظمة المبنى»): rules of the building this unit is in.
+    // Tenant with an active lease on it, its owner, or the broker running it.
+    [HttpGet("~/api/properties/{propertyId:guid}/rules")]
+    [ProducesResponseType(typeof(BuildingRulesDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetUnitRules(Guid propertyId, CancellationToken ct)
+    {
+        if (Caller() is not { } c) return NoCaller();
+        return (await _rules.GetForPropertyAsync(propertyId, c.UserId, c.Role, ct)).ToActionResult();
+    }
+
+    // Changing rules: only whoever added the building (canEdit). Each returns the whole rules screen.
+    [HttpPost("{buildingId:guid}/rules/sections")]
+    [ProducesResponseType(typeof(BuildingRulesDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AddRuleSection(Guid buildingId, [FromBody] AddBuildingRuleSectionDto request, CancellationToken ct)
+    {
+        if (Caller() is not { } c) return NoCaller();
+        return (await _rules.AddSectionAsync(buildingId, c.UserId, c.Role, request, ct)).ToActionResult();
+    }
+
+    [HttpDelete("{buildingId:guid}/rules/sections/{sectionId:guid}")]
+    [ProducesResponseType(typeof(BuildingRulesDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteRuleSection(Guid buildingId, Guid sectionId, CancellationToken ct)
+    {
+        if (Caller() is not { } c) return NoCaller();
+        return (await _rules.DeleteSectionAsync(buildingId, sectionId, c.UserId, c.Role, ct)).ToActionResult();
+    }
+
+    [HttpPost("{buildingId:guid}/rules/sections/{sectionId:guid}/rules")]
+    [ProducesResponseType(typeof(BuildingRulesDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AddRule(Guid buildingId, Guid sectionId, [FromBody] AddBuildingRuleDto request, CancellationToken ct)
+    {
+        if (Caller() is not { } c) return NoCaller();
+        return (await _rules.AddRuleAsync(buildingId, sectionId, c.UserId, c.Role, request, ct)).ToActionResult();
+    }
+
+    [HttpDelete("{buildingId:guid}/rules/sections/{sectionId:guid}/rules/{ruleId:guid}")]
+    [ProducesResponseType(typeof(BuildingRulesDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteRule(Guid buildingId, Guid sectionId, Guid ruleId, CancellationToken ct)
+    {
+        if (Caller() is not { } c) return NoCaller();
+        return (await _rules.DeleteRuleAsync(buildingId, sectionId, ruleId, c.UserId, c.Role, ct)).ToActionResult();
     }
 
     private (Guid UserId, Features.Authentication.Enums.AccountType Role)? Caller() =>
