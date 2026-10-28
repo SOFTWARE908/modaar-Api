@@ -38,8 +38,9 @@ public class ModaarDbContext : DbContext
     // Properties
     public DbSet<Property> Properties => Set<Property>();
     public DbSet<Features.Buildings.Entities.Building> Buildings => Set<Features.Buildings.Entities.Building>();
-    public DbSet<Features.Buildings.Entities.BuildingRuleSection> BuildingRuleSections => Set<Features.Buildings.Entities.BuildingRuleSection>();
+    public DbSet<Features.Buildings.Entities.BuildingRuleCategory> BuildingRuleCategories => Set<Features.Buildings.Entities.BuildingRuleCategory>();
     public DbSet<Features.Buildings.Entities.BuildingRule> BuildingRules => Set<Features.Buildings.Entities.BuildingRule>();
+    public DbSet<Features.Buildings.Entities.BuildingContact> BuildingContacts => Set<Features.Buildings.Entities.BuildingContact>();
     public DbSet<Features.Users.Entities.BuildingOwnerSubscription> BuildingOwnerSubscriptions => Set<Features.Users.Entities.BuildingOwnerSubscription>();
     public DbSet<PropertyHandover> PropertyHandovers => Set<PropertyHandover>();
 

@@ -682,12 +682,50 @@ namespace modaar.api.Persistence.Migrations
                     b.ToTable("Buildings", (string)null);
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingContact", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BuildingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsEmergency")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuildingId", "SortOrder");
+
+                    b.ToTable("BuildingContacts", (string)null);
+                });
+
             modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingRule", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("SectionId")
+                    b.Property<Guid>("BuildingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CategoryId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("SortOrder")
@@ -700,32 +738,147 @@ namespace modaar.api.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SectionId", "SortOrder");
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("BuildingId", "CategoryId", "SortOrder");
 
                     b.ToTable("BuildingRules", (string)null);
                 });
 
-            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingRuleSection", b =>
+            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingRuleCategory", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("BuildingId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
 
-                    b.Property<string>("Title")
+                    b.Property<string>("IconUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NameAr")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("BuildingId", "SortOrder");
+                    b.HasIndex("Code")
+                        .IsUnique();
 
-                    b.ToTable("BuildingRuleSections", (string)null);
+                    b.HasIndex("IsActive", "SortOrder");
+
+                    b.ToTable("BuildingRuleCategories", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("b7d2e8b0-0001-4d2b-8b02-000000000001"),
+                            Code = "quiet_hours",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IconUrl = "https://cdn.jsdelivr.net/npm/lucide-static@0.460.0/icons/moon.svg",
+                            IsActive = true,
+                            NameAr = "أوقات الهدوء",
+                            NameEn = "Quiet hours",
+                            SortOrder = 10,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b7d2e8b0-0001-4d2b-8b02-000000000002"),
+                            Code = "waste_recycling",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IconUrl = "https://cdn.jsdelivr.net/npm/lucide-static@0.460.0/icons/trash-2.svg",
+                            IsActive = true,
+                            NameAr = "النفايات وإعادة التدوير",
+                            NameEn = "Waste and recycling",
+                            SortOrder = 20,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b7d2e8b0-0001-4d2b-8b02-000000000003"),
+                            Code = "parking",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IconUrl = "https://cdn.jsdelivr.net/npm/lucide-static@0.460.0/icons/car.svg",
+                            IsActive = true,
+                            NameAr = "المواقف",
+                            NameEn = "Parking",
+                            SortOrder = 30,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b7d2e8b0-0001-4d2b-8b02-000000000004"),
+                            Code = "shared_facilities",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IconUrl = "https://cdn.jsdelivr.net/npm/lucide-static@0.460.0/icons/dumbbell.svg",
+                            IsActive = true,
+                            NameAr = "المرافق المشتركة",
+                            NameEn = "Shared facilities",
+                            SortOrder = 40,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b7d2e8b0-0001-4d2b-8b02-000000000005"),
+                            Code = "visitors",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IconUrl = "https://cdn.jsdelivr.net/npm/lucide-static@0.460.0/icons/users.svg",
+                            IsActive = true,
+                            NameAr = "الزوار",
+                            NameEn = "Visitors",
+                            SortOrder = 50,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b7d2e8b0-0001-4d2b-8b02-000000000006"),
+                            Code = "safety",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IconUrl = "https://cdn.jsdelivr.net/npm/lucide-static@0.460.0/icons/shield.svg",
+                            IsActive = true,
+                            NameAr = "السلامة",
+                            NameEn = "Safety",
+                            SortOrder = 60,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("b7d2e8b0-0001-4d2b-8b02-000000000007"),
+                            Code = "general",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IconUrl = "https://cdn.jsdelivr.net/npm/lucide-static@0.460.0/icons/clipboard-list.svg",
+                            IsActive = true,
+                            NameAr = "عام",
+                            NameEn = "General",
+                            SortOrder = 100,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
                 });
 
             modelBuilder.Entity("modaar.api.Features.Chat.Entities.ChatAttachment", b =>
@@ -2609,21 +2762,27 @@ namespace modaar.api.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingRule", b =>
-                {
-                    b.HasOne("modaar.api.Features.Buildings.Entities.BuildingRuleSection", null)
-                        .WithMany("Rules")
-                        .HasForeignKey("SectionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingRuleSection", b =>
+            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingContact", b =>
                 {
                     b.HasOne("modaar.api.Features.Buildings.Entities.Building", null)
                         .WithMany()
                         .HasForeignKey("BuildingId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingRule", b =>
+                {
+                    b.HasOne("modaar.api.Features.Buildings.Entities.Building", null)
+                        .WithMany()
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("modaar.api.Features.Buildings.Entities.BuildingRuleCategory", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -3271,11 +3430,6 @@ namespace modaar.api.Persistence.Migrations
             modelBuilder.Entity("modaar.api.Features.Announcements.Entities.Announcement", b =>
                 {
                     b.Navigation("Recipients");
-                });
-
-            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingRuleSection", b =>
-                {
-                    b.Navigation("Rules");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Properties.Entities.Property", b =>

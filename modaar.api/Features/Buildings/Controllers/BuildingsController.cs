@@ -110,52 +110,107 @@ public class BuildingsController : ControllerBase
     }
 
     // Changing rules: only whoever added the building (canEdit). Each returns the whole rules screen.
-    [HttpPost("{buildingId:guid}/rules/sections")]
+    // The rule goes at the end of its category; categories come from GET /api/building-rule-categories.
+    [HttpPost("{buildingId:guid}/rules")]
     [ProducesResponseType(typeof(BuildingRulesDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> AddRuleSection(Guid buildingId, [FromBody] AddBuildingRuleSectionDto request, CancellationToken ct)
+    public async Task<IActionResult> AddRule(Guid buildingId, [FromBody] AddBuildingRuleDto request, CancellationToken ct)
     {
         if (Caller() is not { } c) return NoCaller();
-        return (await _rules.AddSectionAsync(buildingId, c.UserId, c.Role, request, ct)).ToActionResult();
+        return (await _rules.AddRuleAsync(buildingId, c.UserId, c.Role, request, ct)).ToActionResult();
     }
 
-    [HttpDelete("{buildingId:guid}/rules/sections/{sectionId:guid}")]
+    [HttpDelete("{buildingId:guid}/rules/{ruleId:guid}")]
     [ProducesResponseType(typeof(BuildingRulesDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteRuleSection(Guid buildingId, Guid sectionId, CancellationToken ct)
+    public async Task<IActionResult> DeleteRule(Guid buildingId, Guid ruleId, CancellationToken ct)
     {
         if (Caller() is not { } c) return NoCaller();
-        return (await _rules.DeleteSectionAsync(buildingId, sectionId, c.UserId, c.Role, ct)).ToActionResult();
+        return (await _rules.DeleteRuleAsync(buildingId, ruleId, c.UserId, c.Role, ct)).ToActionResult();
     }
 
-    [HttpPost("{buildingId:guid}/rules/sections/{sectionId:guid}/rules")]
+    // "أرقام مهمة" under the rules.
+    [HttpPost("{buildingId:guid}/rules/contacts")]
     [ProducesResponseType(typeof(BuildingRulesDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> AddRule(Guid buildingId, Guid sectionId, [FromBody] AddBuildingRuleDto request, CancellationToken ct)
+    public async Task<IActionResult> AddContact(Guid buildingId, [FromBody] AddBuildingContactDto request, CancellationToken ct)
     {
         if (Caller() is not { } c) return NoCaller();
-        return (await _rules.AddRuleAsync(buildingId, sectionId, c.UserId, c.Role, request, ct)).ToActionResult();
+        return (await _rules.AddContactAsync(buildingId, c.UserId, c.Role, request, ct)).ToActionResult();
     }
 
-    [HttpDelete("{buildingId:guid}/rules/sections/{sectionId:guid}/rules/{ruleId:guid}")]
+    [HttpDelete("{buildingId:guid}/rules/contacts/{contactId:guid}")]
     [ProducesResponseType(typeof(BuildingRulesDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteRule(Guid buildingId, Guid sectionId, Guid ruleId, CancellationToken ct)
+    public async Task<IActionResult> DeleteContact(Guid buildingId, Guid contactId, CancellationToken ct)
     {
         if (Caller() is not { } c) return NoCaller();
-        return (await _rules.DeleteRuleAsync(buildingId, sectionId, ruleId, c.UserId, c.Role, ct)).ToActionResult();
+        return (await _rules.DeleteContactAsync(buildingId, contactId, c.UserId, c.Role, ct)).ToActionResult();
+    }
+
+    // ── Rule categories: one list for every building ──
+
+    // Active categories, for the owner's "add a rule" picker. Any signed-in user.
+    [HttpGet("~/api/building-rule-categories")]
+    [ProducesResponseType(typeof(List<BuildingRuleCategoryDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListRuleCategories(CancellationToken ct) =>
+        Ok(await _rules.ListCategoriesAsync(ct));
+
+    // Admin: everything, inactive included.
+    [HttpGet("~/api/building-rule-categories/admin")]
+    [ProducesResponseType(typeof(List<BuildingRuleCategoryAdminDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ListRuleCategoriesForAdmin(CancellationToken ct)
+    {
+        if (Caller() is not { } c) return NoCaller();
+        return (await _rules.ListCategoriesForAdminAsync(c.Role, ct)).ToActionResult();
+    }
+
+    [HttpPost("~/api/building-rule-categories")]
+    [ProducesResponseType(typeof(BuildingRuleCategoryAdminDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CreateRuleCategory([FromBody] CreateBuildingRuleCategoryDto request, CancellationToken ct)
+    {
+        if (Caller() is not { } c) return NoCaller();
+        var result = await _rules.CreateCategoryAsync(c.Role, request, ct);
+        return result.Success ? CreatedAtAction(nameof(ListRuleCategoriesForAdmin), null, result.Value) : result.ToActionResult();
+    }
+
+    [HttpPatch("~/api/building-rule-categories/{id:guid}")]
+    [ProducesResponseType(typeof(BuildingRuleCategoryAdminDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateRuleCategory(Guid id, [FromBody] UpdateBuildingRuleCategoryDto request, CancellationToken ct)
+    {
+        if (Caller() is not { } c) return NoCaller();
+        return (await _rules.UpdateCategoryAsync(id, c.Role, request, ct)).ToActionResult();
+    }
+
+    // Deactivates; rules already written under it keep showing.
+    [HttpDelete("~/api/building-rule-categories/{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteRuleCategory(Guid id, CancellationToken ct)
+    {
+        if (Caller() is not { } c) return NoCaller();
+        var result = await _rules.DeleteCategoryAsync(id, c.Role, ct);
+        return result.Success ? NoContent() : result.ToActionResult();
     }
 
     private (Guid UserId, Features.Authentication.Enums.AccountType Role)? Caller() =>
