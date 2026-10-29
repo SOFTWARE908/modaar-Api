@@ -51,7 +51,7 @@ public sealed class BrokerService : IBrokerService
         var user = await _db.Users
             .AsNoTracking()
             .Where(u => u.Id == broker.UserId)
-            .Select(u => new { u.FullName, u.ProfileImageUrl })
+            .Select(u => new { u.FullName, u.ProfileImageUrl, PhoneNumber = u.CountryCode + u.PhoneNumber })
             .FirstOrDefaultAsync(ct);
 
         var reviews = await ReviewsQuery(brokerId)
@@ -63,6 +63,7 @@ public sealed class BrokerService : IBrokerService
             Id = broker.Id,
             UserId = broker.UserId,
             Name = user?.FullName ?? string.Empty,
+            PhoneNumber = user?.PhoneNumber,
             LogoUrl = user?.ProfileImageUrl,
             Subtitle = _language.Pick(broker.SubtitleAr, broker.SubtitleEn),
             Rating = broker.RatingAverage,

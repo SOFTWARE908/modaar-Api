@@ -9,6 +9,9 @@ public record BrokerDto
     // The broker's account id: what chat's userId expects, not Id above.
     public required Guid UserId { get; init; }
     public required string Name { get; init; }
+
+    // With the country code, e.g. "+966500000003", for the call button.
+    public string? PhoneNumber { get; init; }
     public string? LogoUrl { get; init; }
     public string? Subtitle { get; init; }
 
