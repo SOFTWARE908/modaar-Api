@@ -22,7 +22,7 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         b.Property(r => r.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
 
         b.HasIndex(r => r.TokenHash).IsUnique();
-        b.HasIndex(r => r.UserId);
+        b.HasIndex(r => new { r.UserId, r.SessionId });
 
         b.HasOne<User>()
             .WithMany()

@@ -6,6 +6,11 @@ public class RefreshToken
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
+
+    // One sign-in on one phone. Rotation and role switches keep it; logout ends only this one,
+    // so the account's other phones stay signed in. Carried in the access token as "sid".
+    public Guid SessionId { get; set; }
+
     public AccountType? ActiveRole { get; set; }
 
     public string TokenHash { get; set; } = null!;

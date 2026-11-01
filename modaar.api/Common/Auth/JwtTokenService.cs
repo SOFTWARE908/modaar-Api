@@ -54,7 +54,7 @@ public sealed class JwtTokenService : IJwtTokenService
     //}
 
 
-    public string CreateAccessToken(User user, AccountType? activeRole)
+    public string CreateAccessToken(User user, AccountType? activeRole, Guid sessionId)
     {
         var now = _time.GetUtcNow().UtcDateTime;
 
@@ -62,6 +62,8 @@ public sealed class JwtTokenService : IJwtTokenService
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            // Which sign-in this is, so logout and role switches touch only this phone's session.
+            new(JwtRegisteredClaimNames.Sid, sessionId.ToString()),
             new(JwtRegisteredClaimNames.PhoneNumber, user.CountryCode + user.PhoneNumber)
         };
 

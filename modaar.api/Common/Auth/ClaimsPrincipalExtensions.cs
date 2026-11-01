@@ -16,6 +16,10 @@ public static class ClaimsPrincipalExtensions
         return Guid.TryParse(sub, out var userId) ? userId : null;
     }
 
+    // Null on access tokens issued before sessions existed.
+    public static Guid? GetSessionId(this ClaimsPrincipal principal) =>
+        Guid.TryParse(principal.FindFirstValue(JwtRegisteredClaimNames.Sid), out var id) ? id : null;
+
     public static AccountType? GetActiveRole(this ClaimsPrincipal principal) =>
         Enum.TryParse<AccountType>(principal.FindFirst("active_role")?.Value, out var role)
             ? role

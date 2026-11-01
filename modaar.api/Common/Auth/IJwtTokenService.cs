@@ -6,7 +6,7 @@ namespace modaar.api.Common.Auth;
 public interface IJwtTokenService
 {
     //string CreateAccessToken(User user);
-    string CreateAccessToken(User user, AccountType? activeRole);
+    string CreateAccessToken(User user, AccountType? activeRole, Guid sessionId);
     string CreateRefreshToken();
     string HashToken(string rawToken);
 }

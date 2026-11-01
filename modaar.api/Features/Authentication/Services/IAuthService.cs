@@ -22,14 +22,15 @@ public interface IAuthService
 
     Task<AuthResult<RefreshTokenResponseDto>> RefreshTokenAsync(string refreshToken, CancellationToken ct);
 
-    Task<Result<bool>> LogoutAsync(Guid userId, LogoutRequestDto request, CancellationToken ct);
+    // Ends this phone's session (sessionId from the access token); other phones stay signed in.
+    Task<Result<bool>> LogoutAsync(Guid userId, Guid? sessionId, LogoutRequestDto request, CancellationToken ct);
 
     Task<AuthResult<AccountTypesResponseDto>> GetAccountTypesAsync(Guid userId, CancellationToken ct);
 
     // Issues the real token pair in the chosen role. The last step of login, and later the
     // in-app role switcher — same call either way.
     Task<AuthResult<AuthSuccessResponseDto>> SelectRoleAsync(
-        Guid userId, AccountType accountType, CancellationToken ct);
+        Guid userId, Guid? sessionId, AccountType accountType, CancellationToken ct);
 
     // Biometric login: register the phone's public key while signed in, then later ask for a
     // challenge and sign it to get tokens without an OTP.

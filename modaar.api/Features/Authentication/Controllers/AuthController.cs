@@ -130,7 +130,7 @@ public class AuthController : ControllerBase
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
-        var result = await _auth.LogoutAsync(userId, request ?? new LogoutRequestDto(), ct);
+        var result = await _auth.LogoutAsync(userId, User.GetSessionId(), request ?? new LogoutRequestDto(), ct);
         return result.Success ? NoContent() : result.ToActionResult();
     }
 
@@ -186,7 +186,7 @@ public class AuthController : ControllerBase
         if (User.GetUserId() is not { } userId)
             return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
 
-        return (await _auth.SelectRoleAsync(userId, request.AccountType, ct)).ToActionResult();
+        return (await _auth.SelectRoleAsync(userId, User.GetSessionId(), request.AccountType, ct)).ToActionResult();
     }
 
 

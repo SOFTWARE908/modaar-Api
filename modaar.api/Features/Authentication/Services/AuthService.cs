@@ -208,6 +208,7 @@ public sealed class AuthService : IAuthService
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
+            SessionId = token.SessionId,
             TokenHash = _jwt.HashToken(newRaw),
             ActiveRole = activeRole,
             ExpiresAt = now.AddDays(_jwtSettings.RefreshTokenExpiresDays)
@@ -221,7 +222,7 @@ public sealed class AuthService : IAuthService
 
         return AuthResult<RefreshTokenResponseDto>.Ok(new RefreshTokenResponseDto
         {
-            AccessToken = _jwt.CreateAccessToken(user, activeRole),
+            AccessToken = _jwt.CreateAccessToken(user, activeRole, token.SessionId),
             RefreshToken = newRaw,
             ActiveRole = activeRole,
             AccountTypes = roles
@@ -501,16 +502,18 @@ public sealed class AuthService : IAuthService
             ? roles[0]
             : (AccountType?)null;
 
-        // No role yet: this token exists to reach the picker. Scoped endpoints refuse it.
-        var access = _jwt.CreateAccessToken(user, activeRole);
-        var refresh = _jwt.CreateRefreshToken();
+        // Every sign-in is a new session; the account's other phones keep theirs.
+        var sessionId = Guid.NewGuid();
 
-        
+        // No role yet: this token exists to reach the picker. Scoped endpoints refuse it.
+        var access = _jwt.CreateAccessToken(user, activeRole, sessionId);
+        var refresh = _jwt.CreateRefreshToken();
 
         _db.RefreshTokens.Add(new RefreshToken
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
+            SessionId = sessionId,
             TokenHash = _jwt.HashToken(refresh),
             ActiveRole = activeRole,
             ExpiresAt = _time.GetUtcNow().AddDays(_jwtSettings.RefreshTokenExpiresDays)
@@ -532,23 +535,21 @@ public sealed class AuthService : IAuthService
 
 
     public async Task<Result<bool>> LogoutAsync(
-        Guid userId, LogoutRequestDto request, CancellationToken ct)
+        Guid userId, Guid? sessionId, LogoutRequestDto request, CancellationToken ct)
     {
         var now = _time.GetUtcNow();
 
-        // Every device, not just this one: the client has no per-session identifier to pass, and
-        // "log me out" meaning "log me out everywhere" is the safer reading.
-        var liveTokens = await _db.RefreshTokens
-            .Where(rt => rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > now)
-            .ToListAsync(ct);
+        // This phone only: the account's other phones stay signed in. A token from before
+        // sessions existed has no sid, so it still logs out everywhere.
+        var liveTokens = await LiveTokens(userId, sessionId, now).ToListAsync(ct);
 
         foreach (var token in liveTokens)
             token.RevokedAt = now;
 
         await _db.SaveChangesAsync(ct);
 
-        // Stop pushing to the phone that logged out. Other phones keep their tokens: they still
-        // get pushes until they log out or their refresh fails.
+        // Stop pushing to the phone that logged out. Other phones keep their tokens and their
+        // sessions.
         if (!string.IsNullOrWhiteSpace(request.DeviceToken))
             await _devices.ClearPushTokenAsync(userId, request.DeviceToken, ct);
 
@@ -593,7 +594,7 @@ public sealed class AuthService : IAuthService
 
 
     public async Task<AuthResult<AuthSuccessResponseDto>> SelectRoleAsync(
-        Guid userId, AccountType accountType, CancellationToken ct)
+        Guid userId, Guid? sessionId, AccountType accountType, CancellationToken ct)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, ct);
 
@@ -614,22 +615,23 @@ public sealed class AuthService : IAuthService
 
         var now = _time.GetUtcNow();
 
-        // Retire the live tokens, including the roleless one from verify-otp. Leaves exactly
-        // one session, so a switch cannot leave an old-role token working alongside the new.
-        var liveTokens = await _db.RefreshTokens
-            .Where(rt => rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > now)
-            .ToListAsync(ct);
+        // Retire this session's live tokens, including the roleless one from verify-otp, so a
+        // switch cannot leave an old-role token working alongside the new. Other phones keep
+        // their sessions. A token from before sessions existed has no sid: retire them all.
+        var liveTokens = await LiveTokens(userId, sessionId, now).ToListAsync(ct);
 
         foreach (var token in liveTokens)
             token.RevokedAt = now;
 
-        var access = _jwt.CreateAccessToken(user, accountType);
+        var session = sessionId ?? Guid.NewGuid();
+        var access = _jwt.CreateAccessToken(user, accountType, session);
         var refresh = _jwt.CreateRefreshToken();
 
         _db.RefreshTokens.Add(new RefreshToken
         {
             Id = Guid.NewGuid(),
             UserId = userId,
+            SessionId = session,
             TokenHash = _jwt.HashToken(refresh),
             ActiveRole = accountType,
             ExpiresAt = now.AddDays(_jwtSettings.RefreshTokenExpiresDays)
@@ -650,6 +652,12 @@ public sealed class AuthService : IAuthService
             ProfileStatus = user.ProfileStatus
         });
     }
+
+    // Unexpired, unrevoked refresh tokens of one session, or of every session when there is no id.
+    private IQueryable<RefreshToken> LiveTokens(Guid userId, Guid? sessionId, DateTimeOffset now) =>
+        _db.RefreshTokens.Where(rt =>
+            rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > now &&
+            (sessionId == null || rt.SessionId == sessionId));
 
     // Technicians have no screens in the app yet, so the role can't be signed into: an account
     // holding only that role can't sign in at all, and one holding others isn't offered it.
