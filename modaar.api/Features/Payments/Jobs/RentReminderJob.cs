@@ -11,7 +11,7 @@ namespace modaar.api.Features.Payments.Jobs;
 // Daily reminders for unpaid rent installments:
 //   due within the next 7 days → the tenant, once
 //   due today                  → the tenant
-//   overdue                    → the tenant and whoever runs the property (owner or broker),
+//   overdue                    → the tenant and the property's owner,
 //                                the first day late and then once a week until it is paid
 //
 // Each reminder is a window, not an exact day, so a missed run catches up the next morning

@@ -22,7 +22,7 @@ public static class ContractNotifications
         "اقترب موعد تجديد عقدك", "Your lease renewal is coming up",
         $"{s.PropertyTitle} · ينتهي العقد {s.EndAr}", $"{s.PropertyTitle} · lease ends {s.EndEn}");
 
-    // To the owner or broker running the property.
+    // To the property's owner.
     public static NewNotification RenewalToHandler(Subject s) => New(s,
         "عقد يقترب من الانتهاء", "Lease ending soon",
         $"{s.TenantName} · {s.PropertyTitle} · ينتهي {s.EndAr}", $"{s.TenantName} · {s.PropertyTitle} · ends {s.EndEn}");

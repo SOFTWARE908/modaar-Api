@@ -35,7 +35,7 @@ public static class PaymentNotifications
         "قسط الإيجار متأخر", "Rent payment overdue",
         $"{s.Ar} · كان مستحقاً {s.DueAr}", $"{s.En} · was due {s.DueEn}");
 
-    // To the owner or broker running the property, on the same days.
+    // To the property's owner, on the same days.
     public static NewNotification OverdueToHandler(Subject s) => New(s,
         "قسط إيجار متأخر", "Overdue rent",
         $"{s.TenantName} · {s.Ar} · كان مستحقاً {s.DueAr}", $"{s.TenantName} · {s.En} · was due {s.DueEn}");
@@ -45,7 +45,7 @@ public static class PaymentNotifications
         "تم استلام دفعتك", "Payment received",
         s.Ar, s.En);
 
-    // To the owner or broker running the property: a receipt is waiting for them.
+    // To the property's owner: a receipt is waiting for them.
     public static NewNotification TransferToReview(Subject s) => New(s,
         "إيصال تحويل بانتظار المراجعة", "Bank transfer to review",
         $"{s.TenantName} · {s.Ar}", $"{s.TenantName} · {s.En}");

@@ -1,36 +1,17 @@
 using Microsoft.EntityFrameworkCore;
-using modaar.api.Features.Users.Enums;
 using modaar.api.Persistence;
 
 namespace modaar.api.Features.Users.Services;
 
-// Who runs a property day to day, by the owner's subscription in that building: the owner on
-// SelfManaged (or when the property has no broker), the managing broker otherwise. The same rule maintenance follows,
-// for notices that go "to the owner or the broker".
+// Who handles a property's rent and leases: always its owner. A broker's mandate covers
+// maintenance only, so overdue rent, renewal reminders and bank-transfer reviews go to the owner
+// even when a broker runs the unit. Maintenance has its own rule (MaintenanceStages).
 public static class PropertyHandlers
 {
     public static async Task<Dictionary<Guid, Guid>> ResolveAsync(
-        ModaarDbContext db, IReadOnlyCollection<Guid> propertyIds, CancellationToken ct)
-    {
-        var rows = await db.Properties
+        ModaarDbContext db, IReadOnlyCollection<Guid> propertyIds, CancellationToken ct) =>
+        await db.Properties
             .AsNoTracking()
             .Where(p => propertyIds.Contains(p.Id))
-            .Select(p => new
-            {
-                p.Id,
-                p.OwnerUserId,
-                Plan = db.BuildingOwnerSubscriptions
-                    .Where(s => s.BuildingId == p.BuildingId && s.OwnerUserId == p.OwnerUserId)
-                    .Select(s => (OwnerSubscriptionPlan?)s.Plan)
-                    .FirstOrDefault(),
-                BrokerUserId = db.Brokers.Where(b => b.Id == p.BrokerId).Select(b => (Guid?)b.UserId).FirstOrDefault()
-            })
-            .ToListAsync(ct);
-
-        return rows.ToDictionary(
-            r => r.Id,
-            r => r.BrokerUserId is { } broker && (r.Plan ?? BuildingSubscriptions.Default.Plan) != OwnerSubscriptionPlan.SelfManaged
-                ? broker
-                : r.OwnerUserId);
-    }
+            .ToDictionaryAsync(p => p.Id, p => p.OwnerUserId, ct);
 }

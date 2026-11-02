@@ -34,7 +34,7 @@ public interface IPayService
 //   The Moyasar webhook runs step 3 too, for when the app closes before confirming.
 //
 // Bank transfer to the platform's account:
-//   tenant uploads the receipt → UnderReview → the owner or broker running the property
+//   tenant uploads the receipt → UnderReview → the property's owner (a mandate covers maintenance only)
 //   approves (Paid) or rejects with a reason (owed again).
 public sealed class PayService : IPayService
 {
@@ -416,7 +416,7 @@ public sealed class PayService : IPayService
         };
     }
 
-    // The latest transfer under review, and only for whoever runs the property.
+    // The latest transfer under review, and only for the property's owner.
     private async Task<ReviewAccess> LoadReviewAsync(Guid paymentId, Guid callerUserId, CancellationToken ct)
     {
         var payment = await _db.Payments.FirstOrDefaultAsync(p => p.Id == paymentId, ct);
@@ -425,7 +425,7 @@ public sealed class PayService : IPayService
 
         var (_, handler) = await SubjectAndHandlerAsync(payment, ct);
         if (handler != callerUserId)
-            return new ReviewAccess { Failure = new Failure(AppErrorCode.Forbidden, "Only the owner or broker running this property can review its transfers.") };
+            return new ReviewAccess { Failure = new Failure(AppErrorCode.Forbidden, "Only the property's owner can review its transfers.") };
 
         var transfer = await _db.PaymentTransactions
             .Where(t => t.PaymentId == paymentId && t.Channel == PaymentChannel.BankTransfer

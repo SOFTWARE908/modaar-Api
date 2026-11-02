@@ -41,7 +41,7 @@ public sealed class ContractExpiryJob : IDailyJob
 }
 
 // Reminds both sides that an active lease is ending: 60 days out and again 30 days out, to the
-// tenant and to whoever runs the property (owner or broker). Windows, not exact days, so a
+// tenant and to the property's owner. Windows, not exact days, so a
 // missed run catches up; a lease created with 20 days left gets only the 30-day reminder.
 public sealed class ContractRenewalReminderJob : IDailyJob
 {
