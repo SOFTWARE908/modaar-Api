@@ -9,8 +9,7 @@ using modaar.api.Persistence;
 namespace modaar.api.Features.Agreements.Jobs;
 
 // Lets units whose lease is over leave their agreement (and the agreement expire with its last
-// unit). Registered right after ContractExpiryJob, so leases are already marked expired, and
-// before the rent and renewal reminders, so those go to whoever runs the unit now.
+// unit). Registered right after ContractExpiryJob, so leases are already marked expired.
 public sealed class AgreementUnitExitJob : IDailyJob
 {
     private readonly IManagementAgreementService _agreements;

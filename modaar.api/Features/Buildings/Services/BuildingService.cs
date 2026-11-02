@@ -32,15 +32,12 @@ public sealed class BuildingService : IBuildingService
     private readonly ModaarDbContext _db;
     private readonly IPropertyService _properties;
     private readonly TimeProvider _time;
-    private readonly Features.Agreements.Services.IManagementAgreementService _agreements;
 
-    public BuildingService(ModaarDbContext db, IPropertyService properties, TimeProvider time,
-        Features.Agreements.Services.IManagementAgreementService agreements)
+    public BuildingService(ModaarDbContext db, IPropertyService properties, TimeProvider time)
     {
         _db = db;
         _properties = properties;
         _time = time;
-        _agreements = agreements;
     }
 
     public async Task<Result<List<BuildingListItemDto>>> ListAsync(
@@ -250,11 +247,9 @@ public sealed class BuildingService : IBuildingService
             UpdatedAt = now
         };
         _db.Properties.Add(unit);
+        // A unit the broker adds is theirs to run (BrokerId above) but stays out of any mandate:
+        // only units the owner approves in an agreement belong to one.
         await _db.SaveChangesAsync(ct);
-
-        // A unit the broker adds for a client joins the agreement that makes them a client.
-        if (scope.BrokerId is { } managing)
-            await _agreements.AttachNewUnitAsync(managing, ownerUserId, unit.Id, callerUserId, ct);
 
         return await _properties.GetDetailsAsync(unit.Id, callerUserId, role, ct);
     }

@@ -42,9 +42,6 @@ public interface IManagementAgreementService
     // Re-reads the leases of these units and lets any whose lease is over leave. Called by the
     // daily job and right after a lease is ended early.
     Task SyncPropertiesAsync(IReadOnlyCollection<Guid>? propertyIds, CancellationToken ct);
-
-    // A broker added a unit for a client: it joins their active agreement.
-    Task AttachNewUnitAsync(Guid brokerId, Guid ownerUserId, Guid propertyId, Guid actorUserId, CancellationToken ct);
 }
 
 // The rules, in one place:
@@ -55,8 +52,9 @@ public interface IManagementAgreementService
 //   A lease ended early → it leaves that day. A next lease made by the same broker keeps it.
 // - When the last unit has left the agreement is expired. Either side may cancel an active one
 //   with a reason; every unit leaves that day.
-// - Leaving clears Property.BrokerId, so open maintenance, transfer reviews and reminders fall
-//   to the owner by the existing rules (PropertyHandlers, MaintenanceFacts).
+// - Leaving does NOT clear Property.BrokerId: the broker keeps running the unit after the
+//   mandate ends (user's decision, 2026-11-02). A unit a broker adds for a client gets the broker
+//   but joins no agreement.
 public sealed class ManagementAgreementService : IManagementAgreementService
 {
     public const int EndingSoonDays = 30;
@@ -544,27 +542,6 @@ public sealed class ManagementAgreementService : IManagementAgreementService
             _logger.LogInformation("Agreements: {Count} unit(s) left their agreement.", exits);
     }
 
-    public async Task AttachNewUnitAsync(Guid brokerId, Guid ownerUserId, Guid propertyId, Guid actorUserId, CancellationToken ct)
-    {
-        var agreement = await _db.ManagementAgreements
-            .Where(a => a.BrokerId == brokerId && a.OwnerUserId == ownerUserId && a.Status == ManagementAgreementStatus.Active)
-            .OrderByDescending(a => a.ApprovedAt)
-            .FirstOrDefaultAsync(ct);
-
-        if (agreement is null)
-            return;
-
-        _db.AgreementProperties.Add(new AgreementProperty
-        {
-            Id = Guid.NewGuid(),
-            AgreementId = agreement.Id,
-            PropertyId = propertyId,
-            ActiveFrom = SaudiTime.Today(_time)
-        });
-        AddEvent(agreement.Id, AgreementEventType.UnitAdded, actorUserId, propertyId);
-        await _db.SaveChangesAsync(ct);
-    }
-
     private sealed record LeaseState(bool Leave, AgreementUnitExitReason? Reason, Guid? ContractId, DateOnly? EndsOn);
 
     // Which lease the unit is tied to now, and whether it has run out. Works on the unit's leases
@@ -608,17 +585,12 @@ public sealed class ManagementAgreementService : IManagementAgreementService
         return new LeaseState(false, null, tracked.Id, tracked.TerminatedOn ?? tracked.EndDate);
     }
 
-    // Takes the unit out and the broker off the property (both tracked). Saving is the caller's.
+    // Takes the unit out of the agreement (tracked). Saving is the caller's. Never touches
+    // Property.BrokerId: a mandate ending doesn't remove the broker from the unit.
     private void Exit(ManagementAgreement agreement, AgreementProperty unit, Property property, AgreementUnitExitReason reason, DateOnly today)
     {
         unit.ExitedOn = today;
         unit.ExitReason = reason;
-
-        if (property.BrokerId == agreement.BrokerId)
-        {
-            property.BrokerId = null;
-            property.UpdatedAt = _time.GetUtcNow();
-        }
 
         AddEvent(agreement.Id, AgreementEventType.UnitExited, actorUserId: null, unit.PropertyId, reason.ToString());
     }
