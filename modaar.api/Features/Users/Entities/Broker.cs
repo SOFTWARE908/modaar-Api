@@ -16,6 +16,10 @@
         public string? AboutEn { get; set; }
 
         public string? LicenseNumber { get; set; }
+
+        // The year the brokerage started; "years of experience" is counted from it so it never
+        // goes stale. Set the same way as the rest of the profile (no edit endpoint yet).
+        public int? ExperienceSinceYear { get; set; }
         public bool IsVerified { get; set; }
 
         // Rollup over published reviews, recalculated whenever a review is written. Kept on the row so
@@ -28,17 +32,10 @@
 
         // Display-only lists, owned and stored as JSON columns: nothing queries or joins them, they
         // are always loaded with their broker, and they are edited as a whole list or not at all.
-        public List<BrokerService> Services { get; set; } = [];
         public List<BrokerCoverageArea> CoverageAreas { get; set; } = [];
         public List<BrokerStat> Stats { get; set; } = [];
     }
 
-    public class BrokerService
-    {
-        public string NameAr { get; set; } = null!;
-        public string NameEn { get; set; } = null!;
-        public int SortOrder { get; set; }
-    }
 
     public class BrokerCoverageArea
     {

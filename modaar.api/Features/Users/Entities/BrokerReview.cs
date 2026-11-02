@@ -16,9 +16,13 @@ namespace modaar.api.Features.Users.Entities
         public Guid ReviewerUserId { get; set; }
         public User Reviewer { get; set; } = null!;
 
-        // Whole stars, 1–5. The average on Broker is decimal(3,2), so 4 and 5 roll up to 4.50
-        // rather than truncating to 4.
+        // Whole stars, 1–5: the four criteria the owner rates, and Rating = their rounded average.
+        // The average on Broker is decimal(3,2), so 4 and 5 roll up to 4.50 rather than 4.
         public int Rating { get; set; }
+        public int ResponsivenessRating { get; set; }   // سرعة الاستجابة
+        public int ManagementRating { get; set; }       // إدارة العقار والمستأجرين
+        public int TransparencyRating { get; set; }     // الشفافية والتقارير
+        public int MarketingRating { get; set; }        // تسويق الوحدات الشاغرة
 
         public string? Comment { get; set; }
 

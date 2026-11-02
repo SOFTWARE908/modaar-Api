@@ -89,7 +89,7 @@ public sealed class ManagementAgreementService : IManagementAgreementService
             return Fail(AppErrorCode.Conflict, "You already have a mandate waiting for this broker.");
 
         return await SendAsync(broker, callerUserId, request.PropertyIds?.Distinct().ToList() ?? [], strictUnits: true,
-            request.AutoApproveLimit, renewedFrom: null, ct);
+            request.AutoApproveLimit, request.Message, renewedFrom: null, ct);
     }
 
     // ── Reading ────────────────────────────────────────────────────────────
@@ -210,20 +210,35 @@ public sealed class ManagementAgreementService : IManagementAgreementService
                 agreement.Properties.Remove(unit);
         }
 
-        // A unit is in one active mandate at a time: the owner cancels the other one first. A unit
-        // another broker runs outside any mandate moves to this broker: the owner chose so.
-        var heldElsewhere = await _db.AgreementProperties
-            .Where(x => propertyIds.Contains(x.PropertyId) && x.ActiveFrom != null && x.ExitedOn == null && x.AgreementId != agreement.Id)
-            .Select(x => x.PropertyId)
+        // A unit is in one active mandate at a time. Sending this one was the owner's choice:
+        // units another mandate holds leave it today and come here (that mandate expires if
+        // nothing is left), and a unit another broker runs outside any mandate moves too.
+        var stillOwned = agreement.Properties.Select(p => p.PropertyId).ToList();
+        var movedFrom = await _db.ManagementAgreements
+            .Include(a => a.Broker)
+            .Include(a => a.Properties)
+            .Where(a => a.Id != agreement.Id && a.Status == ManagementAgreementStatus.Active
+                        && a.Properties.Any(u => stillOwned.Contains(u.PropertyId) && u.ActiveFrom != null && u.ExitedOn == null))
             .ToListAsync(ct);
 
-        if (heldElsewhere.Count > 0)
+        var moveNotices = new List<(Guid[] To, NewNotification Notification)>();
+        foreach (var other in movedFrom)
         {
-            await tx.RollbackAsync(ct);
-            _db.ChangeTracker.Clear();
-            return Fail(AppErrorCode.Conflict,
-                $"{heldElsewhere.Count} unit(s) in this mandate are in another active mandate: {string.Join(", ", heldElsewhere)}.");
+            foreach (var unit in other.Properties.Where(u => stillOwned.Contains(u.PropertyId) && u.ActiveFrom != null && u.ExitedOn == null))
+            {
+                Exit(other, unit, AgreementUnitExitReason.MovedToAnotherAgreement, today);
+                var moved = properties[unit.PropertyId];
+                moveNotices.Add(([other.Broker.UserId], AgreementNotifications.UnitLeft(other.Id, other.Number, UnitTitle(moved.Title, moved.UnitNumber))));
+            }
+
+            if (other.Properties.All(u => u.ActiveFrom == null || u.ExitedOn != null))
+            {
+                End(other, ManagementAgreementStatus.Expired, callerUserId, $"Its units moved to {agreement.Number}.");
+                AddEvent(other.Id, AgreementEventType.Expired, callerUserId, note: agreement.Number);
+                moveNotices.Add(([other.Broker.UserId], AgreementNotifications.Expired(other.Id, other.Number)));
+            }
         }
+        await _db.SaveChangesAsync(ct);
 
         if (agreement.Properties.Count == 0)
         {
@@ -256,6 +271,8 @@ public sealed class ManagementAgreementService : IManagementAgreementService
 
         await _notifications.NotifyAsync([agreement.OwnerUserId],
             AgreementNotifications.Accepted(agreement.Id, agreement.Number, await NameAsync(callerUserId, ct)), ct);
+        foreach (var (to, notification) in moveNotices)
+            await _notifications.NotifyAsync(to, notification, ct);
 
         // A unit whose lease is already over leaves straight away.
         await SyncPropertiesAsync(agreement.Properties.Select(p => p.PropertyId).ToList(), ct);
@@ -358,7 +375,7 @@ public sealed class ManagementAgreementService : IManagementAgreementService
         var units = given ? request.PropertyIds!.Distinct().ToList() : agreement.Properties.Select(p => p.PropertyId).ToList();
 
         return await SendAsync(broker, agreement.OwnerUserId, units, strictUnits: given,
-            request.AutoApproveLimit ?? agreement.AutoApproveLimit, renewedFrom: agreement, ct);
+            request.AutoApproveLimit ?? agreement.AutoApproveLimit, request.Message, renewedFrom: agreement, ct);
     }
 
     // ── Units leaving ──────────────────────────────────────────────────────
@@ -494,7 +511,7 @@ public sealed class ManagementAgreementService : IManagementAgreementService
     // (a renewal copying old units just skips ones that have gone).
     private async Task<Result<AgreementDetailsDto>> SendAsync(
         Broker broker, Guid ownerUserId, IReadOnlyCollection<Guid> propertyIds, bool strictUnits,
-        decimal? autoApproveLimit, ManagementAgreement? renewedFrom, CancellationToken ct)
+        decimal? autoApproveLimit, string? message, ManagementAgreement? renewedFrom, CancellationToken ct)
     {
         var units = await _db.Properties
             .Where(p => p.OwnerUserId == ownerUserId && !p.IsDeleted && (propertyIds.Count == 0 || propertyIds.Contains(p.Id)))
@@ -516,6 +533,7 @@ public sealed class ManagementAgreementService : IManagementAgreementService
             OwnerUserId = ownerUserId,
             Status = ManagementAgreementStatus.PendingBroker,
             AutoApproveLimit = autoApproveLimit,
+            Message = string.IsNullOrWhiteSpace(message) ? null : message.Trim(),
             RenewedFromId = renewedFrom?.Id,
             CreatedByUserId = ownerUserId,
             CreatedAt = now,
@@ -663,8 +681,10 @@ public sealed class ManagementAgreementService : IManagementAgreementService
             .Where(p => propertyIds.Contains(p.Id))
             .Select(p => new
             {
-                p.Id, p.Title, p.UnitNumber,
+                p.Id, p.Title, p.UnitNumber, p.BuildingId, p.AnnualRent, p.BrokerId,
+                Rented = _db.Contracts.Any(c => c.PropertyId == p.Id && c.Status == ContractStatus.Active),
                 BuildingName = _db.Buildings.Where(b => b.Id == p.BuildingId).Select(b => b.Name).FirstOrDefault(),
+                DeedNumber = _db.Buildings.Where(b => b.Id == p.BuildingId).Select(b => b.DeedNumber).FirstOrDefault(),
                 TenantName = _db.Contracts
                     .Where(c => c.PropertyId == p.Id && c.Status == ContractStatus.Active)
                     .OrderByDescending(c => c.StartDate)
@@ -686,6 +706,37 @@ public sealed class ManagementAgreementService : IManagementAgreementService
                 Note = e.Note
             })
             .ToListAsync(ct);
+
+        // Pending: who runs these units now, if it's another broker (the "managed elsewhere" note).
+        var otherBrokerIds = a.Status == ManagementAgreementStatus.PendingBroker
+            ? properties.Values.Where(p => p.BrokerId is { } b && b != a.BrokerId).Select(p => p.BrokerId!.Value).Distinct().ToList()
+            : [];
+        var otherBrokerNames = otherBrokerIds.Count == 0 ? [] : await _db.Brokers
+            .Where(b => otherBrokerIds.Contains(b.Id))
+            .Select(b => new { b.Id, b.User.FullName })
+            .ToDictionaryAsync(b => b.Id, b => b.FullName, ct);
+
+        var buildings = a.Properties
+            .Where(p => properties.ContainsKey(p.PropertyId))
+            .Select(p => properties[p.PropertyId])
+            .GroupBy(p => p.BuildingId ?? p.Id)
+            .Select(g =>
+            {
+                var any = g.First();
+                var other = g.Select(p => p.BrokerId).FirstOrDefault(b => b is { } id && otherBrokerNames.ContainsKey(id));
+                return new AgreementBuildingDto
+                {
+                    Id = g.Key,
+                    Name = any.BuildingName ?? any.Title,
+                    DeedNumber = any.DeedNumber,
+                    UnitsCount = g.Count(),
+                    RentedUnits = g.Count(p => p.Rented),
+                    AnnualRentFullyLet = g.Sum(p => p.AnnualRent),
+                    CurrentBrokerName = other is { } o ? otherBrokerNames[o] : null
+                };
+            })
+            .OrderBy(b => b.Name)
+            .ToList();
 
         var renewedFromNumber = a.RenewedFromId is { } rid
             ? await _db.ManagementAgreements.Where(x => x.Id == rid).Select(x => x.Number).FirstOrDefaultAsync(ct)
@@ -722,6 +773,7 @@ public sealed class ManagementAgreementService : IManagementAgreementService
             Broker = parties[brokerUserId],
             Owner = parties[a.OwnerUserId],
             AutoApproveLimit = a.AutoApproveLimit,
+            Message = a.Message,
             StartDate = a.StartDate,
             EndDate = end,
             DaysLeft = DaysLeft(a, end, today),
@@ -729,6 +781,7 @@ public sealed class ManagementAgreementService : IManagementAgreementService
             EndReason = a.EndReason,
             RenewedFromId = a.RenewedFromId,
             RenewedFromNumber = renewedFromNumber,
+            Buildings = buildings,
             Units = a.Properties
                 .Where(p => properties.ContainsKey(p.PropertyId))
                 .Select(p =>

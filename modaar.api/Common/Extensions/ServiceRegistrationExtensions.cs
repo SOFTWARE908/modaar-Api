@@ -92,6 +92,7 @@ public static class ServiceRegistrationExtensions
         services.AddScoped<Features.Wallets.Services.IWalletService, Features.Wallets.Services.WalletService>();
         services.AddScoped<Features.Buildings.Services.IBuildingService, Features.Buildings.Services.BuildingService>();
         services.AddScoped<Features.Buildings.Services.IBuildingRuleService, Features.Buildings.Services.BuildingRuleService>();
+        services.AddScoped<Features.Users.Services.IBrokerServiceCategoryService, Features.Users.Services.BrokerServiceCategoryService>();
         services.AddScoped<Features.Payments.Services.IPayService, Features.Payments.Services.PayService>();
 
 

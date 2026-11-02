@@ -47,7 +47,8 @@ public class AgreementsController : ControllerBase
         {
             BrokerId = brokerId,
             PropertyIds = request?.PropertyIds,
-            AutoApproveLimit = request?.AutoApproveLimit
+            AutoApproveLimit = request?.AutoApproveLimit,
+            Message = request?.Message
         };
         return (await _agreements.CreateAsync(c.UserId, c.Role, body, ct)).ToActionResult();
     }

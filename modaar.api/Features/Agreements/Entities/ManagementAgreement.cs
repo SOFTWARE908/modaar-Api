@@ -32,6 +32,9 @@ public class ManagementAgreement
     // quote goes to the owner.
     public decimal? AutoApproveLimit { get; set; }
 
+    // The owner's note to the broker when sending it.
+    public string? Message { get; set; }
+
     // The agreement this one renews. Accepting it moves the old one's units across.
     public Guid? RenewedFromId { get; set; }
 
@@ -113,6 +116,8 @@ public enum AgreementUnitExitReason
     AgreementTerminated,
     // Moved to the agreement that renewed this one.
     Renewed,
+    // The owner put it in a new mandate (to this broker or another) that was accepted.
+    MovedToAnotherAgreement,
     // The unit was deleted or changed owner.
     Removed
 }

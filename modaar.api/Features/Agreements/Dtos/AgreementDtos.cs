@@ -14,6 +14,7 @@ public record CreateAgreementDto
     public Guid BrokerId { get; init; }
     public IReadOnlyList<Guid>? PropertyIds { get; init; }
     public decimal? AutoApproveLimit { get; init; }
+    public string? Message { get; init; }
 }
 
 // The same, from the broker's profile (POST /api/brokers/{brokerId}/management-requests), where
@@ -22,14 +23,16 @@ public record RequestManagementDto
 {
     public IReadOnlyList<Guid>? PropertyIds { get; init; }
     public decimal? AutoApproveLimit { get; init; }
+    public string? Message { get; init; }
 }
 
-// Owner. Anything omitted is copied from the agreement being renewed (its units: the ones it
-// holds now, or held when it ended).
+// Owner. Units and limit omitted are copied from the agreement being renewed (its units: the
+// ones it holds now, or held when it ended). The message isn't copied.
 public record RenewAgreementDto
 {
     public IReadOnlyList<Guid>? PropertyIds { get; init; }
     public decimal? AutoApproveLimit { get; init; }
+    public string? Message { get; init; }
 }
 
 public record AgreementReasonDto
@@ -120,6 +123,9 @@ public record AgreementDetailsDto
     // to the owner.
     public decimal? AutoApproveLimit { get; init; }
 
+    // The owner's note to the broker.
+    public string? Message { get; init; }
+
     public DateOnly? StartDate { get; init; }
     public DateOnly? EndDate { get; init; }
     public int? DaysLeft { get; init; }
@@ -129,6 +135,8 @@ public record AgreementDetailsDto
     public Guid? RenewedFromId { get; init; }
     public string? RenewedFromNumber { get; init; }
 
+    // The units grouped by building, for the request screen.
+    public required IReadOnlyList<AgreementBuildingDto> Buildings { get; init; }
     public required IReadOnlyList<AgreementUnitDto> Units { get; init; }
     public required IReadOnlyList<AgreementEventDto> Events { get; init; }
 
@@ -136,6 +144,25 @@ public record AgreementDetailsDto
     public required IReadOnlyList<AgreementAction> AvailableActions { get; init; }
 
     public required DateTimeOffset CreatedAt { get; init; }
+}
+
+// One building's share of the mandate (a unit with no building stands alone, Id = its own).
+public record AgreementBuildingDto
+{
+    public required Guid Id { get; init; }
+    public required string Name { get; init; }
+    public string? DeedNumber { get; init; }
+
+    // Over this mandate's units in the building.
+    public required int UnitsCount { get; init; }
+    public required int RentedUnits { get; init; }
+
+    // The units' annual rent added up: what they bring in fully let.
+    public required decimal AnnualRentFullyLet { get; init; }
+
+    // Pending only: another broker runs some of these units now (in an active mandate or not).
+    // Accepting moves them to this broker and takes them out of that mandate.
+    public string? CurrentBrokerName { get; init; }
 }
 
 public record AgreementUnitDto
@@ -184,17 +211,26 @@ public sealed class CreateAgreementValidator : AbstractValidator<CreateAgreement
     {
         RuleFor(x => x.BrokerId).NotEmpty();
         AgreementRules.Limit(this, x => x.AutoApproveLimit);
+        RuleFor(x => x.Message).MaximumLength(1000);
     }
 }
 
 public sealed class RequestManagementValidator : AbstractValidator<RequestManagementDto>
 {
-    public RequestManagementValidator() => AgreementRules.Limit(this, x => x.AutoApproveLimit);
+    public RequestManagementValidator()
+    {
+        AgreementRules.Limit(this, x => x.AutoApproveLimit);
+        RuleFor(x => x.Message).MaximumLength(1000);
+    }
 }
 
 public sealed class RenewAgreementValidator : AbstractValidator<RenewAgreementDto>
 {
-    public RenewAgreementValidator() => AgreementRules.Limit(this, x => x.AutoApproveLimit);
+    public RenewAgreementValidator()
+    {
+        AgreementRules.Limit(this, x => x.AutoApproveLimit);
+        RuleFor(x => x.Message).MaximumLength(1000);
+    }
 }
 
 public sealed class AgreementReasonValidator : AbstractValidator<AgreementReasonDto>

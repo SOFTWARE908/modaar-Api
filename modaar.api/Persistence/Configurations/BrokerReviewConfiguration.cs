@@ -17,7 +17,13 @@ namespace modaar.api.Persistence.Configurations
             b.Property(x => x.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
             b.Property(x => x.UpdatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
 
-            b.ToTable(t => t.HasCheckConstraint("CK_BrokerReviews_Rating", "[Rating] BETWEEN 1 AND 5"));
+            b.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_BrokerReviews_Rating", "[Rating] BETWEEN 1 AND 5");
+                t.HasCheckConstraint("CK_BrokerReviews_Criteria",
+                    "[ResponsivenessRating] BETWEEN 1 AND 5 AND [ManagementRating] BETWEEN 1 AND 5 " +
+                    "AND [TransparencyRating] BETWEEN 1 AND 5 AND [MarketingRating] BETWEEN 1 AND 5");
+            });
 
             // One review per reviewer per brokerage.
             b.HasIndex(x => new { x.BrokerId, x.ReviewerUserId }).IsUnique();

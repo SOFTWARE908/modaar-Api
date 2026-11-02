@@ -390,6 +390,9 @@ public sealed class DashboardService : IDashboardService
             .CountAsync(ct);
         var lateAmount = await lateRent.SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
 
+        var newMandates = await _db.ManagementAgreements
+            .CountAsync(a => a.BrokerId == brokerId && a.Status == Features.Agreements.Entities.ManagementAgreementStatus.PendingBroker, ct);
+
         return Result<BrokerDashboardDto>.Ok(new BrokerDashboardDto
         {
             UserName = user.FullName,
@@ -401,7 +404,8 @@ public sealed class DashboardService : IDashboardService
                 new() { Type = DashboardTaskType.ReadyForTechnician, Count = counts.GetValueOrDefault(MaintenanceAvailableAction.AssignTechnician) },
                 new() { Type = DashboardTaskType.NewRequests, Count = counts.GetValueOrDefault(MaintenanceAvailableAction.Accept) },
                 new() { Type = DashboardTaskType.LateRents, Count = lateCount, Amount = lateAmount },
-                new() { Type = DashboardTaskType.MandatesExpiring, Count = mandatesExpiring }
+                new() { Type = DashboardTaskType.MandatesExpiring, Count = mandatesExpiring },
+                new() { Type = DashboardTaskType.NewMandates, Count = newMandates }
             ],
             ClosedDeals = new BrokerDealsSummaryDto { Count = closedThisMonth, PeriodLabel = DashboardLabels.ThisMonth(_language) },
             Stats = stats,

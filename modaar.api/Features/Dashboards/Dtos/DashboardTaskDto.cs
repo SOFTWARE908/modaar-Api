@@ -29,5 +29,8 @@ public enum DashboardTaskType
     LateRents,
 
     // Broker: active management agreements whose last unit leaves within 60 days.
-    MandatesExpiring
+    MandatesExpiring,
+
+    // Broker: mandates owners sent that wait for an answer (accept / reject).
+    NewMandates
 }

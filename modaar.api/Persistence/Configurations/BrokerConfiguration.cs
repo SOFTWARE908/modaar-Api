@@ -40,13 +40,6 @@ namespace modaar.api.Persistence.Configurations
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Stored as JSON columns: read and written whole, never filtered on.
-            b.OwnsMany(x => x.Services, s =>
-            {
-                s.ToJson();
-                s.Property(p => p.NameAr).IsRequired();
-                s.Property(p => p.NameEn).IsRequired();
-            });
-
             b.OwnsMany(x => x.CoverageAreas, s =>
             {
                 s.ToJson();

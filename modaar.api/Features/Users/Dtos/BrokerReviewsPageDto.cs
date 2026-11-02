@@ -7,4 +7,7 @@ namespace modaar.api.Features.Users.Dtos;
 public record BrokerReviewsPageDto : PagedResultDto<BrokerReviewDto>
 {
     public required bool IsReviewedByMe { get; init; }
+
+    // The caller's own review, to prefill the edit sheet. Null if they haven't written one.
+    public BrokerReviewDto? MyReview { get; init; }
 }

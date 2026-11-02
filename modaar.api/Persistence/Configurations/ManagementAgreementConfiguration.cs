@@ -21,6 +21,7 @@ public class ManagementAgreementConfiguration : IEntityTypeConfiguration<Managem
 
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
         b.Property(x => x.AutoApproveLimit).HasPrecision(18, 2);
+        b.Property(x => x.Message).HasMaxLength(1000);
         b.Property(x => x.EndReason).HasMaxLength(1000);
 
         b.Property(x => x.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");

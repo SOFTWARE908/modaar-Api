@@ -132,6 +132,10 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<DateOnly?>("EndedOn")
                         .HasColumnType("date");
 
+                    b.Property<string>("Message")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<string>("Number")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -2187,6 +2191,9 @@ namespace modaar.api.Persistence.Migrations
                         .HasColumnType("datetimeoffset")
                         .HasDefaultValueSql("SYSDATETIMEOFFSET()");
 
+                    b.Property<int?>("ExperienceSinceYear")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsVerified")
                         .HasColumnType("bit");
 
@@ -2229,6 +2236,21 @@ namespace modaar.api.Persistence.Migrations
                     b.ToTable("Brokers", (string)null);
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Users.Entities.BrokerOfferedService", b =>
+                {
+                    b.Property<Guid>("BrokerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("BrokerId", "CategoryId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("BrokerOfferedServices", (string)null);
+                });
+
             modelBuilder.Entity("modaar.api.Features.Users.Entities.BrokerReview", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2249,11 +2271,23 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
 
+                    b.Property<int>("ManagementRating")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MarketingRating")
+                        .HasColumnType("int");
+
                     b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ResponsivenessRating")
                         .HasColumnType("int");
 
                     b.Property<Guid>("ReviewerUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TransparencyRating")
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -2271,7 +2305,109 @@ namespace modaar.api.Persistence.Migrations
 
                     b.ToTable("BrokerReviews", null, t =>
                         {
+                            t.HasCheckConstraint("CK_BrokerReviews_Criteria", "[ResponsivenessRating] BETWEEN 1 AND 5 AND [ManagementRating] BETWEEN 1 AND 5 AND [TransparencyRating] BETWEEN 1 AND 5 AND [MarketingRating] BETWEEN 1 AND 5");
+
                             t.HasCheckConstraint("CK_BrokerReviews_Rating", "[Rating] BETWEEN 1 AND 5");
+                        });
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Users.Entities.BrokerServiceCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.Property<string>("IconUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "SortOrder");
+
+                    b.ToTable("BrokerServiceCategories", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("c3a1f0d2-0001-4b6e-9a01-000000000001"),
+                            Code = "property_management",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 11, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IconUrl = "https://cdn.jsdelivr.net/npm/lucide-static@0.460.0/icons/building-2.svg",
+                            IsActive = true,
+                            NameAr = "إدارة أملاك",
+                            NameEn = "Property management",
+                            SortOrder = 10,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 11, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("c3a1f0d2-0001-4b6e-9a01-000000000002"),
+                            Code = "marketing_leasing",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 11, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IconUrl = "https://cdn.jsdelivr.net/npm/lucide-static@0.460.0/icons/megaphone.svg",
+                            IsActive = true,
+                            NameAr = "تسويق وتأجير",
+                            NameEn = "Marketing and leasing",
+                            SortOrder = 20,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 11, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("c3a1f0d2-0001-4b6e-9a01-000000000003"),
+                            Code = "commercial",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 11, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IconUrl = "https://cdn.jsdelivr.net/npm/lucide-static@0.460.0/icons/store.svg",
+                            IsActive = true,
+                            NameAr = "تجاري",
+                            NameEn = "Commercial",
+                            SortOrder = 30,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 11, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("c3a1f0d2-0001-4b6e-9a01-000000000004"),
+                            Code = "maintenance",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 11, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IconUrl = "https://cdn.jsdelivr.net/npm/lucide-static@0.460.0/icons/wrench.svg",
+                            IsActive = true,
+                            NameAr = "صيانة",
+                            NameEn = "Maintenance",
+                            SortOrder = 40,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 11, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         });
                 });
 
@@ -3194,38 +3330,6 @@ namespace modaar.api.Persistence.Migrations
                                 .HasForeignKey("BrokerId");
                         });
 
-                    b.OwnsMany("modaar.api.Features.Users.Entities.BrokerService", "Services", b1 =>
-                        {
-                            b1.Property<Guid>("BrokerId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<int>("__synthesizedOrdinal")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("int");
-
-                            b1.Property<string>("NameAr")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)");
-
-                            b1.Property<string>("NameEn")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)");
-
-                            b1.Property<int>("SortOrder")
-                                .HasColumnType("int");
-
-                            b1.HasKey("BrokerId", "__synthesizedOrdinal");
-
-                            b1.ToTable("Brokers");
-
-                            b1
-                                .ToJson("Services")
-                                .HasColumnType("nvarchar(max)");
-
-                            b1.WithOwner()
-                                .HasForeignKey("BrokerId");
-                        });
-
                     b.OwnsMany("modaar.api.Features.Users.Entities.BrokerStat", "Stats", b1 =>
                         {
                             b1.Property<Guid>("BrokerId")
@@ -3267,11 +3371,24 @@ namespace modaar.api.Persistence.Migrations
 
                     b.Navigation("CoverageAreas");
 
-                    b.Navigation("Services");
-
                     b.Navigation("Stats");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Users.Entities.BrokerOfferedService", b =>
+                {
+                    b.HasOne("modaar.api.Features.Users.Entities.Broker", null)
+                        .WithMany()
+                        .HasForeignKey("BrokerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("modaar.api.Features.Users.Entities.BrokerServiceCategory", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("modaar.api.Features.Users.Entities.BrokerReview", b =>

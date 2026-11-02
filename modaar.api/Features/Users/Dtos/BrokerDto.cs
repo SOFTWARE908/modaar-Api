@@ -22,8 +22,20 @@ public record BrokerDto
     public string? LicenseNumber { get; init; }
     public string? About { get; init; }
 
+    // Counted from the year the brokerage started. Null when not set.
+    public int? YearsOfExperience { get; init; }
+
+    // Units this broker runs now.
+    public required int ManagedUnits { get; init; }
+
+    // Average stars per criterion over published reviews. Null with no reviews.
+    public BrokerReviewCriteriaDto? Criteria { get; init; }
+
     // Localized by Accept-Language, flattened to plain strings for the client.
     public required IReadOnlyList<string> Services { get; init; }
+
+    // The same services as codes (GET /api/broker-services), to prefill the broker's edit screen.
+    public required IReadOnlyList<string> ServiceCodes { get; init; }
     public required IReadOnlyList<string> CoverageAreas { get; init; }
 
     public required IReadOnlyList<BrokerStatDto> Stats { get; init; }
