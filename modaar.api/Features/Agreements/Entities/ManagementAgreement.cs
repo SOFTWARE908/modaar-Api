@@ -5,12 +5,13 @@ using PropertyEntity = modaar.api.Features.Properties.Entities.Property;
 
 namespace modaar.api.Features.Agreements.Entities;
 
-// تفويض: an owner hands some of their units to a broker to run. There is no end date to type
-// in: each unit leaves when its own lease ends (see AgreementProperty), and the agreement
-// expires when its last unit has left.
+// تفويض: an owner lets a broker approve maintenance quotes on some of their units, up to
+// AutoApproveLimit, without asking. The owner creates it (units + limit) and the broker accepts;
+// there are no fees or other terms. No end date to type in either: each unit leaves when its own
+// lease ends (see AgreementProperty), and the agreement expires when its last unit has left.
 //
-// Property.BrokerId stays the "who runs this unit now" the rest of the system reads; only this
-// feature writes it — set when an agreement goes active, cleared when the unit leaves.
+// Property.BrokerId is "who runs this unit now". Accepting an agreement sets it; a unit leaving
+// doesn't clear it (the broker keeps running the unit, just without the limit).
 public class ManagementAgreement
 {
     public Guid Id { get; set; }
@@ -25,24 +26,18 @@ public class ManagementAgreement
     public Broker Broker { get; set; } = null!;
     public User Owner { get; set; } = null!;
 
-    public ManagementAgreementStatus Status { get; set; } = ManagementAgreementStatus.PendingOwner;
+    public ManagementAgreementStatus Status { get; set; } = ManagementAgreementStatus.PendingBroker;
 
-    // Terms. ManagementFeePercent is null only on agreements created from broker links that
-    // existed before agreements did.
-    public decimal? ManagementFeePercent { get; set; }
-    public LeasingFeeType? LeasingFeeType { get; set; }
-    public decimal? LeasingFeeValue { get; set; }
-    public string? DocumentUrl { get; set; }
+    // Maintenance quotes at or under this skip the owner's approval on Managed units. Null: every
+    // quote goes to the owner.
+    public decimal? AutoApproveLimit { get; set; }
 
-    // The owner's request this answered, if it started from one.
-    public Guid? RequestId { get; set; }
-
-    // The agreement this one renews. Approving it moves the old one's units across.
+    // The agreement this one renews. Accepting it moves the old one's units across.
     public Guid? RenewedFromId { get; set; }
 
     public Guid CreatedByUserId { get; set; }
 
-    // Set when the owner approves.
+    // Set when the broker accepts.
     public DateOnly? StartDate { get; set; }
     public DateTimeOffset? ApprovedAt { get; set; }
 
@@ -95,25 +90,17 @@ public class AgreementEvent
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ManagementAgreementStatus
 {
-    // Terms written by the broker, waiting for the owner.
-    PendingOwner,
+    // Sent by the owner, waiting for the broker.
+    PendingBroker,
     Active,
     // Every unit has left (or a renewal replaced it).
     Expired,
     // Cancelled by either side while active.
     Terminated,
-    // The owner said no.
+    // The broker said no.
     Rejected,
-    // The broker took it back before the owner answered.
+    // The owner took it back before the broker answered.
     Withdrawn
-}
-
-[JsonConverter(typeof(JsonStringEnumConverter))]
-public enum LeasingFeeType
-{
-    // Percent of the annual rent.
-    Percent,
-    Fixed
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -134,7 +121,8 @@ public enum AgreementUnitExitReason
 public enum AgreementEventType
 {
     Created,
-    Approved,
+    // The broker accepted.
+    Accepted,
     Rejected,
     Withdrawn,
     Terminated,

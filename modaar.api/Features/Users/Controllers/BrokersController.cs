@@ -45,30 +45,4 @@ public class BrokersController : ControllerBase
 
         return (await _brokers.ListReviewsAsync(brokerId, userId, query, ct)).ToActionResult();
     }
-
-    // Owner only. Records the ask; nothing here approves it or assigns the broker.
-    [HttpPost("{brokerId:guid}/management-requests")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> RequestManagement(
-        Guid brokerId, [FromBody] BrokerManagementRequestDto? request, CancellationToken ct)
-    {
-        if (User.GetUserId() is not { } userId)
-            return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid token subject.");
-
-        if (User.GetActiveRole() is not { } activeRole)
-            return Problem(
-                statusCode: StatusCodes.Status403Forbidden,
-                title: "Role not selected",
-                detail: "Choose an account type with POST /api/auth/select-role before using this endpoint.");
-        // An empty body means the whole portfolio.
-        var result = await _brokers.RequestManagementAsync(
-            brokerId, userId, request ?? new BrokerManagementRequestDto(), activeRole, ct);
-
-        return result.Success ? NoContent() : result.ToActionResult();
-    }
 }

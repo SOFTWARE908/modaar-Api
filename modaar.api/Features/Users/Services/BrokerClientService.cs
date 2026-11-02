@@ -26,7 +26,7 @@ public interface IBrokerClientService
 
 // A client is an owner with at least one unit this broker manages — the same rule
 // OwnerSubscriptionService uses to let the broker set the owner's plan — or an agreement still
-// waiting for the owner, or one that ended in the last 90 days (so the broker can renew it).
+// waiting for the broker, or one that ended in the last 90 days (so the owner can renew it).
 // Everything shown is over the broker's units only.
 public sealed class BrokerClientService : IBrokerClientService
 {
@@ -60,7 +60,7 @@ public sealed class BrokerClientService : IBrokerClientService
         var recentCutoff = today.AddDays(-RecentlyEndedDays);
         var ownerIds = units.Select(u => u.OwnerUserId)
             .Concat(agreements
-                .Where(a => a.Status is ManagementAgreementStatus.PendingOwner or ManagementAgreementStatus.Active
+                .Where(a => a.Status is ManagementAgreementStatus.PendingBroker or ManagementAgreementStatus.Active
                             || (a.EndedOn is { } ended && ended >= recentCutoff))
                 .Select(a => a.OwnerUserId))
             .Distinct()
@@ -77,6 +77,8 @@ public sealed class BrokerClientService : IBrokerClientService
         var people = await owners
             .Select(u => new { u.Id, u.FullName, Phone = u.CountryCode + u.PhoneNumber, u.ProfileImageUrl })
             .ToListAsync(ct);
+
+        var needsMandate = await OwnersNeedingMandateAsync(units, agreements, ct);
 
         var rows = people
             .Select(u =>
@@ -98,7 +100,7 @@ public sealed class BrokerClientService : IBrokerClientService
                     MonthlyIncome = Math.Round(mine.Sum(x => x.MonthlyRent), 2),
                     MandateStatus = mandate.Status,
                     UnitsEndingSoon = mandate.UnitsEndingSoon,
-                    CommissionPercent = mandate.Current?.ManagementFeePercent
+                    NeedsMandate = needsMandate.Contains(u.Id)
                 };
             })
             .OrderByDescending(r => r.TotalUnits)
@@ -137,7 +139,7 @@ public sealed class BrokerClientService : IBrokerClientService
         var today = SaudiTime.Today(_time);
         var mandate = Mandate(agreements, today);
         var pending = agreements
-            .Where(a => a.Status == ManagementAgreementStatus.PendingOwner)
+            .Where(a => a.Status == ManagementAgreementStatus.PendingBroker)
             .OrderByDescending(a => a.CreatedAt)
             .FirstOrDefault();
 
@@ -191,8 +193,7 @@ public sealed class BrokerClientService : IBrokerClientService
                     RentedUnits = r,
                     OccupancyPercent = Percent(r, g.Count()),
                     EndsOn = g.Select(u => endsOn.GetValueOrDefault(u.Id)).Where(d => d != null).Min(),
-                    Plan = plans.TryGetValue(g.Key, out var s) ? s.Plan : BuildingSubscriptions.Default.Plan,
-                    AutoApproveLimit = plans.TryGetValue(g.Key, out var l) ? l.AutoApproveLimit : null
+                    Plan = plans.TryGetValue(g.Key, out var s) ? s.Plan : BuildingSubscriptions.Default.Plan
                 };
             })
             .OrderByDescending(p => p.TotalUnits)
@@ -208,6 +209,7 @@ public sealed class BrokerClientService : IBrokerClientService
             OwnerSince = agreements.Where(a => a.StartDate != null).Min(a => a.StartDate),
             MandateStatus = mandate.Status,
             UnitsEndingSoon = mandate.UnitsEndingSoon,
+            NeedsMandate = (await OwnersNeedingMandateAsync(units, agreements, ct)).Count > 0,
             Mandate = mandate.Current is { } current ? new BrokerClientMandateDto
             {
                 Id = current.Id,
@@ -217,7 +219,7 @@ public sealed class BrokerClientService : IBrokerClientService
                 EndDate = ManagementAgreementService.EndDate(current),
                 DaysLeft = current.Status == ManagementAgreementStatus.Active && ManagementAgreementService.EndDate(current) is { } e
                     ? Math.Max(0, e.DayNumber - today.DayNumber) : null,
-                ManagementFeePercent = current.ManagementFeePercent
+                AutoApproveLimit = current.AutoApproveLimit
             } : null,
             PendingMandate = pending is null ? null : new BrokerClientPendingMandateDto
             {
@@ -272,10 +274,40 @@ public sealed class BrokerClientService : IBrokerClientService
 
         var status = active.Count > 0
             ? held.Count > 0 && endingSoon == held.Count ? AgreementDisplayStatus.EndingSoon : AgreementDisplayStatus.Active
-            : agreements.Any(a => a.Status == ManagementAgreementStatus.PendingOwner) ? AgreementDisplayStatus.Pending
+            : agreements.Any(a => a.Status == ManagementAgreementStatus.PendingBroker) ? AgreementDisplayStatus.Pending
             : AgreementDisplayStatus.Expired;
 
         return new MandateSummary(status, endingSoon, current);
+    }
+
+    // Owners with a unit of this broker's on the Managed plan (in its building; Managed when
+    // never set) that no active agreement holds: the units whose quotes all go to the owner.
+    private async Task<HashSet<Guid>> OwnersNeedingMandateAsync(
+        IReadOnlyList<Unit> units, IReadOnlyList<ManagementAgreement> agreements, CancellationToken ct)
+    {
+        var held = agreements
+            .Where(a => a.Status == ManagementAgreementStatus.Active)
+            .SelectMany(a => a.Properties.Where(p => p.ActiveFrom != null && p.ExitedOn == null))
+            .Select(p => p.PropertyId)
+            .ToHashSet();
+
+        var loose = units.Where(u => !held.Contains(u.Id)).ToList();
+        if (loose.Count == 0)
+            return [];
+
+        var ownerIds = loose.Select(u => u.OwnerUserId).Distinct().ToList();
+        var plans = (await _db.BuildingOwnerSubscriptions
+                .AsNoTracking()
+                .Where(s => ownerIds.Contains(s.OwnerUserId))
+                .Select(s => new { s.OwnerUserId, s.BuildingId, s.Plan })
+                .ToListAsync(ct))
+            .ToDictionary(s => (s.OwnerUserId, s.BuildingId), s => s.Plan);
+
+        return loose
+            .Where(u => (u.BuildingId is { } b && plans.TryGetValue((u.OwnerUserId, b), out var plan)
+                ? plan : BuildingSubscriptions.Default.Plan) == OwnerSubscriptionPlan.Managed)
+            .Select(u => u.OwnerUserId)
+            .ToHashSet();
     }
 
     // Rejected and withdrawn proposals never made anyone a client, so they're left out.

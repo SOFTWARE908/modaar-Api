@@ -11,7 +11,4 @@ public interface IBrokerService
 
     Task<Result<BrokerReviewsPageDto>> ListReviewsAsync(
         Guid brokerId, Guid callerUserId, PagedRequestDto query, CancellationToken ct);
-
-    Task<Result<bool>> RequestManagementAsync(
-        Guid brokerId, Guid ownerUserId, BrokerManagementRequestDto request, AccountType activeRole, CancellationToken ct);
 }

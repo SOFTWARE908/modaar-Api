@@ -33,7 +33,6 @@ public class ModaarDbContext : DbContext
     // Brokers
     public DbSet<Broker> Brokers => Set<Broker>();
     public DbSet<BrokerReview> BrokerReviews => Set<BrokerReview>();
-    public DbSet<BrokerManagementRequest> BrokerManagementRequests => Set<BrokerManagementRequest>();
 
     // Properties
     public DbSet<Property> Properties => Set<Property>();

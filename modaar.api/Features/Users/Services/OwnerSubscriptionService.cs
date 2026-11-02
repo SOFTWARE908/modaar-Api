@@ -116,15 +116,14 @@ public sealed class OwnerSubscriptionService : IOwnerSubscriptionService
             }
 
             row.Plan = request.Plan;
-            row.AutoApproveLimit = request.AutoApproveLimit;
             row.UpdatedByUserId = actorUserId;
             row.UpdatedAt = now;
         }
 
         await _db.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Owner {OwnerId} subscription set to {Plan} (limit {Limit}) in {Count} building(s) by user {UserId}.",
-            ownerUserId, request.Plan, request.AutoApproveLimit, buildingIds.Count, actorUserId);
+        _logger.LogInformation("Owner {OwnerId} subscription set to {Plan} in {Count} building(s) by user {UserId}.",
+            ownerUserId, request.Plan, buildingIds.Count, actorUserId);
     }
 
     private async Task<OwnerSubscriptionDto> LoadAsync(Guid ownerUserId, IReadOnlyCollection<Guid> buildingIds, CancellationToken ct)
@@ -142,7 +141,7 @@ public sealed class OwnerSubscriptionService : IOwnerSubscriptionService
                 Units = _db.Properties.Count(p => p.BuildingId == b.Id && p.OwnerUserId == ownerUserId && !p.IsDeleted),
                 Sub = _db.BuildingOwnerSubscriptions
                     .Where(s => s.BuildingId == b.Id && s.OwnerUserId == ownerUserId)
-                    .Select(s => new { s.Plan, s.AutoApproveLimit })
+                    .Select(s => new { s.Plan })
                     .FirstOrDefault()
             })
             .OrderBy(b => b.Name)
@@ -159,7 +158,6 @@ public sealed class OwnerSubscriptionService : IOwnerSubscriptionService
                 City = b.City,
                 UnitsCount = b.Units,
                 Plan = b.Sub?.Plan ?? BuildingSubscriptions.Default.Plan,
-                AutoApproveLimit = b.Sub?.AutoApproveLimit,
                 IsDefault = b.Sub is null
             }).ToList()
         };

@@ -20,20 +20,17 @@ public sealed class BrokerService : IBrokerService
     private readonly TimeProvider _time;
     private readonly IRequestLanguage _language;
     private readonly ILogger<BrokerService> _logger;
-    private readonly Features.Notifications.Services.INotificationService _notifications;
 
     public BrokerService(
         ModaarDbContext db,
         TimeProvider time,
         IRequestLanguage language,
-        ILogger<BrokerService> logger,
-        Features.Notifications.Services.INotificationService notifications)
+        ILogger<BrokerService> logger)
     {
         _db = db;
         _time = time;
         _language = language;
         _logger = logger;
-        _notifications = notifications;
     }
 
     public async Task<Result<BrokerDto>> GetProfileAsync(
@@ -112,84 +109,6 @@ public sealed class BrokerService : IBrokerService
             IsReviewedByMe = isReviewedByMe
         });
     }
-
-    public async Task<Result<bool>> RequestManagementAsync(
-        Guid brokerId, Guid ownerUserId, BrokerManagementRequestDto request, AccountType activeRole, CancellationToken ct)
-    {
-        var types = await _db.Users
-            .AsNoTracking()
-            .Where(u => u.Id == ownerUserId && !u.IsDeleted && u.IsActive)
-            .Select(u =>u.AccountTypes)
-            .FirstOrDefaultAsync(ct);
-
-        if (types is null)
-            return Result<bool>.Fail(AppErrorCode.NotFound, "User not found.");
-
-        // The token is signed, so the role cannot be forged — but it can be stale. This catches
-        // a role removed since selection, which a 60-minute token would otherwise honour.
-        if (!types.Contains(activeRole))
-            return Result<bool>.Fail(
-                AppErrorCode.Forbidden, "That role is no longer available on this account.");
-
-
-        // Only an owner can hand over management of a property, because only an owner has one.
-        if (activeRole != AccountType.Owner)
-            return Result<bool>.Fail(AppErrorCode.Forbidden,
-                "Only an owner account can request brokerage management.");
-
-        if (!await _db.Brokers.AnyAsync(b => b.Id == brokerId, ct))
-            return Result<bool>.Fail(AppErrorCode.NotFound, "Broker not found.");
-
-        var propertyIds = request.PropertyIds ?? [];
-
-        if (propertyIds.Count > 0)
-        {
-            // Every named property must be the caller's. Otherwise an owner could offer up
-            // someone else's portfolio.
-            var ownedCount = await _db.Properties.CountAsync(p =>
-                propertyIds.Contains(p.Id) && p.OwnerUserId == ownerUserId && !p.IsDeleted, ct);
-
-            if (ownedCount != propertyIds.Count)
-                return Result<bool>.Fail(AppErrorCode.ValidationFailed,
-                    "One or more properties are unknown or not yours.");
-        }
-
-        var alreadyPending = await _db.BrokerManagementRequests.AnyAsync(r =>
-            r.OwnerUserId == ownerUserId &&
-            r.BrokerId == brokerId &&
-            r.Status == BrokerManagementRequestStatus.Pending, ct);
-
-        if (alreadyPending)
-            return Result<bool>.Fail(AppErrorCode.Conflict,
-                "You already have a pending request with this broker.");
-
-        var now = _time.GetUtcNow();
-
-        _db.BrokerManagementRequests.Add(new BrokerManagementRequest
-        {
-            Id = Guid.NewGuid(),
-            BrokerId = brokerId,
-            OwnerUserId = ownerUserId,
-            PropertyIds = propertyIds.ToList(),
-            Status = BrokerManagementRequestStatus.Pending,
-            CreatedAt = now,
-            UpdatedAt = now
-        });
-
-        await _db.SaveChangesAsync(ct);
-
-        _logger.LogInformation(
-            "Management request from owner {OwnerId} to broker {BrokerId} over {Count} propert(ies).",
-            ownerUserId, brokerId, propertyIds.Count == 0 ? -1 : propertyIds.Count);
-
-        var brokerUserId = await _db.Brokers.Where(b => b.Id == brokerId).Select(b => b.UserId).FirstAsync(ct);
-        var ownerName = await _db.Users.Where(u => u.Id == ownerUserId).Select(u => u.FullName).FirstOrDefaultAsync(ct);
-        await _notifications.NotifyAsync([brokerUserId], Features.Agreements.AgreementNotifications.NewRequest(ownerName), ct);
-
-        return Result<bool>.Ok(true);
-    }
-
-    
 
     // Shared projection so the profile preview and the paged list can never drift apart.
     private IQueryable<BrokerReviewDto> ReviewsQuery(Guid brokerId) =>

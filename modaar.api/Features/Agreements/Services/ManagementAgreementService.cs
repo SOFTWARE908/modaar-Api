@@ -10,22 +10,13 @@ using modaar.api.Features.Contracts.Enums;
 using modaar.api.Features.Notifications.Services;
 using modaar.api.Features.Properties.Entities;
 using modaar.api.Features.Users.Entities;
-using modaar.api.Features.Users.Enums;
 using modaar.api.Persistence;
 
 namespace modaar.api.Features.Agreements.Services;
 
 public interface IManagementAgreementService
 {
-    // Broker: owners' requests to them.
-    Task<Result<PagedResultDto<ManagementRequestItemDto>>> ListRequestsAsync(
-        Guid callerUserId, AccountType role, ManagementRequestsRequestDto query, CancellationToken ct);
-    Task<Result<AgreementDetailsDto>> AcceptRequestAsync(
-        Guid requestId, Guid callerUserId, AccountType role, AcceptManagementRequestDto terms, CancellationToken ct);
-    Task<Result<bool>> RejectRequestAsync(
-        Guid requestId, Guid callerUserId, AccountType role, string reason, CancellationToken ct);
-
-    // Broker proposes without a request.
+    // Owner sends a mandate to a broker.
     Task<Result<AgreementDetailsDto>> CreateAsync(
         Guid callerUserId, AccountType role, CreateAgreementDto request, CancellationToken ct);
 
@@ -34,8 +25,10 @@ public interface IManagementAgreementService
         Guid callerUserId, AccountType role, AgreementsRequestDto query, CancellationToken ct);
     Task<Result<AgreementDetailsDto>> GetAsync(Guid id, Guid callerUserId, AccountType role, CancellationToken ct);
 
-    Task<Result<AgreementDetailsDto>> ApproveAsync(Guid id, Guid callerUserId, AccountType role, CancellationToken ct);
+    // Broker's answer.
+    Task<Result<AgreementDetailsDto>> AcceptAsync(Guid id, Guid callerUserId, AccountType role, CancellationToken ct);
     Task<Result<AgreementDetailsDto>> RejectAsync(Guid id, Guid callerUserId, AccountType role, string reason, CancellationToken ct);
+
     Task<Result<AgreementDetailsDto>> CancelAsync(Guid id, Guid callerUserId, AccountType role, string reason, CancellationToken ct);
     Task<Result<AgreementDetailsDto>> RenewAsync(Guid id, Guid callerUserId, AccountType role, RenewAgreementDto request, CancellationToken ct);
 
@@ -45,16 +38,15 @@ public interface IManagementAgreementService
 }
 
 // The rules, in one place:
-// - The owner asks (BrokerManagementRequests), the broker answers with terms → pendingOwner;
-//   or the broker proposes directly. Only the owner's approval makes it active.
-// - On approval each unit is "held": Property.BrokerId points at the broker, and the unit leaves
-//   when its lease does — the current lease, or the first one signed on it if it was vacant.
-//   A lease ended early → it leaves that day. A next lease made by the same broker keeps it.
+// - The owner sends it (units + maintenance auto-approve limit) → pendingBroker. The broker
+//   accepts → active, or rejects. No fees or other terms. Brokers can't start one.
+// - On accepting, each unit is "held": Property.BrokerId points at the broker, and the unit
+//   leaves when its lease does — the current lease, or the first one signed on it if it was
+//   vacant. A lease ended early → it leaves that day. A next lease made by the same broker keeps it.
 // - When the last unit has left the agreement is expired. Either side may cancel an active one
-//   with a reason; every unit leaves that day.
+//   with a reason; every unit leaves that day. The owner may withdraw a pending one.
 // - Leaving does NOT clear Property.BrokerId: the broker keeps running the unit after the
-//   mandate ends (user's decision, 2026-11-02). A unit a broker adds for a client gets the broker
-//   but joins no agreement.
+//   mandate ends (user's decision, 2026-11-02), just without the limit (MandateLimits).
 public sealed class ManagementAgreementService : IManagementAgreementService
 {
     public const int EndingSoonDays = 30;
@@ -73,117 +65,31 @@ public sealed class ManagementAgreementService : IManagementAgreementService
         _logger = logger;
     }
 
-    // ── Requests ───────────────────────────────────────────────────────────
-
-    public async Task<Result<PagedResultDto<ManagementRequestItemDto>>> ListRequestsAsync(
-        Guid callerUserId, AccountType role, ManagementRequestsRequestDto query, CancellationToken ct)
-    {
-        if (await BrokerOfAsync(callerUserId, role, ct) is not { } broker)
-            return Result<PagedResultDto<ManagementRequestItemDto>>.Fail(AppErrorCode.Forbidden, "Only a broker receives management requests.");
-
-        var status = query.Status ?? BrokerManagementRequestStatus.Pending;
-        var rows = _db.BrokerManagementRequests.AsNoTracking().Where(r => r.BrokerId == broker.Id && r.Status == status);
-
-        var total = await rows.CountAsync(ct);
-        var page = await rows
-            .OrderByDescending(r => r.CreatedAt)
-            .Skip(query.SkipCount).Take(query.MaxResultCount)
-            .Select(r => new
-            {
-                r.Id, r.Status, r.OwnerUserId, r.PropertyIds, r.DecisionReason, r.CreatedAt,
-                Owner = _db.Users.Where(u => u.Id == r.OwnerUserId)
-                    .Select(u => new { u.FullName, Phone = u.CountryCode + u.PhoneNumber, u.ProfileImageUrl }).FirstOrDefault(),
-                OwnedUnits = _db.Properties.Count(p => p.OwnerUserId == r.OwnerUserId && !p.IsDeleted),
-                AgreementId = _db.ManagementAgreements.Where(a => a.RequestId == r.Id).Select(a => (Guid?)a.Id).FirstOrDefault()
-            })
-            .ToListAsync(ct);
-
-        return Result<PagedResultDto<ManagementRequestItemDto>>.Ok(new PagedResultDto<ManagementRequestItemDto>
-        {
-            TotalCount = total,
-            Items = page.Select(r => new ManagementRequestItemDto
-            {
-                Id = r.Id,
-                Status = r.Status,
-                Owner = new AgreementPartyDto { UserId = r.OwnerUserId, Name = r.Owner?.FullName, PhoneNumber = r.Owner?.Phone, ImageUrl = r.Owner?.ProfileImageUrl },
-                WholePortfolio = r.PropertyIds.Count == 0,
-                UnitsCount = r.PropertyIds.Count == 0 ? r.OwnedUnits : r.PropertyIds.Count,
-                DecisionReason = r.DecisionReason,
-                AgreementId = r.AgreementId,
-                CreatedAt = r.CreatedAt
-            }).ToList()
-        });
-    }
-
-    public async Task<Result<AgreementDetailsDto>> AcceptRequestAsync(
-        Guid requestId, Guid callerUserId, AccountType role, AcceptManagementRequestDto terms, CancellationToken ct)
-    {
-        if (await BrokerOfAsync(callerUserId, role, ct) is not { } broker)
-            return Fail(AppErrorCode.Forbidden, "Only a broker answers management requests.");
-
-        var request = await _db.BrokerManagementRequests.FirstOrDefaultAsync(r => r.Id == requestId && r.BrokerId == broker.Id, ct);
-        if (request is null)
-            return Fail(AppErrorCode.NotFound, "Request not found.");
-        if (request.Status != BrokerManagementRequestStatus.Pending)
-            return Fail(AppErrorCode.Conflict, "This request has already been answered.");
-
-        // The broker may narrow what was asked, not widen it.
-        var asked = request.PropertyIds;
-        var chosen = terms.PropertyIds is { Count: > 0 } ids ? ids.Distinct().ToList() : asked;
-        if (asked.Count > 0 && chosen.Except(asked).Any())
-            return Fail(AppErrorCode.ValidationFailed, "propertyIds must be among the units the owner asked about.");
-
-        var now = _time.GetUtcNow();
-        var created = await ProposeAsync(broker, request.OwnerUserId, chosen, terms, callerUserId, request.Id, renewedFrom: null, ct);
-        if (!created.Success)
-            return created;
-
-        request.Status = BrokerManagementRequestStatus.Accepted;
-        request.DecidedByUserId = callerUserId;
-        request.DecidedAt = now;
-        request.UpdatedAt = now;
-        await _db.SaveChangesAsync(ct);
-
-        return created;
-    }
-
-    public async Task<Result<bool>> RejectRequestAsync(
-        Guid requestId, Guid callerUserId, AccountType role, string reason, CancellationToken ct)
-    {
-        if (await BrokerOfAsync(callerUserId, role, ct) is not { } broker)
-            return Result<bool>.Fail(AppErrorCode.Forbidden, "Only a broker answers management requests.");
-
-        var request = await _db.BrokerManagementRequests.FirstOrDefaultAsync(r => r.Id == requestId && r.BrokerId == broker.Id, ct);
-        if (request is null)
-            return Result<bool>.Fail(AppErrorCode.NotFound, "Request not found.");
-        if (request.Status != BrokerManagementRequestStatus.Pending)
-            return Result<bool>.Fail(AppErrorCode.Conflict, "This request has already been answered.");
-
-        var now = _time.GetUtcNow();
-        request.Status = BrokerManagementRequestStatus.Rejected;
-        request.DecidedByUserId = callerUserId;
-        request.DecidedAt = now;
-        request.DecisionReason = reason.Trim();
-        request.UpdatedAt = now;
-        await _db.SaveChangesAsync(ct);
-
-        await _notifications.NotifyAsync([request.OwnerUserId], AgreementNotifications.RequestRejected(await NameAsync(callerUserId, ct)), ct);
-        return Result<bool>.Ok(true);
-    }
+    // ── Owner sends ────────────────────────────────────────────────────────
 
     public async Task<Result<AgreementDetailsDto>> CreateAsync(
         Guid callerUserId, AccountType role, CreateAgreementDto request, CancellationToken ct)
     {
-        if (await BrokerOfAsync(callerUserId, role, ct) is not { } broker)
-            return Fail(AppErrorCode.Forbidden, "Only a broker proposes an agreement.");
+        if (role != AccountType.Owner)
+            return Fail(AppErrorCode.Forbidden, "Only an owner sends a mandate.");
 
+        // The token is signed but can be stale: a role removed since selection doesn't count.
         var isOwner = await _db.Users.AnyAsync(u =>
-            u.Id == request.OwnerUserId && !u.IsDeleted && u.AccountTypes.Contains(AccountType.Owner), ct);
+            u.Id == callerUserId && !u.IsDeleted && u.IsActive && u.AccountTypes.Contains(AccountType.Owner), ct);
         if (!isOwner)
-            return Fail(AppErrorCode.NotFound, "Owner not found.");
+            return Fail(AppErrorCode.Forbidden, "That role is no longer available on this account.");
 
-        return await ProposeAsync(broker, request.OwnerUserId, request.PropertyIds?.Distinct().ToList() ?? [],
-            request, callerUserId, requestId: null, renewedFrom: null, ct);
+        var broker = await _db.Brokers.AsNoTracking().FirstOrDefaultAsync(b => b.Id == request.BrokerId, ct);
+        if (broker is null)
+            return Fail(AppErrorCode.NotFound, "Broker not found.");
+
+        var alreadyPending = await _db.ManagementAgreements.AnyAsync(a =>
+            a.OwnerUserId == callerUserId && a.BrokerId == broker.Id && a.Status == ManagementAgreementStatus.PendingBroker, ct);
+        if (alreadyPending)
+            return Fail(AppErrorCode.Conflict, "You already have a mandate waiting for this broker.");
+
+        return await SendAsync(broker, callerUserId, request.PropertyIds?.Distinct().ToList() ?? [], strictUnits: true,
+            request.AutoApproveLimit, renewedFrom: null, ct);
     }
 
     // ── Reading ────────────────────────────────────────────────────────────
@@ -205,7 +111,7 @@ public sealed class ManagementAgreementService : IManagementAgreementService
         var total = await rows.CountAsync(ct);
         var page = await rows
             .AsNoTracking()
-            .OrderBy(a => a.Status == ManagementAgreementStatus.PendingOwner ? 0 : a.Status == ManagementAgreementStatus.Active ? 1 : 2)
+            .OrderBy(a => a.Status == ManagementAgreementStatus.PendingBroker ? 0 : a.Status == ManagementAgreementStatus.Active ? 1 : 2)
             .ThenByDescending(a => a.CreatedAt)
             .Skip(query.SkipCount).Take(query.MaxResultCount)
             .Include(a => a.Properties)
@@ -231,10 +137,10 @@ public sealed class ManagementAgreementService : IManagementAgreementService
                     Status = a.Status,
                     DisplayStatus = Display(a, end, today),
                     OtherParty = parties[role == AccountType.Owner ? brokerUsers[a.BrokerId] : a.OwnerUserId],
-                    UnitsCount = a.Status == ManagementAgreementStatus.PendingOwner
+                    UnitsCount = a.Status == ManagementAgreementStatus.PendingBroker
                         ? a.Properties.Count
                         : a.Properties.Count(p => p.ActiveFrom != null && p.ExitedOn == null),
-                    ManagementFeePercent = a.ManagementFeePercent,
+                    AutoApproveLimit = a.AutoApproveLimit,
                     StartDate = a.StartDate,
                     EndDate = end,
                     DaysLeft = DaysLeft(a, end, today),
@@ -253,16 +159,16 @@ public sealed class ManagementAgreementService : IManagementAgreementService
         return Result<AgreementDetailsDto>.Ok(await DetailsAsync(access.Agreement.Id, access.IsOwner, ct));
     }
 
-    // ── Owner's answer ─────────────────────────────────────────────────────
+    // ── Broker's answer ────────────────────────────────────────────────────
 
-    public async Task<Result<AgreementDetailsDto>> ApproveAsync(Guid id, Guid callerUserId, AccountType role, CancellationToken ct)
+    public async Task<Result<AgreementDetailsDto>> AcceptAsync(Guid id, Guid callerUserId, AccountType role, CancellationToken ct)
     {
-        if (await AccessAsync(id, callerUserId, role, ct) is not { IsOwner: true } access)
-            return await NotYoursAsync(id, callerUserId, role, "Only the owner approves an agreement.", ct);
+        if (await AccessAsync(id, callerUserId, role, ct) is not { IsOwner: false } access)
+            return await NotYoursAsync(id, callerUserId, role, "Only the broker accepts a mandate.", ct);
 
         var agreement = access.Agreement;
-        if (agreement.Status != ManagementAgreementStatus.PendingOwner)
-            return Fail(AppErrorCode.Conflict, "This agreement isn't waiting for approval.");
+        if (agreement.Status != ManagementAgreementStatus.PendingBroker)
+            return Fail(AppErrorCode.Conflict, "This mandate isn't waiting for an answer.");
 
         var today = SaudiTime.Today(_time);
         var now = _time.GetUtcNow();
@@ -271,10 +177,9 @@ public sealed class ManagementAgreementService : IManagementAgreementService
 
         // A renewal takes over the units the old agreement still holds: release them first so the
         // one-holder index never sees two.
-        ManagementAgreement? old = null;
         if (agreement.RenewedFromId is { } oldId)
         {
-            old = await _db.ManagementAgreements.Include(a => a.Properties).FirstAsync(a => a.Id == oldId, ct);
+            var old = await _db.ManagementAgreements.Include(a => a.Properties).FirstAsync(a => a.Id == oldId, ct);
             foreach (var unit in old.Properties.Where(p => p.ActiveFrom != null && p.ExitedOn == null))
             {
                 unit.ExitedOn = today;
@@ -298,37 +203,33 @@ public sealed class ManagementAgreementService : IManagementAgreementService
             .AsSplitQuery()
             .ToDictionaryAsync(p => p.Id, ct);
 
-        // Units no longer the owner's drop out of the proposal.
+        // Units no longer the owner's drop out.
         foreach (var unit in agreement.Properties.ToList())
         {
             if (!properties.TryGetValue(unit.PropertyId, out var p) || p.IsDeleted || p.OwnerUserId != agreement.OwnerUserId)
                 agreement.Properties.Remove(unit);
         }
 
+        // A unit is in one active mandate at a time: the owner cancels the other one first. A unit
+        // another broker runs outside any mandate moves to this broker: the owner chose so.
         var heldElsewhere = await _db.AgreementProperties
             .Where(x => propertyIds.Contains(x.PropertyId) && x.ActiveFrom != null && x.ExitedOn == null && x.AgreementId != agreement.Id)
             .Select(x => x.PropertyId)
             .ToListAsync(ct);
 
-        // A unit run by another broker outside any agreement can't be taken over silently either.
-        var runByOther = properties.Values
-            .Where(p => p.BrokerId is { } b && b != agreement.BrokerId && agreement.Properties.Any(u => u.PropertyId == p.Id))
-            .Select(p => p.Id);
-
-        var blocked = heldElsewhere.Concat(runByOther).Distinct().ToList();
-        if (blocked.Count > 0)
+        if (heldElsewhere.Count > 0)
         {
             await tx.RollbackAsync(ct);
             _db.ChangeTracker.Clear();
             return Fail(AppErrorCode.Conflict,
-                $"{blocked.Count} unit(s) in this agreement are managed under another agreement: {string.Join(", ", blocked)}.");
+                $"{heldElsewhere.Count} unit(s) in this mandate are in another active mandate: {string.Join(", ", heldElsewhere)}.");
         }
 
         if (agreement.Properties.Count == 0)
         {
             await tx.RollbackAsync(ct);
             _db.ChangeTracker.Clear();
-            return Fail(AppErrorCode.Conflict, "None of the units in this agreement can be managed any more.");
+            return Fail(AppErrorCode.Conflict, "None of the units in this mandate can be managed any more.");
         }
 
         foreach (var unit in agreement.Properties)
@@ -345,45 +246,45 @@ public sealed class ManagementAgreementService : IManagementAgreementService
         agreement.StartDate = today;
         agreement.ApprovedAt = now;
         agreement.UpdatedAt = now;
-        AddEvent(agreement.Id, AgreementEventType.Approved, callerUserId);
+        AddEvent(agreement.Id, AgreementEventType.Accepted, callerUserId);
 
         await _db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
 
-        _logger.LogInformation("Agreement {Number} approved: broker {BrokerId} now runs {Count} unit(s) of owner {OwnerId}.",
+        _logger.LogInformation("Agreement {Number} accepted: broker {BrokerId} now runs {Count} unit(s) of owner {OwnerId}.",
             agreement.Number, agreement.BrokerId, agreement.Properties.Count, agreement.OwnerUserId);
 
-        await _notifications.NotifyAsync([await BrokerUserAsync(agreement.BrokerId, ct)],
-            AgreementNotifications.Approved(agreement.Id, agreement.Number, await NameAsync(callerUserId, ct)), ct);
+        await _notifications.NotifyAsync([agreement.OwnerUserId],
+            AgreementNotifications.Accepted(agreement.Id, agreement.Number, await NameAsync(callerUserId, ct)), ct);
 
         // A unit whose lease is already over leaves straight away.
         await SyncPropertiesAsync(agreement.Properties.Select(p => p.PropertyId).ToList(), ct);
 
-        return Result<AgreementDetailsDto>.Ok(await DetailsAsync(agreement.Id, forOwner: true, ct));
+        return Result<AgreementDetailsDto>.Ok(await DetailsAsync(agreement.Id, forOwner: false, ct));
     }
 
     public async Task<Result<AgreementDetailsDto>> RejectAsync(Guid id, Guid callerUserId, AccountType role, string reason, CancellationToken ct)
     {
-        if (await AccessAsync(id, callerUserId, role, ct) is not { IsOwner: true } access)
-            return await NotYoursAsync(id, callerUserId, role, "Only the owner rejects an agreement.", ct);
+        if (await AccessAsync(id, callerUserId, role, ct) is not { IsOwner: false } access)
+            return await NotYoursAsync(id, callerUserId, role, "Only the broker rejects a mandate.", ct);
 
         var agreement = access.Agreement;
-        if (agreement.Status != ManagementAgreementStatus.PendingOwner)
-            return Fail(AppErrorCode.Conflict, "This agreement isn't waiting for approval.");
+        if (agreement.Status != ManagementAgreementStatus.PendingBroker)
+            return Fail(AppErrorCode.Conflict, "This mandate isn't waiting for an answer.");
 
         End(agreement, ManagementAgreementStatus.Rejected, callerUserId, reason);
         AddEvent(agreement.Id, AgreementEventType.Rejected, callerUserId, note: reason.Trim());
         await _db.SaveChangesAsync(ct);
 
-        await _notifications.NotifyAsync([await BrokerUserAsync(agreement.BrokerId, ct)],
+        await _notifications.NotifyAsync([agreement.OwnerUserId],
             AgreementNotifications.Rejected(agreement.Id, agreement.Number, await NameAsync(callerUserId, ct)), ct);
 
-        return Result<AgreementDetailsDto>.Ok(await DetailsAsync(agreement.Id, forOwner: true, ct));
+        return Result<AgreementDetailsDto>.Ok(await DetailsAsync(agreement.Id, forOwner: false, ct));
     }
 
     // ── Either side ────────────────────────────────────────────────────────
 
-    // Broker on a pending one → withdrawn. Either side on an active one → terminated, every unit
+    // Owner on a pending one → withdrawn. Either side on an active one → terminated, every unit
     // leaves today.
     public async Task<Result<AgreementDetailsDto>> CancelAsync(Guid id, Guid callerUserId, AccountType role, string reason, CancellationToken ct)
     {
@@ -394,15 +295,15 @@ public sealed class ManagementAgreementService : IManagementAgreementService
         var brokerUserId = await BrokerUserAsync(agreement.BrokerId, ct);
         var callerName = await NameAsync(callerUserId, ct);
 
-        if (agreement.Status == ManagementAgreementStatus.PendingOwner)
+        if (agreement.Status == ManagementAgreementStatus.PendingBroker)
         {
-            if (access.IsOwner)
-                return Fail(AppErrorCode.Conflict, "To turn down a pending agreement, reject it.");
+            if (!access.IsOwner)
+                return Fail(AppErrorCode.Conflict, "To turn down a pending mandate, reject it.");
 
             End(agreement, ManagementAgreementStatus.Withdrawn, callerUserId, reason);
             AddEvent(agreement.Id, AgreementEventType.Withdrawn, callerUserId, note: reason.Trim());
             await _db.SaveChangesAsync(ct);
-            await _notifications.NotifyAsync([agreement.OwnerUserId],
+            await _notifications.NotifyAsync([brokerUserId],
                 AgreementNotifications.Withdrawn(agreement.Id, agreement.Number, callerName), ct);
             return Result<AgreementDetailsDto>.Ok(await DetailsAsync(agreement.Id, access.IsOwner, ct));
         }
@@ -411,18 +312,15 @@ public sealed class ManagementAgreementService : IManagementAgreementService
             return Fail(AppErrorCode.Conflict, "This agreement has already ended.");
 
         var today = SaudiTime.Today(_time);
-        var held = agreement.Properties.Where(p => p.ActiveFrom != null && p.ExitedOn == null).ToList();
-        var heldIds = held.Select(u => u.PropertyId).ToList();
-        var properties = await _db.Properties.Where(p => heldIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id, ct);
-        foreach (var unit in held)
-            Exit(agreement, unit, properties[unit.PropertyId], AgreementUnitExitReason.AgreementTerminated, today);
+        foreach (var unit in agreement.Properties.Where(p => p.ActiveFrom != null && p.ExitedOn == null))
+            Exit(agreement, unit, AgreementUnitExitReason.AgreementTerminated, today);
 
         End(agreement, ManagementAgreementStatus.Terminated, callerUserId, reason);
         AddEvent(agreement.Id, AgreementEventType.Terminated, callerUserId, note: reason.Trim());
 
         // A renewal waiting on this one has nothing left to renew.
         var pendingRenewals = await _db.ManagementAgreements
-            .Where(a => a.RenewedFromId == agreement.Id && a.Status == ManagementAgreementStatus.PendingOwner)
+            .Where(a => a.RenewedFromId == agreement.Id && a.Status == ManagementAgreementStatus.PendingBroker)
             .ToListAsync(ct);
         foreach (var renewal in pendingRenewals)
         {
@@ -440,33 +338,27 @@ public sealed class ManagementAgreementService : IManagementAgreementService
         return Result<AgreementDetailsDto>.Ok(await DetailsAsync(agreement.Id, access.IsOwner, ct));
     }
 
-    // Broker asks to carry on: a new pending agreement over the same units, terms copied unless
+    // Owner carries on with the same broker: a new pending mandate, units and limit copied unless
     // given. Works on an active agreement and on one that expired (its units may come back).
     public async Task<Result<AgreementDetailsDto>> RenewAsync(Guid id, Guid callerUserId, AccountType role, RenewAgreementDto request, CancellationToken ct)
     {
-        if (await AccessAsync(id, callerUserId, role, ct) is not { IsOwner: false } access)
-            return await NotYoursAsync(id, callerUserId, role, "Only the broker asks for a renewal.", ct);
+        if (await AccessAsync(id, callerUserId, role, ct) is not { IsOwner: true } access)
+            return await NotYoursAsync(id, callerUserId, role, "Only the owner renews a mandate.", ct);
 
         var agreement = access.Agreement;
         if (agreement.Status is not (ManagementAgreementStatus.Active or ManagementAgreementStatus.Expired))
             return Fail(AppErrorCode.Conflict, "Only an active or expired agreement can be renewed.");
 
         if (await _db.ManagementAgreements.AnyAsync(a => a.RenewedFromId == agreement.Id
-                && (a.Status == ManagementAgreementStatus.PendingOwner || a.Status == ManagementAgreementStatus.Active), ct))
+                && (a.Status == ManagementAgreementStatus.PendingBroker || a.Status == ManagementAgreementStatus.Active), ct))
             return Fail(AppErrorCode.Conflict, "A renewal of this agreement already exists.");
 
-        var terms = new AgreementTermsDto
-        {
-            ManagementFeePercent = request.ManagementFeePercent ?? agreement.ManagementFeePercent ?? 0m,
-            LeasingFeeType = request.LeasingFeeValue is null ? agreement.LeasingFeeType : request.LeasingFeeType,
-            LeasingFeeValue = request.LeasingFeeValue ?? agreement.LeasingFeeValue,
-            DocumentUrl = request.DocumentUrl ?? agreement.DocumentUrl
-        };
-
         var broker = await _db.Brokers.AsNoTracking().FirstAsync(b => b.Id == agreement.BrokerId, ct);
-        var units = agreement.Properties.Select(p => p.PropertyId).ToList();
+        var given = request.PropertyIds is { Count: > 0 } ids;
+        var units = given ? request.PropertyIds!.Distinct().ToList() : agreement.Properties.Select(p => p.PropertyId).ToList();
 
-        return await ProposeAsync(broker, agreement.OwnerUserId, units, terms, callerUserId, requestId: null, renewedFrom: agreement, ct);
+        return await SendAsync(broker, agreement.OwnerUserId, units, strictUnits: given,
+            request.AutoApproveLimit ?? agreement.AutoApproveLimit, renewedFrom: agreement, ct);
     }
 
     // ── Units leaving ──────────────────────────────────────────────────────
@@ -514,7 +406,7 @@ public sealed class ManagementAgreementService : IManagementAgreementService
 
                 if (lease.Leave)
                 {
-                    Exit(agreement, unit, property, lease.Reason!.Value, today);
+                    Exit(agreement, unit, lease.Reason!.Value, today);
                     notices.Add((recipients, AgreementNotifications.UnitLeft(agreement.Id, agreement.Number, UnitTitle(property.Title, property.UnitNumber))));
                     exits++;
                 }
@@ -587,7 +479,7 @@ public sealed class ManagementAgreementService : IManagementAgreementService
 
     // Takes the unit out of the agreement (tracked). Saving is the caller's. Never touches
     // Property.BrokerId: a mandate ending doesn't remove the broker from the unit.
-    private void Exit(ManagementAgreement agreement, AgreementProperty unit, Property property, AgreementUnitExitReason reason, DateOnly today)
+    private void Exit(ManagementAgreement agreement, AgreementProperty unit, AgreementUnitExitReason reason, DateOnly today)
     {
         unit.ExitedOn = today;
         unit.ExitReason = reason;
@@ -597,21 +489,23 @@ public sealed class ManagementAgreementService : IManagementAgreementService
 
     // ── Shared ─────────────────────────────────────────────────────────────
 
-    private async Task<Result<AgreementDetailsDto>> ProposeAsync(
-        Broker broker, Guid ownerUserId, IReadOnlyCollection<Guid> propertyIds, AgreementTermsDto terms,
-        Guid actorUserId, Guid? requestId, ManagementAgreement? renewedFrom, CancellationToken ct)
+    // Creates the pending mandate and tells the broker. Empty propertyIds → every unit the owner
+    // has now. strictUnits: the caller named the units, so an unknown or foreign one is an error
+    // (a renewal copying old units just skips ones that have gone).
+    private async Task<Result<AgreementDetailsDto>> SendAsync(
+        Broker broker, Guid ownerUserId, IReadOnlyCollection<Guid> propertyIds, bool strictUnits,
+        decimal? autoApproveLimit, ManagementAgreement? renewedFrom, CancellationToken ct)
     {
-        // Empty → every unit the owner has now.
         var units = await _db.Properties
             .Where(p => p.OwnerUserId == ownerUserId && !p.IsDeleted && (propertyIds.Count == 0 || propertyIds.Contains(p.Id)))
             .Select(p => p.Id)
             .ToListAsync(ct);
 
-        if (propertyIds.Count > 0 && units.Count != propertyIds.Count && renewedFrom is null)
-            return Fail(AppErrorCode.ValidationFailed, "One or more units are unknown or not this owner's.");
+        if (strictUnits && propertyIds.Count > 0 && units.Count != propertyIds.Count)
+            return Fail(AppErrorCode.ValidationFailed, "One or more units are unknown or not yours.");
 
         if (units.Count == 0)
-            return Fail(AppErrorCode.ValidationFailed, "The owner has no units to manage.");
+            return Fail(AppErrorCode.ValidationFailed, "You have no units to put in a mandate.");
 
         var now = _time.GetUtcNow();
         var agreement = new ManagementAgreement
@@ -620,30 +514,26 @@ public sealed class ManagementAgreementService : IManagementAgreementService
             Number = await NextNumberAsync(ct),
             BrokerId = broker.Id,
             OwnerUserId = ownerUserId,
-            Status = ManagementAgreementStatus.PendingOwner,
-            ManagementFeePercent = terms.ManagementFeePercent,
-            LeasingFeeType = terms.LeasingFeeType,
-            LeasingFeeValue = terms.LeasingFeeValue,
-            DocumentUrl = terms.DocumentUrl?.Trim(),
-            RequestId = requestId,
+            Status = ManagementAgreementStatus.PendingBroker,
+            AutoApproveLimit = autoApproveLimit,
             RenewedFromId = renewedFrom?.Id,
-            CreatedByUserId = actorUserId,
+            CreatedByUserId = ownerUserId,
             CreatedAt = now,
             UpdatedAt = now,
             Properties = units.Select(id => new AgreementProperty { Id = Guid.NewGuid(), PropertyId = id }).ToList()
         };
 
         _db.ManagementAgreements.Add(agreement);
-        AddEvent(agreement.Id, AgreementEventType.Created, actorUserId, note: renewedFrom is null ? null : $"Renews {renewedFrom.Number}.");
+        AddEvent(agreement.Id, AgreementEventType.Created, ownerUserId, note: renewedFrom is null ? null : $"Renews {renewedFrom.Number}.");
         await _db.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Agreement {Number} proposed by broker {BrokerId} to owner {OwnerId} over {Count} unit(s).",
-            agreement.Number, broker.Id, ownerUserId, units.Count);
+        _logger.LogInformation("Agreement {Number} sent by owner {OwnerId} to broker {BrokerId} over {Count} unit(s).",
+            agreement.Number, ownerUserId, broker.Id, units.Count);
 
-        await _notifications.NotifyAsync([ownerUserId],
-            AgreementNotifications.AwaitingOwner(agreement.Id, agreement.Number, await NameAsync(broker.UserId, ct), renewedFrom is not null), ct);
+        await _notifications.NotifyAsync([broker.UserId],
+            AgreementNotifications.NewRequest(agreement.Id, agreement.Number, await NameAsync(ownerUserId, ct), renewedFrom is not null), ct);
 
-        return Result<AgreementDetailsDto>.Ok(await DetailsAsync(agreement.Id, forOwner: false, ct));
+        return Result<AgreementDetailsDto>.Ok(await DetailsAsync(agreement.Id, forOwner: true, ct));
     }
 
     private sealed record Access(ManagementAgreement Agreement, bool IsOwner);
@@ -723,7 +613,7 @@ public sealed class ManagementAgreementService : IManagementAgreementService
     public static DateOnly? EndDate(ManagementAgreement a)
     {
         if (a.Status != ManagementAgreementStatus.Active)
-            return a.Status == ManagementAgreementStatus.PendingOwner ? null : a.EndedOn;
+            return a.Status == ManagementAgreementStatus.PendingBroker ? null : a.EndedOn;
 
         var held = a.Properties.Where(p => p.ActiveFrom != null && p.ExitedOn == null).ToList();
         return held.Count == 0 || held.Any(p => p.EndsOn is null) ? null : held.Max(p => p.EndsOn);
@@ -731,7 +621,7 @@ public sealed class ManagementAgreementService : IManagementAgreementService
 
     public static AgreementDisplayStatus Display(ManagementAgreement a, DateOnly? end, DateOnly today) => a.Status switch
     {
-        ManagementAgreementStatus.PendingOwner => AgreementDisplayStatus.Pending,
+        ManagementAgreementStatus.PendingBroker => AgreementDisplayStatus.Pending,
         ManagementAgreementStatus.Active when end is { } e && e.DayNumber - today.DayNumber <= EndingSoonDays => AgreementDisplayStatus.EndingSoon,
         ManagementAgreementStatus.Active => AgreementDisplayStatus.Active,
         ManagementAgreementStatus.Expired => AgreementDisplayStatus.Expired,
@@ -802,22 +692,22 @@ public sealed class ManagementAgreementService : IManagementAgreementService
             : null;
 
         var renewalExists = await _db.ManagementAgreements.AnyAsync(x => x.RenewedFromId == a.Id
-            && (x.Status == ManagementAgreementStatus.PendingOwner || x.Status == ManagementAgreementStatus.Active), ct);
+            && (x.Status == ManagementAgreementStatus.PendingBroker || x.Status == ManagementAgreementStatus.Active), ct);
 
         var actions = new List<AgreementAction>();
         switch (a.Status)
         {
-            case ManagementAgreementStatus.PendingOwner when forOwner:
-                actions.AddRange([AgreementAction.Approve, AgreementAction.Reject]);
-                break;
-            case ManagementAgreementStatus.PendingOwner:
+            case ManagementAgreementStatus.PendingBroker when forOwner:
                 actions.Add(AgreementAction.Withdraw);
+                break;
+            case ManagementAgreementStatus.PendingBroker:
+                actions.AddRange([AgreementAction.Accept, AgreementAction.Reject]);
                 break;
             case ManagementAgreementStatus.Active:
                 actions.Add(AgreementAction.Cancel);
-                if (!forOwner && !renewalExists) actions.Add(AgreementAction.Renew);
+                if (forOwner && !renewalExists) actions.Add(AgreementAction.Renew);
                 break;
-            case ManagementAgreementStatus.Expired when !forOwner && !renewalExists:
+            case ManagementAgreementStatus.Expired when forOwner && !renewalExists:
                 actions.Add(AgreementAction.Renew);
                 break;
         }
@@ -831,18 +721,14 @@ public sealed class ManagementAgreementService : IManagementAgreementService
             BrokerId = a.BrokerId,
             Broker = parties[brokerUserId],
             Owner = parties[a.OwnerUserId],
-            ManagementFeePercent = a.ManagementFeePercent,
-            LeasingFeeType = a.LeasingFeeType,
-            LeasingFeeValue = a.LeasingFeeValue,
-            DocumentUrl = a.DocumentUrl,
+            AutoApproveLimit = a.AutoApproveLimit,
             StartDate = a.StartDate,
             EndDate = end,
             DaysLeft = DaysLeft(a, end, today),
-            EndedOn = a.Status is ManagementAgreementStatus.Active or ManagementAgreementStatus.PendingOwner ? null : a.EndedOn,
+            EndedOn = a.Status is ManagementAgreementStatus.Active or ManagementAgreementStatus.PendingBroker ? null : a.EndedOn,
             EndReason = a.EndReason,
             RenewedFromId = a.RenewedFromId,
             RenewedFromNumber = renewedFromNumber,
-            RequestId = a.RequestId,
             Units = a.Properties
                 .Where(p => properties.ContainsKey(p.PropertyId))
                 .Select(p =>

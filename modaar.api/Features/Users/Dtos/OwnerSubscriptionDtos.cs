@@ -26,19 +26,14 @@ namespace modaar.api.Features.Users.Dtos
 
         public required OwnerSubscriptionPlan Plan { get; init; }
 
-        // Managed plan: quotes at or under this total are approved without asking the owner.
-        // Null = every quote goes to the owner.
-        public decimal? AutoApproveLimit { get; init; }
-
         // True while nobody has set it: Plan is the default.
         public required bool IsDefault { get; init; }
     }
 
-    // Broker only. Both fields are written as sent: omitting the limit clears it.
+    // Broker only. The auto-approve limit is set by the owner on the mandate, not here.
     public record UpdateOwnerSubscriptionDto
     {
         public required OwnerSubscriptionPlan Plan { get; init; }
-        public decimal? AutoApproveLimit { get; init; }
     }
 }
 
@@ -48,13 +43,6 @@ namespace modaar.api.Features.Users.Validation
 
     public sealed class UpdateOwnerSubscriptionValidator : AbstractValidator<UpdateOwnerSubscriptionDto>
     {
-        public UpdateOwnerSubscriptionValidator()
-        {
-            RuleFor(x => x.Plan).IsInEnum();
-
-            RuleFor(x => x.AutoApproveLimit!.Value)
-                .GreaterThanOrEqualTo(0).LessThan(1_000_000)
-                .When(x => x.AutoApproveLimit is not null);
-        }
+        public UpdateOwnerSubscriptionValidator() => RuleFor(x => x.Plan).IsInEnum();
     }
 }

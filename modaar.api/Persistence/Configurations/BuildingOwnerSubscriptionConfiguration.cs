@@ -16,7 +16,6 @@ public class BuildingOwnerSubscriptionConfiguration : IEntityTypeConfiguration<B
         // No HasDefaultValue: SelfManaged is the enum's 0, so EF would treat it as "unset" and let a
         // database default overwrite it.
         b.Property(x => x.Plan).HasConversion<string>().HasMaxLength(20).IsRequired();
-        b.Property(x => x.AutoApproveLimit).HasPrecision(18, 2);
         b.Property(x => x.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
         b.Property(x => x.UpdatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
 

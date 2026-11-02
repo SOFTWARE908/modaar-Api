@@ -182,9 +182,9 @@ public sealed class MaintenanceActionService : IMaintenanceActionService
 
         if (ctx.Facts.NeedsOwnerApproval)
         {
-            // Read live, not snapshotted: the limit is the owner's standing instruction to the broker
-            // for this building.
-            var limit = (await BuildingSubscriptions.ForPropertyAsync(_db, ctx.Property.Id, ct)).AutoApproveLimit;
+            // Read live, not snapshotted: the limit is the owner's standing instruction on the
+            // unit's active mandate. No mandate → no limit → the owner approves.
+            var limit = await Features.Agreements.MandateLimits.ForPropertyAsync(_db, ctx.Property.Id, ct);
 
             if (limit is { } max && total <= max)
             {

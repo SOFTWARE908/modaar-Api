@@ -20,10 +20,7 @@ public class ManagementAgreementConfiguration : IEntityTypeConfiguration<Managem
         b.HasIndex(x => x.Number).IsUnique();
 
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
-        b.Property(x => x.ManagementFeePercent).HasPrecision(5, 2);
-        b.Property(x => x.LeasingFeeType).HasConversion<string>().HasMaxLength(20);
-        b.Property(x => x.LeasingFeeValue).HasPrecision(18, 2);
-        b.Property(x => x.DocumentUrl).HasMaxLength(500);
+        b.Property(x => x.AutoApproveLimit).HasPrecision(18, 2);
         b.Property(x => x.EndReason).HasMaxLength(1000);
 
         b.Property(x => x.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
@@ -35,7 +32,6 @@ public class ManagementAgreementConfiguration : IEntityTypeConfiguration<Managem
         b.HasOne(x => x.Broker).WithMany().HasForeignKey(x => x.BrokerId).OnDelete(DeleteBehavior.NoAction);
         b.HasOne(x => x.Owner).WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.NoAction);
         b.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.NoAction);
-        b.HasOne<BrokerManagementRequest>().WithMany().HasForeignKey(x => x.RequestId).OnDelete(DeleteBehavior.NoAction);
         b.HasOne<ManagementAgreement>().WithMany().HasForeignKey(x => x.RenewedFromId).OnDelete(DeleteBehavior.NoAction);
 
         b.HasMany(x => x.Properties).WithOne().HasForeignKey(x => x.AgreementId).OnDelete(DeleteBehavior.Cascade);

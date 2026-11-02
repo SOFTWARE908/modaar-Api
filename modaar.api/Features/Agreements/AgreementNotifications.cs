@@ -4,45 +4,32 @@ using modaar.api.Features.Notifications.Services;
 
 namespace modaar.api.Features.Agreements;
 
-// Management agreement (تفويض) wording, both languages. All open the agreement except the new
-// request, which has no agreement yet.
+// Management agreement (تفويض) wording, both languages. All open the agreement.
 public static class AgreementNotifications
 {
     // ar-EG, not ar-SA: ar-SA formats in the Hijri calendar, and these dates are Gregorian.
     private static readonly CultureInfo Arabic = CultureInfo.GetCultureInfo("ar-EG");
     private static readonly CultureInfo English = CultureInfo.InvariantCulture;
 
-    // To the broker.
-    public static NewNotification NewRequest(string? ownerName) =>
-        new(NotificationType.Contracts,
-            "طلب إدارة أملاك جديد", "New management request",
-            $"{ownerName} يطلب إدارة أملاكه", $"{ownerName} asked you to manage their properties");
-
-    // To the owner.
-    public static NewNotification RequestRejected(string? brokerName) =>
-        new(NotificationType.Contracts,
-            "تم رفض طلب الإدارة", "Management request declined",
-            $"{brokerName} اعتذر عن طلبك", $"{brokerName} declined your request");
-
-    // To the owner: new terms or a renewal to approve.
-    public static NewNotification AwaitingOwner(Guid id, string number, string? brokerName, bool renewal) => New(id,
-        renewal ? "طلب تجديد التفويض" : "تفويض بانتظار موافقتك",
-        renewal ? "Agreement renewal to approve" : "Agreement awaiting your approval",
-        $"{brokerName} · {number}", $"{brokerName} · {number}");
-
-    // To the broker.
-    public static NewNotification Approved(Guid id, string number, string? ownerName) => New(id,
-        "تمت الموافقة على التفويض", "Agreement approved",
-        $"{ownerName} · {number}", $"{ownerName} · {number}");
-
-    public static NewNotification Rejected(Guid id, string number, string? ownerName) => New(id,
-        "تم رفض التفويض", "Agreement declined",
+    // To the broker: a new mandate or a renewal to accept.
+    public static NewNotification NewRequest(Guid id, string number, string? ownerName, bool renewal) => New(id,
+        renewal ? "طلب تجديد التفويض" : "تفويض جديد بانتظار موافقتك",
+        renewal ? "Mandate renewal to accept" : "New mandate awaiting your answer",
         $"{ownerName} · {number}", $"{ownerName} · {number}");
 
     // To the owner.
-    public static NewNotification Withdrawn(Guid id, string number, string? brokerName) => New(id,
-        "تم سحب التفويض", "Agreement withdrawn",
+    public static NewNotification Accepted(Guid id, string number, string? brokerName) => New(id,
+        "تم قبول التفويض", "Mandate accepted",
         $"{brokerName} · {number}", $"{brokerName} · {number}");
+
+    public static NewNotification Rejected(Guid id, string number, string? brokerName) => New(id,
+        "تم رفض التفويض", "Mandate declined",
+        $"{brokerName} · {number}", $"{brokerName} · {number}");
+
+    // To the broker.
+    public static NewNotification Withdrawn(Guid id, string number, string? ownerName) => New(id,
+        "تم سحب التفويض", "Mandate withdrawn",
+        $"{ownerName} · {number}", $"{ownerName} · {number}");
 
     // To the other side.
     public static NewNotification Terminated(Guid id, string number, string? byName) => New(id,

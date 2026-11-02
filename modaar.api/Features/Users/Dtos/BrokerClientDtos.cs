@@ -31,15 +31,16 @@ public record BrokerClientListItemDto
     // Rent per month of the active leases (annual rent / 12, or the installment spread over its period).
     public required decimal MonthlyIncome { get; init; }
 
-    // The relationship as a whole: pending (waiting for the owner), active, endingSoon (every
+    // The relationship as a whole: pending (waiting for the broker), active, endingSoon (every
     // unit still held leaves within 30 days) or expired.
     public required AgreementDisplayStatus MandateStatus { get; init; }
 
     // Units leaving within 30 days, even while the relationship as a whole carries on.
     public required int UnitsEndingSoon { get; init; }
 
-    // Management fee of the current agreement.
-    public decimal? CommissionPercent { get; init; }
+    // Some of this broker's units of this owner are on the Managed plan but in no active mandate:
+    // every maintenance quote on them goes to the owner until the owner sends a mandate.
+    public required bool NeedsMandate { get; init; }
 }
 
 // Client screen (B-6).
@@ -55,6 +56,9 @@ public record BrokerClientDetailsDto
 
     public required AgreementDisplayStatus MandateStatus { get; init; }
     public required int UnitsEndingSoon { get; init; }
+
+    // Same as on the list.
+    public required bool NeedsMandate { get; init; }
 
     // The current agreement (the latest active one, else the latest that ended). Null if there
     // has never been one.
@@ -95,7 +99,6 @@ public record BrokerClientPropertyDto
 
     // This owner's subscription in this building (default managed when never set).
     public required OwnerSubscriptionPlan Plan { get; init; }
-    public decimal? AutoApproveLimit { get; init; }
 }
 
 public record BrokerClientMandateDto
@@ -108,7 +111,9 @@ public record BrokerClientMandateDto
     // When the last unit leaves (null while a vacant unit has no lease yet), or the day it ended.
     public DateOnly? EndDate { get; init; }
     public int? DaysLeft { get; init; }
-    public decimal? ManagementFeePercent { get; init; }
+
+    // Quotes at or under this skip the owner on Managed units. Null: every quote goes to the owner.
+    public decimal? AutoApproveLimit { get; init; }
 }
 
 public record BrokerClientPendingMandateDto

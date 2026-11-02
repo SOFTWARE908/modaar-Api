@@ -162,7 +162,7 @@ public sealed class MaintenanceService : IMaintenanceService
             })
             .FirstOrDefaultAsync(ct);
 
-        // The owner as the broker sees them, and the owner's auto-approve limit in this building for
+        // The owner as the broker sees them, and the auto-approve limit on the unit's active mandate for
         // both sides.
         var owner = isBroker || isOwner
             ? await _db.Users.AsNoTracking()
@@ -170,7 +170,7 @@ public sealed class MaintenanceService : IMaintenanceService
                 .Select(u => new { u.Id, u.FullName, u.CountryCode, u.PhoneNumber, u.ProfileImageUrl })
                 .FirstOrDefaultAsync(ct)
             : null;
-        var ownerLimit = owner is null ? null : (await BuildingSubscriptions.ForPropertyAsync(_db, property.Id, ct)).AutoApproveLimit;
+        var ownerLimit = owner is null ? null : await Features.Agreements.MandateLimits.ForPropertyAsync(_db, property.Id, ct);
 
         var allAttachments = await _db.MaintenanceAttachments
             .AsNoTracking()

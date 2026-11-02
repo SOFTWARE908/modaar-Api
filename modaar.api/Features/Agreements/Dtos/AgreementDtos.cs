@@ -2,46 +2,34 @@ using System.Text.Json.Serialization;
 using FluentValidation;
 using modaar.api.Common.Dtos;
 using modaar.api.Features.Agreements.Entities;
-using modaar.api.Features.Users.Enums;
 
 namespace modaar.api.Features.Agreements.Dtos;
 
 // ── Input ──────────────────────────────────────────────────────────────────
 
-// What the broker writes when proposing an agreement.
-public record AgreementTermsDto
+// The owner sends a mandate to a broker. PropertyIds omitted → all the owner's units.
+// AutoApproveLimit omitted → every maintenance quote still comes to the owner.
+public record CreateAgreementDto
 {
-    // Percent of the rent collected.
-    public decimal ManagementFeePercent { get; init; }
-
-    // Both or neither.
-    public LeasingFeeType? LeasingFeeType { get; init; }
-    public decimal? LeasingFeeValue { get; init; }
-
-    public string? DocumentUrl { get; init; }
+    public Guid BrokerId { get; init; }
+    public IReadOnlyList<Guid>? PropertyIds { get; init; }
+    public decimal? AutoApproveLimit { get; init; }
 }
 
-// Broker answers an owner's request with terms. PropertyIds narrows the request's units;
-// omitted → the units the owner asked for (all of them if they asked for the whole portfolio).
-public record AcceptManagementRequestDto : AgreementTermsDto
+// The same, from the broker's profile (POST /api/brokers/{brokerId}/management-requests), where
+// the broker is in the route.
+public record RequestManagementDto
 {
     public IReadOnlyList<Guid>? PropertyIds { get; init; }
+    public decimal? AutoApproveLimit { get; init; }
 }
 
-// Broker proposes an agreement without a request. PropertyIds omitted → all the owner's units.
-public record CreateAgreementDto : AgreementTermsDto
-{
-    public Guid OwnerUserId { get; init; }
-    public IReadOnlyList<Guid>? PropertyIds { get; init; }
-}
-
-// Renewal: anything omitted is copied from the agreement being renewed.
+// Owner. Anything omitted is copied from the agreement being renewed (its units: the ones it
+// holds now, or held when it ended).
 public record RenewAgreementDto
 {
-    public decimal? ManagementFeePercent { get; init; }
-    public LeasingFeeType? LeasingFeeType { get; init; }
-    public decimal? LeasingFeeValue { get; init; }
-    public string? DocumentUrl { get; init; }
+    public IReadOnlyList<Guid>? PropertyIds { get; init; }
+    public decimal? AutoApproveLimit { get; init; }
 }
 
 public record AgreementReasonDto
@@ -52,12 +40,6 @@ public record AgreementReasonDto
 public record AgreementsRequestDto : PagedRequestDto
 {
     public ManagementAgreementStatus? Status { get; init; }
-}
-
-public record ManagementRequestsRequestDto : PagedRequestDto
-{
-    // Default: pending only.
-    public BrokerManagementRequestStatus? Status { get; init; }
 }
 
 // ── Output ─────────────────────────────────────────────────────────────────
@@ -79,10 +61,14 @@ public enum AgreementDisplayStatus
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AgreementAction
 {
-    Approve,
+    // Broker, on a pending one.
+    Accept,
     Reject,
+    // Owner, on a pending one.
     Withdraw,
+    // Either side, on an active one.
     Cancel,
+    // Owner, on an active or expired one.
     Renew
 }
 
@@ -104,10 +90,10 @@ public record AgreementListItemDto
     // The other side: the broker for an owner, the owner for a broker.
     public required AgreementPartyDto OtherParty { get; init; }
 
-    // Units it holds now (proposed units while pending).
+    // Units it holds now (the units sent while pending).
     public required int UnitsCount { get; init; }
 
-    public decimal? ManagementFeePercent { get; init; }
+    public decimal? AutoApproveLimit { get; init; }
     public DateOnly? StartDate { get; init; }
 
     // Active: when the last unit leaves (null while a vacant unit has no lease yet).
@@ -130,10 +116,9 @@ public record AgreementDetailsDto
     public required AgreementPartyDto Broker { get; init; }
     public required AgreementPartyDto Owner { get; init; }
 
-    public decimal? ManagementFeePercent { get; init; }
-    public LeasingFeeType? LeasingFeeType { get; init; }
-    public decimal? LeasingFeeValue { get; init; }
-    public string? DocumentUrl { get; init; }
+    // Maintenance quotes at or under this skip the owner on Managed units. Null: every quote goes
+    // to the owner.
+    public decimal? AutoApproveLimit { get; init; }
 
     public DateOnly? StartDate { get; init; }
     public DateOnly? EndDate { get; init; }
@@ -143,7 +128,6 @@ public record AgreementDetailsDto
 
     public Guid? RenewedFromId { get; init; }
     public string? RenewedFromNumber { get; init; }
-    public Guid? RequestId { get; init; }
 
     public required IReadOnlyList<AgreementUnitDto> Units { get; init; }
     public required IReadOnlyList<AgreementEventDto> Events { get; init; }
@@ -179,78 +163,38 @@ public record AgreementEventDto
     public string? Note { get; init; }
 }
 
-public record ManagementRequestItemDto
-{
-    public required Guid Id { get; init; }
-    public required BrokerManagementRequestStatus Status { get; init; }
-    public required AgreementPartyDto Owner { get; init; }
-
-    // True when the owner asked for their whole portfolio.
-    public required bool WholePortfolio { get; init; }
-    public required int UnitsCount { get; init; }
-
-    public string? DecisionReason { get; init; }
-    public Guid? AgreementId { get; init; }
-    public required DateTimeOffset CreatedAt { get; init; }
-}
-
 // ── Validation ─────────────────────────────────────────────────────────────
 
 public static class AgreementRules
 {
-    public static void Terms<T>(AbstractValidator<T> v) where T : AgreementTermsDto
+    public const decimal MaxAutoApproveLimit = 1_000_000m;
+
+    public static void Limit<T>(AbstractValidator<T> v, System.Linq.Expressions.Expression<Func<T, decimal?>> limit)
     {
-        v.RuleFor(x => x.ManagementFeePercent).InclusiveBetween(0m, 100m);
-        Fees(v, x => x.LeasingFeeType, x => x.LeasingFeeValue);
-        v.RuleFor(x => x.DocumentUrl).Must(BeUrl).MaximumLength(500).When(x => x.DocumentUrl is not null)
-            .WithMessage("documentUrl must be an http(s) URL.");
+        var get = limit.Compile();
+        v.RuleFor(limit)
+            .GreaterThanOrEqualTo(0m).LessThan(MaxAutoApproveLimit)
+            .When(x => get(x) is not null);
     }
-
-    public static void Fees<T>(AbstractValidator<T> v,
-        System.Linq.Expressions.Expression<Func<T, LeasingFeeType?>> type,
-        System.Linq.Expressions.Expression<Func<T, decimal?>> value)
-    {
-        var getType = type.Compile();
-        var getValue = value.Compile();
-
-        v.RuleFor(x => x)
-            .Must(x => getType(x) is null == getValue(x) is null)
-            .WithName("leasingFee")
-            .WithMessage("leasingFeeType and leasingFeeValue go together.");
-
-        v.RuleFor(value).GreaterThanOrEqualTo(0m).When(x => getValue(x) is not null);
-        v.RuleFor(value).LessThanOrEqualTo(100m)
-            .When(x => getType(x) == LeasingFeeType.Percent && getValue(x) is not null)
-            .WithMessage("A percent leasing fee can't be over 100.");
-    }
-
-    public static bool BeUrl(string? url) =>
-        Uri.TryCreate(url, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
-}
-
-public sealed class AcceptManagementRequestValidator : AbstractValidator<AcceptManagementRequestDto>
-{
-    public AcceptManagementRequestValidator() => AgreementRules.Terms(this);
 }
 
 public sealed class CreateAgreementValidator : AbstractValidator<CreateAgreementDto>
 {
     public CreateAgreementValidator()
     {
-        RuleFor(x => x.OwnerUserId).NotEmpty();
-        AgreementRules.Terms(this);
+        RuleFor(x => x.BrokerId).NotEmpty();
+        AgreementRules.Limit(this, x => x.AutoApproveLimit);
     }
+}
+
+public sealed class RequestManagementValidator : AbstractValidator<RequestManagementDto>
+{
+    public RequestManagementValidator() => AgreementRules.Limit(this, x => x.AutoApproveLimit);
 }
 
 public sealed class RenewAgreementValidator : AbstractValidator<RenewAgreementDto>
 {
-    public RenewAgreementValidator()
-    {
-        RuleFor(x => x.ManagementFeePercent).InclusiveBetween(0m, 100m).When(x => x.ManagementFeePercent is not null);
-        AgreementRules.Fees(this, x => x.LeasingFeeType, x => x.LeasingFeeValue);
-        RuleFor(x => x.DocumentUrl).Must(AgreementRules.BeUrl).MaximumLength(500).When(x => x.DocumentUrl is not null)
-            .WithMessage("documentUrl must be an http(s) URL.");
-    }
+    public RenewAgreementValidator() => AgreementRules.Limit(this, x => x.AutoApproveLimit);
 }
 
 public sealed class AgreementReasonValidator : AbstractValidator<AgreementReasonDto>

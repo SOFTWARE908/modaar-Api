@@ -22,60 +22,6 @@ namespace modaar.api.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BrokerManagementRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("BrokerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetimeoffset")
-                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
-
-                    b.Property<DateTimeOffset?>("DecidedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("DecidedByUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("DecisionReason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<Guid>("OwnerUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.PrimitiveCollection<string>("PropertyIds")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetimeoffset")
-                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BrokerId", "Status");
-
-                    b.HasIndex("OwnerUserId", "BrokerId")
-                        .IsUnique()
-                        .HasFilter("[Status] = 'Pending'");
-
-                    b.HasIndex("OwnerUserId", "CreatedAt");
-
-                    b.ToTable("BrokerManagementRequests", (string)null);
-                });
-
             modelBuilder.Entity("modaar.api.Features.Agreements.Entities.AgreementEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -161,6 +107,10 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<DateTimeOffset?>("ApprovedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<decimal?>("AutoApproveLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<Guid>("BrokerId")
                         .HasColumnType("uniqueidentifier");
 
@@ -172,10 +122,6 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("DocumentUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<string>("EndReason")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -186,18 +132,6 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<DateOnly?>("EndedOn")
                         .HasColumnType("date");
 
-                    b.Property<string>("LeasingFeeType")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<decimal?>("LeasingFeeValue")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("ManagementFeePercent")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
-
                     b.Property<string>("Number")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -207,9 +141,6 @@ namespace modaar.api.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("RenewedFromId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("RequestId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly?>("StartDate")
@@ -233,8 +164,6 @@ namespace modaar.api.Persistence.Migrations
                         .IsUnique();
 
                     b.HasIndex("RenewedFromId");
-
-                    b.HasIndex("RequestId");
 
                     b.HasIndex("BrokerId", "Status");
 
@@ -2351,10 +2280,6 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal?>("AutoApproveLimit")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<Guid>("BuildingId")
                         .HasColumnType("uniqueidentifier");
 
@@ -2606,21 +2531,6 @@ namespace modaar.api.Persistence.Migrations
                     b.ToTable("WalletTransactions", (string)null);
                 });
 
-            modelBuilder.Entity("BrokerManagementRequest", b =>
-                {
-                    b.HasOne("modaar.api.Features.Users.Entities.Broker", null)
-                        .WithMany()
-                        .HasForeignKey("BrokerId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("modaar.api.Features.Users.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("OwnerUserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("modaar.api.Features.Agreements.Entities.AgreementEvent", b =>
                 {
                     b.HasOne("modaar.api.Features.Agreements.Entities.ManagementAgreement", null)
@@ -2677,11 +2587,6 @@ namespace modaar.api.Persistence.Migrations
                     b.HasOne("modaar.api.Features.Agreements.Entities.ManagementAgreement", null)
                         .WithMany()
                         .HasForeignKey("RenewedFromId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("BrokerManagementRequest", null)
-                        .WithMany()
-                        .HasForeignKey("RequestId")
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Broker");
