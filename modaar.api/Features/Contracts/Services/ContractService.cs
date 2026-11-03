@@ -123,7 +123,9 @@ public sealed class ContractService : IContractService
                     b.ReviewsCount,
                     b.IsVerified,
                     Name = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.FullName).FirstOrDefault(),
-                    LogoUrl = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault()
+                    LogoUrl = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault(),
+
+                    PhoneNumber = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.CountryCode + u.PhoneNumber).FirstOrDefault()
                 })
                 .FirstOrDefaultAsync(ct);
 
@@ -132,6 +134,8 @@ public sealed class ContractService : IContractService
                 Id = row.Id,
                 Name = row.Name ?? string.Empty,
                 LogoUrl = row.LogoUrl,
+
+                PhoneNumber = row.PhoneNumber,
                 Subtitle = _language.Pick(row.SubtitleAr, row.SubtitleEn),
                 RatingAverage = row.RatingAverage,
                 ReviewsCount = row.ReviewsCount,

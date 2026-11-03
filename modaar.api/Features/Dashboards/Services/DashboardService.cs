@@ -144,6 +144,7 @@ public sealed class DashboardService : IDashboardService
             .Select(c => new
             {
                 c.Id,
+                c.ContractNumber,
                 c.PropertyId,
                 c.InstallmentAmount,
                 c.Currency,
@@ -211,6 +212,7 @@ public sealed class DashboardService : IDashboardService
             units.Add(new TenantUnitCardDto
             {
                 ContractId = lease.Id,
+                ContractNumber = lease.ContractNumber,
                 PropertyId = lease.PropertyId,
                 UnitTitle = lease.Property?.Title ?? string.Empty,
                 PropertyName = lease.Property?.Title ?? string.Empty,
@@ -604,7 +606,9 @@ public sealed class DashboardService : IDashboardService
                 b.ReviewsCount,
                 b.IsVerified,
                 Name = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.FullName).FirstOrDefault(),
-                LogoUrl = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault()
+                LogoUrl = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.ProfileImageUrl).FirstOrDefault(),
+
+                PhoneNumber = _db.Users.Where(u => u.Id == b.UserId).Select(u => u.CountryCode + u.PhoneNumber).FirstOrDefault()
             })
             .FirstOrDefaultAsync(ct);
 
@@ -613,6 +617,8 @@ public sealed class DashboardService : IDashboardService
             Id = row.Id,
             Name = row.Name ?? string.Empty,
             LogoUrl = row.LogoUrl,
+
+            PhoneNumber = row.PhoneNumber,
             Subtitle = _language.Pick(row.SubtitleAr, row.SubtitleEn),
             RatingAverage = row.RatingAverage,
             ReviewsCount = row.ReviewsCount,

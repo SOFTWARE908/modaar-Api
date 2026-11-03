@@ -4,6 +4,9 @@ namespace modaar.api.Features.Users.Dtos;
 public record TenantUnitCardDto
 {
     public required Guid ContractId { get; init; }
+
+    // The lease's number, e.g. "MDR-2026-000412".
+    public required string ContractNumber { get; init; }
     public required Guid PropertyId { get; init; }
     public string? UnitNumber { get; init; }
 
