@@ -1,0 +1,28 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "تسجيل الدخول";
+}
+
+<section class="card login-card">
+    <h1>تسجيل دخول الأدمن</h1>
+
+    <form method="post" asp-action="Login" novalidate>
+        <div asp-validation-summary="ModelOnly" class="form-error"></div>
+        <input type="hidden" asp-for="ReturnUrl" />
+
+        <label asp-for="Email"></label>
+        <input asp-for="Email" autocomplete="username" dir="ltr" autofocus />
+        <span asp-validation-for="Email" class="field-error"></span>
+
+        <label asp-for="Password"></label>
+        <input asp-for="Password" autocomplete="current-password" dir="ltr" />
+        <span asp-validation-for="Password" class="field-error"></span>
+
+        <label class="check">
+            <input asp-for="RememberMe" />
+            <span>@Html.DisplayNameFor(m => m.RememberMe)</span>
+        </label>
+
+        <button type="submit" class="primary-button">دخول</button>
+    </form>
+</section>

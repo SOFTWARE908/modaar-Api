@@ -1,0 +1,93 @@
+:root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --text: #1d2433;
+    --muted: #6b7385;
+    --border: #e1e4ea;
+    --primary: #1f6f5c;
+    --primary-hover: #185a4a;
+    --danger: #b42318;
+    --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, "Noto Sans Arabic", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.brand { font-weight: 700; color: var(--primary); text-decoration: none; }
+
+.topbar-user { display: flex; align-items: center; gap: 16px; color: var(--muted); }
+.topbar-user form { margin: 0; }
+
+.page { padding: 24px; max-width: 1200px; margin: 0 auto; }
+.page-center { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+}
+
+.card h1 { margin: 0 0 16px; font-size: 1.3rem; }
+
+.muted { color: var(--muted); }
+
+.login-card { width: 100%; max-width: 380px; }
+
+.login-card form { display: flex; flex-direction: column; gap: 6px; }
+
+.login-card label { font-size: 0.9rem; margin-top: 8px; }
+
+.login-card input[type=email],
+.login-card input[type=text],
+.login-card input[type=password] {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.login-card input:focus { outline: 2px solid var(--primary); outline-offset: -1px; }
+
+.check { display: flex; align-items: center; gap: 8px; }
+
+.primary-button {
+    margin-top: 16px;
+    padding: 11px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.primary-button:hover { background: var(--primary-hover); }
+
+.link-button {
+    border: 0;
+    background: none;
+    color: var(--primary);
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+}
+
+.form-error { color: var(--danger); }
+.form-error ul { margin: 0; padding-inline-start: 18px; }
+.field-error { color: var(--danger); font-size: 0.85rem; }

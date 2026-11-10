@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"] is string t ? $"{t} · " : "")لوحة مُدارة</title>
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+</head>
+<body>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <header class="topbar">
+            <a class="brand" asp-controller="Home" asp-action="Index">لوحة مُدارة</a>
+            <div class="topbar-user">
+                <span>@User.Identity.Name</span>
+                <form method="post" asp-controller="Account" asp-action="Logout">
+                    <button type="submit" class="link-button">تسجيل الخروج</button>
+                </form>
+            </div>
+        </header>
+    }
+    <main class="@(User.Identity?.IsAuthenticated == true ? "page" : "page page-center")">
+        @RenderBody()
+    </main>
+</body>
+</html>
