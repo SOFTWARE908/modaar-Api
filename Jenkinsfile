@@ -36,7 +36,9 @@ pipeline {
 
         stage('Publish') {
             steps {
-                bat "dotnet publish --configuration Release --output %PUBLISH_DIR% --no-build"
+                // The API project only: the solution also holds modaar.core (and later the admin
+                // site), which must not land in the API's IIS folder.
+                bat "dotnet publish modaar.api\\modaar.api.csproj --configuration Release --output %PUBLISH_DIR% --no-build"
             }
         }
 

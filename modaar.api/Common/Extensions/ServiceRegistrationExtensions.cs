@@ -1,110 +1,24 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using modaar.api.Common.Auth;
-using modaar.api.Common.Localization;
 using modaar.api.Common.Realtime;
 using modaar.api.Common.Validation;
-using modaar.api.Features.Authentication.Services;
-using modaar.api.Features.Contracts.Services;
-using modaar.api.Features.Dashboards.Services;
-using modaar.api.Features.Maintenance.Services;
-using modaar.api.Features.Payments.Services;
-using modaar.api.Features.Properties.Services;
-using modaar.api.Features.Users.Entities;
-using modaar.api.Features.Users.Services;
-using modaar.api.Persistence;
 using System.Text;
 using JsonWebTokens = Microsoft.IdentityModel.JsonWebTokens;
 
 namespace modaar.api.Common.Extensions;
 
+// The API host's own wiring. The business side (DbContext, services, validators) is AddModaarCore
+// in modaar.core.
 public static class ServiceRegistrationExtensions
 {
-    public static IServiceCollection AddModaarPersistence(this IServiceCollection services, IConfiguration configuration)
-    {
-        var connectionString = configuration.GetConnectionString("ModaarDb")
-            ?? throw new InvalidOperationException("ConnectionStrings:ModaarDb is not configured.");
-
-        services.AddDbContext<ModaarDbContext>(options => options.UseSqlServer(connectionString));
-        return services;
-    }
-
+    // Validating the app's JWTs. Issuing them is AuthService/JwtTokenService in core.
     public static IServiceCollection AddModaarAuth(this IServiceCollection services, IConfiguration configuration)
     {
-        services.TryAddSingleton(TimeProvider.System);
-
-        services.Configure<OtpSettings>(configuration.GetSection(OtpSettings.SectionName));
-
-        services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
-        services.AddSingleton<IOtpHasher, Sha256OtpHasher>();
-        services.AddSingleton<IOtpCodeGenerator, OtpCodeGenerator>();
-        services.AddSingleton<IOtpDeliverySender, LoggingOtpDeliverySender>();
-        services.AddSingleton<IJwtTokenService, JwtTokenService>();
-        services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IProfileService, ProfileService>();
-        services.AddScoped<ISecuritySettingsService, SecuritySettingsService>();
-        services.AddScoped<IBrokerService, Features.Users.Services.BrokerService>();
-        services.AddScoped<IOwnerSubscriptionService, OwnerSubscriptionService>();
-        services.AddScoped<IBrokerClientService, BrokerClientService>();
-        services.AddScoped<Features.Agreements.Services.IManagementAgreementService, Features.Agreements.Services.ManagementAgreementService>();
-        services.AddScoped<Features.Announcements.Services.IAnnouncementService, Features.Announcements.Services.AnnouncementService>();
-
-
-        services.AddHttpContextAccessor();
-        services.AddScoped<IMaintenanceService, MaintenanceService>();
-        services.AddScoped<IMaintenanceAttachmentService, MaintenanceAttachmentService>();
-
-        services.AddScoped<IMaintenanceActionService, MaintenanceActionService>();
-        services.AddScoped<ITechnicianService, TechnicianService>();
-        services.AddScoped<IOwnerTechnicianService, OwnerTechnicianService>();
-
-        services.AddScoped<IMaintenanceFeedbackService, MaintenanceFeedbackService>();
-
-        services.AddScoped<IMaintenanceServiceTypeService, MaintenanceServiceTypeService>();
-
-
-        services.AddScoped<IContractService, ContractService>();
-        //////////////Properties//////////////////////
-        services.AddScoped<IPropertyService, PropertyService>();
-
-        services.AddScoped<IPropertyHandoverService, PropertyHandoverService>();
-
-        ///////////////////////////payments/////////////////////
-        services.AddScoped<IPaymentService, PaymentService>();
-        services.AddScoped<Features.Payments.Services.IReceiptShareService, Features.Payments.Services.ReceiptShareService>();
-
-        // Paying installments. With a Moyasar secret key the real gateway is used; without one, a
-        // simulator, so the app can build the flow before the account exists. Test → live is
-        // swapping the keys in config, nothing else.
-        services.Configure<Features.Payments.Gateway.PaymentSettings>(
-            configuration.GetSection(Features.Payments.Gateway.PaymentSettings.SectionName));
-        var moyasar = configuration.GetSection(Features.Payments.Gateway.PaymentSettings.SectionName)
-            .Get<Features.Payments.Gateway.PaymentSettings>()?.Moyasar;
-        if (moyasar?.IsConfigured == true)
-            services.AddHttpClient<Features.Payments.Gateway.IPaymentGatewayClient, Features.Payments.Gateway.MoyasarClient>();
-        else
-            services.AddSingleton<Features.Payments.Gateway.IPaymentGatewayClient, Features.Payments.Gateway.SimulatedMoyasarClient>();
-        services.AddScoped<Features.Wallets.Services.IWalletService, Features.Wallets.Services.WalletService>();
-        services.AddScoped<Features.Buildings.Services.IBuildingService, Features.Buildings.Services.BuildingService>();
-        services.AddScoped<Features.Buildings.Services.IBuildingRuleService, Features.Buildings.Services.BuildingRuleService>();
-        services.AddScoped<Features.Users.Services.IBrokerServiceCategoryService, Features.Users.Services.BrokerServiceCategoryService>();
-        services.AddScoped<Features.Payments.Services.IPayService, Features.Payments.Services.PayService>();
-
-
-        services.AddScoped<IDashboardService, DashboardService>();
-
-
-        services.AddScoped<IRequestLanguage, RequestLanguage>();
-
-        var jwtSection = configuration.GetSection(JwtSettings.SectionName);
-        services.Configure<JwtSettings>(jwtSection);
-
-        var jwtSettings = jwtSection.Get<JwtSettings>()
+        var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
             ?? throw new InvalidOperationException("JwtSettings section is missing from configuration.");
 
         if (string.IsNullOrWhiteSpace(jwtSettings.SigningKey))
@@ -155,11 +69,12 @@ public static class ServiceRegistrationExtensions
 
         services.AddAuthorization();
 
-
         return services;
     }
 
-    public static IServiceCollection AddModaarRealtime(this IServiceCollection services, IConfiguration configuration)
+    // The SignalR hub and the background workers. Only the API runs these: the hub is where the
+    // apps connect, and the daily jobs and push queue must run in one process.
+    public static IServiceCollection AddModaarRealtime(this IServiceCollection services)
     {
         services
             .AddSignalR()
@@ -171,47 +86,15 @@ public static class ServiceRegistrationExtensions
 
         services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, SubClaimUserIdProvider>();
         services.AddSingleton<IRealtimeNotifier, RealtimeNotifier>();
-        services.AddSingleton<PresenceTracker>();
 
-        // Scoped: it uses the request's DbContext.
-        services.AddScoped<Features.Notifications.Services.INotificationService,
-                           Features.Notifications.Services.NotificationService>();
-
-        // Push: the queue and its background worker are singletons living for the whole app; the
-        // sender is Firebase when a credentials file is configured, otherwise a no-op.
-        services.AddSingleton<Push.PushQueue>();
-        services.AddSingleton<Push.IPushSender>(sp =>
-        {
-            var settings = configuration.GetSection(Push.FirebaseSettings.SectionName).Get<Push.FirebaseSettings>();
-            var path = settings?.CredentialsPath;
-
-            if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
-                return new Push.FirebasePushSender(path, sp.GetRequiredService<ILogger<Push.FirebasePushSender>>());
-
-            if (!string.IsNullOrWhiteSpace(path))
-                sp.GetRequiredService<ILogger<Push.NullPushSender>>()
-                    .LogWarning("Firebase credentials file not found at {Path}; push is off.", path);
-
-            return new Push.NullPushSender(sp.GetRequiredService<ILogger<Push.NullPushSender>>());
-        });
         services.AddHostedService<Push.PushDispatcher>();
-
-        // Once-a-day work. Registration order is run order: expiry before renewal reminders.
-        services.Configure<Jobs.JobsSettings>(configuration.GetSection(Jobs.JobsSettings.SectionName));
-        services.AddScoped<Jobs.IDailyJob, Features.Contracts.Jobs.ContractExpiryJob>();
-        services.AddScoped<Jobs.IDailyJob, Features.Agreements.Jobs.AgreementUnitExitJob>();
-        services.AddScoped<Jobs.IDailyJob, Features.Agreements.Jobs.AgreementExitReminderJob>();
-        services.AddScoped<Jobs.IDailyJob, Features.Contracts.Jobs.ContractRenewalReminderJob>();
-        services.AddScoped<Jobs.IDailyJob, Features.Payments.Jobs.RentReminderJob>();
         services.AddHostedService<Jobs.DailyJobsRunner>();
-        services.AddScoped<Features.Authentication.Services.IDeviceService, Features.Authentication.Services.DeviceService>();
-
-        services.AddScoped<Features.Chat.Services.ChatAccess>();
-        services.AddScoped<Features.Chat.Services.IChatService, Features.Chat.Services.ChatService>();
 
         return services;
     }
 
+    // Core's validators come with AddModaarCore; this adds the ones written in the API itself (next
+    // to a controller) and the filter that runs them all.
     public static IServiceCollection AddModaarValidation(this IServiceCollection services)
     {
         services.AddValidatorsFromAssembly(typeof(ServiceRegistrationExtensions).Assembly);

@@ -37,9 +37,10 @@ try
           builder.Configuration.GetSection(AppVersionOptions.SectionName));
     builder.Services.AddProblemDetails();
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-    builder.Services.AddModaarPersistence(builder.Configuration);
+    // DbContext, services and validators (modaar.core), then the API's own auth, hub and workers.
+    builder.Services.AddModaarCore(builder.Configuration);
     builder.Services.AddModaarAuth(builder.Configuration);
-    builder.Services.AddModaarRealtime(builder.Configuration);
+    builder.Services.AddModaarRealtime();
     builder.Services.AddModaarValidation();
     builder.Services.AddModaarSwagger();
 
