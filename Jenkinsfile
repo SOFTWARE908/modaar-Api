@@ -40,6 +40,11 @@ pipeline {
 
         stage('Publish') {
             steps {
+                // Start from empty folders: a file left from an older build (e.g. a previous EF Core
+                // version) would otherwise be deployed next to code built against a newer one.
+                bat "if exist \"%PUBLISH_DIR%\" rmdir /s /q \"%PUBLISH_DIR%\""
+                bat "if exist \"%ADMIN_PUBLISH_DIR%\" rmdir /s /q \"%ADMIN_PUBLISH_DIR%\""
+
                 // Each site to its own folder: the solution also holds modaar.core, and the API
                 // and the admin panel must not land in each other's IIS folder.
                 bat "dotnet publish modaar.api\\modaar.api.csproj --configuration Release --output %PUBLISH_DIR% --no-build"
