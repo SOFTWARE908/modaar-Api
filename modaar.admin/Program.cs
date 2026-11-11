@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using modaar.admin.Auth;
-using modaar.admin.Tools;
 using modaar.api.Common.Extensions;
 using modaar.api.Common.Realtime;
 using System.Threading.RateLimiting;
@@ -61,10 +60,6 @@ builder.Services.AddRateLimiter(o =>
 
 var app = builder.Build();
 
-// `dotnet modaar.admin.dll create-admin …` makes or promotes an admin account and exits.
-if (args.Length > 0 && args[0] == CreateAdminCommand.Name)
-    return await CreateAdminCommand.RunAsync(app.Services, args[1..]);
-
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/home/error");
@@ -81,4 +76,3 @@ app.UseAuthorization();
 app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
-return 0;

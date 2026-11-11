@@ -2,7 +2,14 @@
     ViewData["Title"] = "الرئيسية";
 }
 
-<section class="card">
-    <h1>أهلاً @User.Identity?.Name</h1>
-    <p class="muted">تم تسجيل الدخول بنجاح. أقسام اللوحة (العقارات، الوحدات، العقود…) هتتضاف هنا.</p>
+<section class="card welcome">
+    <h2>أهلاً @User.Identity?.Name 👋</h2>
+    <p>تم تسجيل الدخول بنجاح. أقسام اللوحة هتتضاف هنا تباعاً.</p>
 </section>
+
+<div class="tiles">
+    <div class="tile"><strong>المستخدمين</strong>إضافة الملاك والمستأجرين والوسطاء والفنيين.</div>
+    <div class="tile"><strong>العقارات والوحدات</strong>إضافة عقار وشققه.</div>
+    <div class="tile"><strong>العقود</strong>عقد إيجار لكل وحدة.</div>
+    <div class="tile"><strong>القوائم الثابتة</strong>أنواع الصيانة وأقسام الأنظمة والخدمات.</div>
+</div>

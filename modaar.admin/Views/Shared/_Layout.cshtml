@@ -4,23 +4,52 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@(ViewData["Title"] is string t ? $"{t} · " : "")لوحة مُدارة</title>
+    <link rel="icon" type="image/png" href="~/img/logo-navy.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" />
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
 </head>
 <body>
     @if (User.Identity?.IsAuthenticated == true)
     {
-        <header class="topbar">
-            <a class="brand" asp-controller="Home" asp-action="Index">لوحة مُدارة</a>
-            <div class="topbar-user">
-                <span>@User.Identity.Name</span>
-                <form method="post" asp-controller="Account" asp-action="Logout">
-                    <button type="submit" class="link-button">تسجيل الخروج</button>
-                </form>
+        var name = User.Identity.Name ?? "";
+        var current = ViewContext.RouteData.Values["controller"]?.ToString();
+        <div class="shell">
+            <aside class="sidebar">
+                <a class="logo" asp-controller="Home" asp-action="Index"><img src="~/img/logo-white.png" alt="مُدارة" /></a>
+                <nav class="nav">
+                    <a asp-controller="Home" asp-action="Index" class="@(current == "Home" ? "active" : "")">الرئيسية</a>
+                    <div class="nav-section">قريباً</div>
+                    <span class="soon">المستخدمين <i class="tag">قريباً</i></span>
+                    <span class="soon">العقارات والوحدات <i class="tag">قريباً</i></span>
+                    <span class="soon">العقود <i class="tag">قريباً</i></span>
+                    <span class="soon">القوائم الثابتة <i class="tag">قريباً</i></span>
+                </nav>
+            </aside>
+            <div class="main">
+                <header class="topbar">
+                    <h1>@ViewData["Title"]</h1>
+                    <div class="user">
+                        <div class="avatar">@(name.Length > 0 ? name[..1] : "؟")</div>
+                        <div>
+                            <div class="name">@name</div>
+                            <div class="role">مدير النظام</div>
+                        </div>
+                        <form method="post" asp-controller="Account" asp-action="Logout">
+                            <button type="submit" class="btn btn-ghost">تسجيل الخروج</button>
+                        </form>
+                    </div>
+                </header>
+                <main class="content">
+                    @RenderBody()
+                </main>
             </div>
-        </header>
+        </div>
     }
-    <main class="@(User.Identity?.IsAuthenticated == true ? "page" : "page page-center")">
+    else
+    {
         @RenderBody()
-    </main>
+    }
 </body>
 </html>

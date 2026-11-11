@@ -3,26 +3,42 @@
     ViewData["Title"] = "تسجيل الدخول";
 }
 
-<section class="card login-card">
-    <h1>تسجيل دخول الأدمن</h1>
+<div class="auth">
+    <section class="auth-brand">
+        <img src="~/img/logo-white.png" alt="مُدارة" />
+        <h2>لوحة إدارة مُدارة</h2>
+        <p>إدارة المستخدمين والعقارات والعقود من مكان واحد.</p>
+    </section>
 
-    <form method="post" asp-action="Login" novalidate>
-        <div asp-validation-summary="ModelOnly" class="form-error"></div>
-        <input type="hidden" asp-for="ReturnUrl" />
+    <section class="auth-form">
+        <div class="auth-card">
+            <img class="mobile-logo" src="~/img/logo-navy.png" alt="مُدارة" />
+            <h1>تسجيل الدخول</h1>
+            <p class="lead">ادخل ببيانات حساب الأدمن.</p>
 
-        <label asp-for="Email"></label>
-        <input asp-for="Email" autocomplete="username" dir="ltr" autofocus />
-        <span asp-validation-for="Email" class="field-error"></span>
+            <form method="post" asp-action="Login" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert"></div>
+                <input type="hidden" asp-for="ReturnUrl" />
 
-        <label asp-for="Password"></label>
-        <input asp-for="Password" autocomplete="current-password" dir="ltr" />
-        <span asp-validation-for="Password" class="field-error"></span>
+                <div class="field">
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email" type="email" autocomplete="username" dir="ltr" autofocus />
+                    <span asp-validation-for="Email" class="field-error"></span>
+                </div>
 
-        <label class="check">
-            <input asp-for="RememberMe" />
-            <span>@Html.DisplayNameFor(m => m.RememberMe)</span>
-        </label>
+                <div class="field">
+                    <label asp-for="Password"></label>
+                    <input asp-for="Password" autocomplete="current-password" dir="ltr" />
+                    <span asp-validation-for="Password" class="field-error"></span>
+                </div>
 
-        <button type="submit" class="primary-button">دخول</button>
-    </form>
-</section>
+                <label class="check">
+                    <input asp-for="RememberMe" />
+                    <span>@Html.DisplayNameFor(m => m.RememberMe)</span>
+                </label>
+
+                <button type="submit" class="btn btn-primary btn-block">دخول</button>
+            </form>
+        </div>
+    </section>
+</div>
