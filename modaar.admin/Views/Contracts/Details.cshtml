@@ -1,0 +1,114 @@
+@model ContractDetails
+@{
+    var c = Model.Contract;
+    ViewData["Title"] = "عقد " + c.ContractNumber;
+
+    void Party(string title, User u, ContractRepresentative? rep, string repTitle)
+    {
+        <section class="card form-section">
+            <h2>@title</h2>
+            <dl class="facts">
+                <div><dt>الاسم</dt><dd>@(u.FullName ?? "—")</dd></div>
+                <div><dt>الجوال</dt><dd dir="ltr">@u.CountryCode @u.PhoneNumber</dd></div>
+                <div><dt>الجنسية</dt><dd>@Model.Name(u.NationalityId)</dd></div>
+                <div><dt>نوع الهوية</dt><dd>@Model.Name(u.IdTypeId)</dd></div>
+                <div><dt>رقم الهوية</dt><dd dir="ltr">@(u.NationalId ?? "—")</dd></div>
+            </dl>
+            @if (rep is not null)
+            {
+                <h3 class="sub-title">@repTitle</h3>
+                <dl class="facts">
+                    <div><dt>الاسم</dt><dd>@rep.FullName</dd></div>
+                    <div><dt>الجوال</dt><dd dir="ltr">+966 @rep.PhoneNumber</dd></div>
+                    <div><dt>الجنسية</dt><dd>@Model.Name(rep.NationalityId)</dd></div>
+                    <div><dt>نوع الهوية</dt><dd>@Model.Name(rep.IdTypeId)</dd></div>
+                    <div><dt>رقم الهوية</dt><dd dir="ltr">@rep.IdNumber</dd></div>
+                </dl>
+            }
+        </section>
+    }
+}
+
+<div class="page-head">
+    @if (Model.BuildingId is { } bid)
+    {
+        <a asp-controller="Buildings" asp-action="Details" asp-route-id="@bid" class="btn btn-ghost">→ @Model.Building</a>
+    }
+    else
+    {
+        <a asp-action="Index" class="btn btn-ghost">→ كل العقود</a>
+    }
+    <span class="badge @(c.Status == ContractStatus.Active ? "badge-done" : "")">@StatusLabels.Of(c.Status)</span>
+</div>
+
+<section class="card form-section">
+    <h2>بيانات العقد</h2>
+    <dl class="facts">
+        <div><dt>رقم سجل العقد</dt><dd dir="ltr">@c.ContractNumber</dd></div>
+        <div><dt>الوحدة</dt><dd>@Model.Unit · @Model.Building</dd></div>
+        <div><dt>نوع العقد</dt><dd>@Model.Name(c.ContractTypeId)</dd></div>
+        <div><dt>مكان إبرام العقد</dt><dd>@Model.Name(c.ContractPlaceId)</dd></div>
+        <div><dt>تاريخ إبرام العقد</dt><dd dir="ltr">@(c.SignedOn?.ToString("yyyy-MM-dd") ?? "—")</dd></div>
+        <div><dt>مدة الإيجار</dt><dd dir="ltr">@c.StartDate.ToString("yyyy-MM-dd") → @c.EndDate.ToString("yyyy-MM-dd")</dd></div>
+    </dl>
+</section>
+
+@{ Party("بيانات المؤجر", Model.Lessor, c.LessorRepresentative, "ممثل المؤجر"); }
+@{ Party("بيانات المستأجر", Model.Tenant, c.TenantRepresentative, "ممثل المستأجر"); }
+
+@if (Model.Brokerage is not null)
+{
+    <section class="card form-section">
+        <h2>بيانات منشأة الوساطة العقارية</h2>
+        <dl class="facts">
+            <div><dt>اسم المنشأة</dt><dd>@Model.Brokerage</dd></div>
+            <div><dt>رقم السجل التجاري</dt><dd dir="ltr">@(Model.BrokerCr ?? "—")</dd></div>
+            <div><dt>الوسيط</dt><dd>@(Model.BrokerEmployee ?? "—")</dd></div>
+        </dl>
+    </section>
+}
+
+<section class="card form-section">
+    <h2>البيانات المالية</h2>
+    <dl class="facts">
+        <div><dt>الإيجار السنوي</dt><dd>@Money(c.AnnualRent)</dd></div>
+        <div><dt>أجرة المياه السنوية</dt><dd>@Money(c.AnnualWaterFee)</dd></div>
+        <div><dt>مبلغ الضمان</dt><dd>@Money(c.SecurityDeposit)</dd></div>
+        <div><dt>إجمالي قيمة العقد</dt><dd>@Money(c.TotalValue)</dd></div>
+        <div><dt>دورة السداد</dt><dd>@FrequencyLabels.Of(c.PaymentFrequency)</dd></div>
+        <div><dt>عدد الدفعات</dt><dd>@(c.InstallmentsCount?.ToString() ?? "—")</dd></div>
+        <div><dt>قنوات الدفع</dt><dd>@(c.PaymentChannelIds.Count == 0 ? "—" : string.Join("، ", c.PaymentChannelIds.Select(id => Model.Name(id))))</dd></div>
+    </dl>
+</section>
+
+<section class="card table-card">
+    <h2 class="table-title">جدول الدفعات</h2>
+    @if (Model.Installments.Count == 0)
+    {
+        <p class="empty">لا توجد دفعات.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead><tr><th>#</th><th>الدفعة</th><th>تاريخ الاستحقاق</th><th>الفترة</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+            <tbody>
+                @for (var i = 0; i < Model.Installments.Count; i++)
+                {
+                    var p = Model.Installments[i];
+                    <tr>
+                        <td class="muted">@(i + 1)</td>
+                        <td>@p.Title</td>
+                        <td dir="ltr">@p.DueDate?.ToString("yyyy-MM-dd")</td>
+                        <td class="muted" dir="ltr">@p.PeriodStart?.ToString("yyyy-MM-dd") → @p.PeriodEnd?.ToString("yyyy-MM-dd")</td>
+                        <td>@Money(p.Amount)</td>
+                        <td><span class="badge @(p.Status == modaar.api.Features.Payments.Enums.PaymentStatus.Paid ? "badge-done" : "")">@(p.Status == modaar.api.Features.Payments.Enums.PaymentStatus.Paid ? "مدفوعة" : "مستحقة")</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+@functions {
+    static string Money(decimal? v) => v is { } x ? x.ToString("N2") + " ر.س" : "—";
+}

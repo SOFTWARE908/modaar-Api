@@ -15,7 +15,7 @@ public record CityOption(Guid Id, string Name);
 public record BuildingRow(Guid Id, string Name, string? City, string? District, int UnitsAdded, int? UnitsCount, DateTimeOffset CreatedAt);
 
 public record UnitRow(Guid Id, string? UnitNumber, string? Floor, PropertyType Type, decimal? Area,
-    string? OwnerName, string OwnerPhone, decimal AnnualRent);
+    string? OwnerName, string OwnerPhone, decimal AnnualRent, Guid? ActiveContractId, string? ActiveContractNumber);
 
 public record BuildingDetails(Building Building, string? CityName, IReadOnlyList<UnitRow> Units)
 {
@@ -75,7 +75,9 @@ public class AdminBuildingService
             .Where(p => p.BuildingId == id && !p.IsDeleted)
             .OrderBy(p => p.Floor).ThenBy(p => p.UnitNumber)
             .Select(p => new UnitRow(p.Id, p.UnitNumber, p.Floor, p.PropertyType, p.Area,
-                p.Owner.FullName, p.Owner.CountryCode + " " + p.Owner.PhoneNumber, p.AnnualRent))
+                p.Owner.FullName, p.Owner.CountryCode + " " + p.Owner.PhoneNumber, p.AnnualRent,
+                p.Contracts.Where(c => c.Status == api.Features.Contracts.Enums.ContractStatus.Active).Select(c => (Guid?)c.Id).FirstOrDefault(),
+                p.Contracts.Where(c => c.Status == api.Features.Contracts.Enums.ContractStatus.Active).Select(c => c.ContractNumber).FirstOrDefault()))
             .ToListAsync(ct);
 
         return new BuildingDetails(building, cityName, units);

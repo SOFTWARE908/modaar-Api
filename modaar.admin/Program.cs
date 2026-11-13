@@ -18,6 +18,8 @@ builder.Services.AddSingleton<IRealtimeNotifier, NoRealtimeNotifier>();
 
 builder.Services.AddScoped<AdminSignIn>();
 builder.Services.AddScoped<modaar.admin.Features.Buildings.AdminBuildingService>();
+builder.Services.AddScoped<modaar.admin.Features.Brokers.AdminBrokerService>();
+builder.Services.AddScoped<modaar.admin.Features.Contracts.AdminContractService>();
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

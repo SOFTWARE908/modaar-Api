@@ -1,0 +1,299 @@
+@model ContractForm
+@{
+    var unit = (ContractUnit)ViewData["Unit"]!;
+    var o = (ContractFormData)ViewData["Options"]!;
+    ViewData["Title"] = "إضافة عقد إيجار";
+
+    void Pick(string name, Guid? value, List<Option> options)
+    {
+        @* <!…> opts out of tag helpers, which a local function can't run. *@
+        <!select name="@name" id="@name.Replace('.', '_')">
+            <!option value="">اختر</!option>
+            @foreach (var x in options)
+            {
+                <!option value="@x.Id" selected="@(value == x.Id)">@x.Name</!option>
+            }
+        </!select>
+    }
+
+    void Representative(string prefix, RepresentativeForm r)
+    {
+        <div class="grid">
+            <div class="field span-2">
+                <label>اسم الممثل</label>
+                <input name="@(prefix).FullName" value="@r.FullName" maxlength="150" />
+                @Html.ValidationMessage($"{prefix}.FullName", new { @class = "field-error" })
+            </div>
+            <div class="field">
+                <label>رقم الجوال</label>
+                <input name="@(prefix).Phone" value="@r.Phone" inputmode="tel" maxlength="10" dir="ltr" placeholder="05XXXXXXXX" />
+                @Html.ValidationMessage($"{prefix}.Phone", new { @class = "field-error" })
+            </div>
+            <div class="field">
+                <label>الجنسية</label>
+                @{ Pick($"{prefix}.NationalityId", r.NationalityId, o.Nationalities); }
+                @Html.ValidationMessage($"{prefix}.NationalityId", new { @class = "field-error" })
+            </div>
+            <div class="field">
+                <label>نوع الهوية</label>
+                @{ Pick($"{prefix}.IdTypeId", r.IdTypeId, o.IdTypes); }
+                @Html.ValidationMessage($"{prefix}.IdTypeId", new { @class = "field-error" })
+            </div>
+            <div class="field">
+                <label>رقم الهوية</label>
+                <input name="@(prefix).IdNumber" value="@r.IdNumber" inputmode="numeric" maxlength="10" dir="ltr" />
+                @Html.ValidationMessage($"{prefix}.IdNumber", new { @class = "field-error" })
+            </div>
+        </div>
+    }
+}
+
+<div class="page-head">
+    @if (unit.BuildingId is { } bid)
+    {
+        <a asp-controller="Buildings" asp-action="Details" asp-route-id="@bid" class="btn btn-ghost">→ @unit.BuildingName</a>
+    }
+    <span class="badge">الوحدة @(unit.UnitNumber ?? unit.Title)</span>
+</div>
+
+<form method="post" asp-action="Create" asp-route-propertyId="@unit.PropertyId" novalidate class="form-page">
+    <div asp-validation-summary="ModelOnly" class="alert"></div>
+
+    <section class="card form-section">
+        <h2>بيانات العقد</h2>
+        <div class="grid">
+            <div class="field">
+                <label asp-for="ContractNumber"></label>
+                <input asp-for="ContractNumber" dir="ltr" placeholder="10131452216 / 1-0" />
+                <span asp-validation-for="ContractNumber" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="ContractTypeId"></label>
+                @{ Pick("ContractTypeId", Model.ContractTypeId, o.ContractTypes); }
+                <span asp-validation-for="ContractTypeId" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="ContractPlaceId"></label>
+                @{ Pick("ContractPlaceId", Model.ContractPlaceId, o.ContractPlaces); }
+                <span asp-validation-for="ContractPlaceId" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="SignedOn"></label>
+                <input asp-for="SignedOn" type="date" />
+                <span asp-validation-for="SignedOn" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="StartDate"></label>
+                <input asp-for="StartDate" type="date" />
+                <span asp-validation-for="StartDate" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="EndDate"></label>
+                <input asp-for="EndDate" type="date" />
+                <span asp-validation-for="EndDate" class="field-error"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="card form-section">
+        <h2>بيانات المؤجر <span class="muted small">(مالك الوحدة · <span dir="ltr">@unit.OwnerPhone</span>)</span></h2>
+        <div class="grid">
+            <div class="field span-2">
+                <label asp-for="LessorName"></label>
+                <input asp-for="LessorName" />
+                <span asp-validation-for="LessorName" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="LessorNationalityId"></label>
+                @{ Pick("LessorNationalityId", Model.LessorNationalityId, o.Nationalities); }
+                <span asp-validation-for="LessorNationalityId" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="LessorIdTypeId"></label>
+                @{ Pick("LessorIdTypeId", Model.LessorIdTypeId, o.IdTypes); }
+                <span asp-validation-for="LessorIdTypeId" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="LessorIdNumber"></label>
+                <input asp-for="LessorIdNumber" inputmode="numeric" maxlength="10" dir="ltr" />
+                <span asp-validation-for="LessorIdNumber" class="field-error"></span>
+            </div>
+        </div>
+        <label class="check"><input asp-for="HasLessorRepresentative" data-toggle="lessor-rep" /> <span>فيه ممثل للمؤجر</span></label>
+        <div id="lessor-rep" class="sub-section" hidden="@(!Model.HasLessorRepresentative)">
+            <h3>بيانات ممثل المؤجر</h3>
+            @{ Representative("LessorRep", Model.LessorRep); }
+        </div>
+    </section>
+
+    <section class="card form-section">
+        <h2>بيانات المستأجر</h2>
+        <div class="grid">
+            <div class="field">
+                <label asp-for="TenantPhone"></label>
+                <input asp-for="TenantPhone" inputmode="tel" maxlength="10" dir="ltr" placeholder="05XXXXXXXX" />
+                <span asp-validation-for="TenantPhone" class="field-error"></span>
+                <span id="tenant-status" class="hint"></span>
+            </div>
+            <div class="field span-2">
+                <label asp-for="TenantName"></label>
+                <input asp-for="TenantName" />
+                <span asp-validation-for="TenantName" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="TenantNationalityId"></label>
+                @{ Pick("TenantNationalityId", Model.TenantNationalityId, o.Nationalities); }
+                <span asp-validation-for="TenantNationalityId" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="TenantIdTypeId"></label>
+                @{ Pick("TenantIdTypeId", Model.TenantIdTypeId, o.IdTypes); }
+                <span asp-validation-for="TenantIdTypeId" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="TenantIdNumber"></label>
+                <input asp-for="TenantIdNumber" inputmode="numeric" maxlength="10" dir="ltr" />
+                <span asp-validation-for="TenantIdNumber" class="field-error"></span>
+            </div>
+        </div>
+        <label class="check"><input asp-for="HasTenantRepresentative" data-toggle="tenant-rep" /> <span>فيه ممثل للمستأجر</span></label>
+        <div id="tenant-rep" class="sub-section" hidden="@(!Model.HasTenantRepresentative)">
+            <h3>بيانات ممثل المستأجر</h3>
+            @{ Representative("TenantRep", Model.TenantRep); }
+        </div>
+    </section>
+
+    <section class="card form-section">
+        <h2>بيانات منشأة الوساطة العقارية <span class="muted small">(اختياري)</span></h2>
+        <div class="grid">
+            <div class="field span-2">
+                <label asp-for="BrokerEmployeeId"></label>
+                <select asp-for="BrokerEmployeeId">
+                    <option value="">بدون وسيط</option>
+                    @foreach (var g in o.BrokerEmployees)
+                    {
+                        <optgroup label="@g.Brokerage">
+                            @foreach (var e in g.Employees)
+                            {
+                                <option value="@e.Id" selected="@(Model.BrokerEmployeeId == e.Id)">@e.Name</option>
+                            }
+                        </optgroup>
+                    }
+                </select>
+                <span asp-validation-for="BrokerEmployeeId" class="field-error"></span>
+                <span class="hint">الموظفين واسم المنشأة والسجل التجاري بيتضافوا من صفحة <a asp-controller="Brokers" asp-action="Index">الوسطاء</a>.</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="card form-section">
+        <h2>البيانات المالية والمدفوعات</h2>
+        <div class="grid">
+            <div class="field">
+                <label asp-for="AnnualRent"></label>
+                <input asp-for="AnnualRent" type="number" step="0.01" min="1" dir="ltr" data-calc />
+                <span asp-validation-for="AnnualRent" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="AnnualWaterFee"></label>
+                <input asp-for="AnnualWaterFee" type="number" step="0.01" min="0" dir="ltr" data-calc />
+                <span asp-validation-for="AnnualWaterFee" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="SecurityDeposit"></label>
+                <input asp-for="SecurityDeposit" type="number" step="0.01" min="0" dir="ltr" />
+                <span asp-validation-for="SecurityDeposit" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="PaymentFrequency"></label>
+                <select asp-for="PaymentFrequency" data-calc>
+                    <option value="">اختر</option>
+                    @foreach (var fr in Enum.GetValues<modaar.api.Features.Contracts.Enums.PaymentFrequency>())
+                    {
+                        <option value="@fr" data-months="@FrequencyLabels.Months(fr)" selected="@(Model.PaymentFrequency == fr)">@FrequencyLabels.Of(fr)</option>
+                    }
+                </select>
+                <span asp-validation-for="PaymentFrequency" class="field-error"></span>
+            </div>
+            <div class="field span-2">
+                <label>قنوات الدفع المتاحة</label>
+                <div class="chips">
+                    @foreach (var ch in o.PaymentChannels)
+                    {
+                        <label class="chip"><input type="checkbox" name="PaymentChannelIds" value="@ch.Id" checked="@(Model.PaymentChannelIds.Contains(ch.Id))" /> @ch.Name</label>
+                    }
+                </div>
+                <span asp-validation-for="PaymentChannelIds" class="field-error"></span>
+            </div>
+        </div>
+        <p id="calc" class="calc">إجمالي قيمة العقد وعدد الدفعات بيتحسبوا لما تكتب التواريخ والإيجار ودورة السداد.</p>
+    </section>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">حفظ العقد</button>
+        @if (unit.BuildingId is { } back)
+        {
+            <a asp-controller="Buildings" asp-action="Details" asp-route-id="@back" class="btn btn-ghost">إلغاء</a>
+        }
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        (function () {
+            // Representative sections open with their checkbox.
+            document.querySelectorAll('[data-toggle]').forEach(cb => {
+                const box = document.getElementById(cb.dataset.toggle);
+                cb.addEventListener('change', () => box.hidden = !cb.checked);
+            });
+
+            // Tenant: whose number it is, and their saved details.
+            const phone = document.getElementById('TenantPhone');
+            const status = document.getElementById('tenant-status');
+            const set = (id, v) => { const el = document.getElementById(id); if (v && !el.value) el.value = v; };
+            let last = '';
+            async function lookup() {
+                const v = phone.value.trim();
+                if (v === last) return;
+                last = v;
+                if (!/^0?5\d{8}$/.test(v)) { status.textContent = ''; return; }
+                try {
+                    const res = await fetch('@Url.Action("PartyLookup")?propertyId=@unit.PropertyId&phone=' + encodeURIComponent(v));
+                    if (!res.ok || phone.value.trim() !== v) return;
+                    const p = await res.json();
+                    if (!p.found) { status.textContent = 'مفيش حساب بالرقم ده: هيتعمل حساب مستأجر جديد.'; status.className = 'hint'; return; }
+                    if (p.isUnitOwner) { status.textContent = 'ده رقم مالك الوحدة.'; status.className = 'hint hint-error'; return; }
+                    if (!p.isActive) { status.textContent = 'حساب صاحب الرقم ده موقوف.'; status.className = 'hint hint-error'; return; }
+                    status.textContent = 'حساب موجود: ' + (p.name || 'بدون اسم') + (p.isTenant ? '' : ' (هيتضاف له دور مستأجر)');
+                    status.className = 'hint hint-ok';
+                    set('TenantName', p.name); set('TenantNationalityId', p.nationalityId);
+                    set('TenantIdTypeId', p.idTypeId); set('TenantIdNumber', p.nationalId);
+                } catch { /* the server checks again on save */ }
+            }
+            phone.addEventListener('input', lookup);
+            lookup();
+
+            // Preview of the computed totals; the server computes them again on save.
+            const calc = document.getElementById('calc');
+            const val = id => document.getElementById(id).value;
+            function preview() {
+                const s = val('StartDate'), e = val('EndDate'), rent = parseFloat(val('AnnualRent')) || 0, water = parseFloat(val('AnnualWaterFee')) || 0;
+                const opt = document.getElementById('PaymentFrequency').selectedOptions[0];
+                const per = opt && opt.dataset.months ? parseInt(opt.dataset.months) : 0;
+                if (!s || !e || !rent || !per || e <= s) return;
+                const start = new Date(s + 'T00:00:00Z'), end = new Date(e + 'T00:00:00Z');
+                const addM = (d, m) => { const x = new Date(d); x.setUTCMonth(x.getUTCMonth() + m); return x; };
+                let months = 0; while (new Date(addM(start, months + 1) - 864e5) <= end) months++;
+                const left = Math.round((end - addM(start, months)) / 864e5) + 1;
+                const total = (rent + water) * months / 12 + (left > 0 ? (rent + water) * left / 365 : 0);
+                let count = 0; while (addM(start, count * per) <= end) count++;
+                const fmt = n => n.toLocaleString('ar-SA', { maximumFractionDigits: 2 });
+                calc.innerHTML = 'إجمالي قيمة العقد: <strong>' + fmt(total) + ' ر.س</strong> · عدد الدفعات: <strong>' + count +
+                    '</strong> · الدفعة: <strong>' + fmt(total / count) + ' ر.س</strong>';
+            }
+            ['StartDate', 'EndDate', 'AnnualRent', 'AnnualWaterFee', 'PaymentFrequency'].forEach(id =>
+                document.getElementById(id).addEventListener('input', preview));
+            preview();
+        })();
+    </script>
+}

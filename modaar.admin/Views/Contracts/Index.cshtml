@@ -1,0 +1,40 @@
+@model List<ContractRow>
+@{
+    ViewData["Title"] = "العقود";
+    var q = ViewData["Search"] as string;
+}
+
+<div class="page-head">
+    <form method="get" class="search">
+        <input type="search" name="q" value="@q" placeholder="ابحث برقم العقد أو اسم المستأجر أو جواله" />
+        <button type="submit" class="btn btn-outline">بحث</button>
+    </form>
+    <span class="hint">لإضافة عقد: افتح المبنى واضغط "إضافة عقد" جنب الوحدة.</span>
+</div>
+
+<section class="card table-card">
+    @if (Model.Count == 0)
+    {
+        <p class="empty">@(string.IsNullOrWhiteSpace(q) ? "لا توجد عقود بعد." : "لا توجد نتائج.")</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr><th>رقم العقد</th><th>الوحدة</th><th>المستأجر</th><th>المدة</th><th>الحالة</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td><a asp-action="Details" asp-route-id="@c.Id" class="strong" dir="ltr">@c.Number</a></td>
+                        <td>@c.Unit<div class="muted small">@c.Building</div></td>
+                        <td>@(c.Tenant ?? "—")</td>
+                        <td class="muted" dir="ltr">@c.Start.ToString("yyyy-MM-dd") → @c.End.ToString("yyyy-MM-dd")</td>
+                        <td><span class="badge @(c.Status == ContractStatus.Active ? "badge-done" : "")">@StatusLabels.Of(c.Status)</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>

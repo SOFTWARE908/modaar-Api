@@ -42,7 +42,7 @@
     {
         <table class="table">
             <thead>
-                <tr><th>رقم الوحدة</th><th>الطابق</th><th>النوع</th><th>المساحة</th><th>المالك</th><th>الإيجار السنوي</th></tr>
+                <tr><th>رقم الوحدة</th><th>الطابق</th><th>النوع</th><th>المساحة</th><th>المالك</th><th>الإيجار السنوي</th><th>العقد</th></tr>
             </thead>
             <tbody>
                 @foreach (var u in Model.Units)
@@ -54,6 +54,16 @@
                         <td>@(u.Area is { } a ? $"{a:0.##} م²" : "—")</td>
                         <td>@(u.OwnerName ?? "—")<div class="muted small" dir="ltr">@u.OwnerPhone</div></td>
                         <td>@(u.AnnualRent > 0 ? u.AnnualRent.ToString("N0") + " ر.س" : "—")</td>
+                        <td>
+                            @if (u.ActiveContractId is { } cid)
+                            {
+                                <a asp-controller="Contracts" asp-action="Details" asp-route-id="@cid" class="badge badge-done" dir="ltr">@u.ActiveContractNumber</a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Contracts" asp-action="Create" asp-route-propertyId="@u.Id" class="btn btn-ghost">+ إضافة عقد</a>
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>

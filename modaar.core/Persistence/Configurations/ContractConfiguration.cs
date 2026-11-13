@@ -74,6 +74,25 @@ public class ContractConfiguration : IEntityTypeConfiguration<Contract>
             i.ToJson();
             i.Property(p => p.Url).IsRequired();
         });
+
+        b.Property(x => x.AnnualWaterFee).HasPrecision(18, 2);
+        b.Property(x => x.TotalValue).HasPrecision(18, 2);
+        b.PrimitiveCollection(x => x.PaymentChannelIds);
+
+        b.HasOne<modaar.api.Features.Lookups.Entities.Lookup>().WithMany().HasForeignKey(x => x.ContractTypeId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<modaar.api.Features.Lookups.Entities.Lookup>().WithMany().HasForeignKey(x => x.ContractPlaceId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.BrokerEmployee).WithMany().HasForeignKey(x => x.BrokerEmployeeId).OnDelete(DeleteBehavior.NoAction);
+
+        // Columns on Contracts (LessorRepresentative_FullName, …); null when nobody represents the party.
+        b.OwnsOne(x => x.LessorRepresentative, Representative);
+        b.OwnsOne(x => x.TenantRepresentative, Representative);
+    }
+
+    private static void Representative<TOwner>(OwnedNavigationBuilder<TOwner, ContractRepresentative> r) where TOwner : class
+    {
+        r.Property(p => p.FullName).HasMaxLength(150).IsRequired();
+        r.Property(p => p.IdNumber).HasMaxLength(10);
+        r.Property(p => p.PhoneNumber).HasMaxLength(20);
     }
 }
 

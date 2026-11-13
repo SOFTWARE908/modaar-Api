@@ -41,6 +41,31 @@ public class Contract
 
     public decimal? SecurityDeposit { get; set; }
     public decimal? AnnualRent { get; set; }
+
+    // ── Ejar contract sheet, filled by the admin panel. Null on contracts made before it. ──
+    // ContractNumber above is then the Ejar record number (رقم سجل العقد), typed by the admin.
+
+    // From the "contract_type" (new / renewal) and "contract_place" lookups.
+    public Guid? ContractTypeId { get; set; }
+    public Guid? ContractPlaceId { get; set; }
+    // تاريخ إبرام العقد: when the parties signed, as against CreatedAt, when the row was saved.
+    public DateOnly? SignedOn { get; set; }
+
+    public decimal? AnnualWaterFee { get; set; }
+    // Computed on save: (annual rent + annual water fee) over the contract's months, and how many
+    // installments the payment cycle splits that into. Each installment is a Payments row.
+    public decimal? TotalValue { get; set; }
+    public int? InstallmentsCount { get; set; }
+    // Ids from the "payment_channel" lookup (مدى، سداد…).
+    public List<Guid> PaymentChannelIds { get; set; } = [];
+
+    // The broker employee who handled it; BrokerId above is their brokerage.
+    public Guid? BrokerEmployeeId { get; set; }
+    public BrokerEmployee? BrokerEmployee { get; set; }
+
+    // Someone signing on a party's behalf (ممثل المؤجر / ممثل المستأجر). Details only, not accounts.
+    public ContractRepresentative? LessorRepresentative { get; set; }
+    public ContractRepresentative? TenantRepresentative { get; set; }
     // Set when a contract is ended before EndDate, via POST /contracts/{id}/end.
     public DateOnly? TerminatedOn { get; set; }
     public string? TerminationReason { get; set; }
@@ -52,6 +77,16 @@ public class Contract
 
     // Scanned pages or supporting photos. Display-only and replaced wholesale, so JSON.
     public List<ContractImage> Images { get; set; } = [];
+}
+
+public class ContractRepresentative
+{
+    public string FullName { get; set; } = null!;
+    public Guid? NationalityId { get; set; }
+    public Guid? IdTypeId { get; set; }
+    public string? IdNumber { get; set; }
+    // Saudi mobile as the app stores numbers: 5XXXXXXXX, country code +966.
+    public string? PhoneNumber { get; set; }
 }
 
 public class ContractImage

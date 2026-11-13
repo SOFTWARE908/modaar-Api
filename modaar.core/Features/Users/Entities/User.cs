@@ -21,6 +21,12 @@ public class User
     public DateOnly? DateOfBirth { get; set; }
     public string? Nationality { get; set; }
 
+    // From the "nationality" and "id_type" lookups, filled by the admin panel (Ejar contract parties).
+    // The API shows the nationality from the lookup in the caller's language, falling back to the
+    // Nationality text above for accounts that only have that.
+    public Guid? NationalityId { get; set; }
+    public Guid? IdTypeId { get; set; }
+
     // Defaulted on creation; the user can change it while completing their profile.
     public List<AccountType> AccountTypes { get; set; } = [];
 

@@ -1,0 +1,32 @@
+@model List<modaar.admin.Features.Brokers.BrokerRow>
+@{
+    ViewData["Title"] = "الوسطاء";
+}
+
+<section class="card table-card">
+    @if (Model.Count == 0)
+    {
+        <p class="empty">لا يوجد وسطاء مسجلين. الوسيط بيسجل من التطبيق.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr><th>الوسيط</th><th>الجوال</th><th>منشأة الوساطة</th><th>السجل التجاري</th><th>الموظفين</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model)
+                {
+                    <tr>
+                        <td><a asp-action="Details" asp-route-id="@b.Id" class="strong">@(b.Name ?? "—")</a></td>
+                        <td dir="ltr" class="muted">@b.Phone</td>
+                        <td>@(b.CompanyName ?? "—")</td>
+                        <td dir="ltr">@(b.Cr ?? "—")</td>
+                        <td><span class="badge">@b.Employees</span></td>
+                        <td class="end"><a asp-action="Details" asp-route-id="@b.Id" class="btn btn-ghost">تعديل</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>

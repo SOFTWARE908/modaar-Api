@@ -1158,6 +1158,13 @@ namespace modaar.api.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal?>("AnnualWaterFee")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("BrokerEmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid?>("BrokerId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1165,6 +1172,12 @@ namespace modaar.api.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("ContractPlaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ContractTypeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -1187,6 +1200,13 @@ namespace modaar.api.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int?>("InstallmentsCount")
+                        .HasColumnType("int");
+
+                    b.PrimitiveCollection<string>("PaymentChannelIds")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PaymentFrequency")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -1204,6 +1224,9 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<decimal?>("SecurityDeposit")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateOnly?>("SignedOn")
+                        .HasColumnType("date");
 
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
@@ -1227,6 +1250,10 @@ namespace modaar.api.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<decimal?>("TotalValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetimeoffset")
@@ -1234,10 +1261,16 @@ namespace modaar.api.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BrokerEmployeeId");
+
                     b.HasIndex("BrokerId");
 
                     b.HasIndex("ContractNumber")
                         .IsUnique();
+
+                    b.HasIndex("ContractPlaceId");
+
+                    b.HasIndex("ContractTypeId");
 
                     b.HasIndex("EndDate");
 
@@ -1312,6 +1345,1352 @@ namespace modaar.api.Persistence.Migrations
                         .HasFilter("[Status] = 'Pending'");
 
                     b.ToTable("ContractRequests", (string)null);
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Lookups.Entities.Lookup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId", "Code")
+                        .IsUnique();
+
+                    b.HasIndex("CategoryId", "IsActive", "SortOrder");
+
+                    b.ToTable("Lookups", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000001"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "sa",
+                            IsActive = true,
+                            NameAr = "المملكة العربية السعودية",
+                            NameEn = "Saudi Arabia",
+                            SortOrder = 10
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000002"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "af",
+                            IsActive = true,
+                            NameAr = "أفغانستان",
+                            NameEn = "Afghanistan",
+                            SortOrder = 20
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000003"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "al",
+                            IsActive = true,
+                            NameAr = "ألبانيا",
+                            NameEn = "Albania",
+                            SortOrder = 30
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000004"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "dz",
+                            IsActive = true,
+                            NameAr = "الجزائر",
+                            NameEn = "Algeria",
+                            SortOrder = 40
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000005"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ar",
+                            IsActive = true,
+                            NameAr = "الأرجنتين",
+                            NameEn = "Argentina",
+                            SortOrder = 50
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000006"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "am",
+                            IsActive = true,
+                            NameAr = "أرمينيا",
+                            NameEn = "Armenia",
+                            SortOrder = 60
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000007"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "au",
+                            IsActive = true,
+                            NameAr = "أستراليا",
+                            NameEn = "Australia",
+                            SortOrder = 70
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000008"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "at",
+                            IsActive = true,
+                            NameAr = "النمسا",
+                            NameEn = "Austria",
+                            SortOrder = 80
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000009"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "az",
+                            IsActive = true,
+                            NameAr = "أذربيجان",
+                            NameEn = "Azerbaijan",
+                            SortOrder = 90
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000010"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "bh",
+                            IsActive = true,
+                            NameAr = "البحرين",
+                            NameEn = "Bahrain",
+                            SortOrder = 100
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000011"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "bd",
+                            IsActive = true,
+                            NameAr = "بنغلاديش",
+                            NameEn = "Bangladesh",
+                            SortOrder = 110
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000012"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "be",
+                            IsActive = true,
+                            NameAr = "بلجيكا",
+                            NameEn = "Belgium",
+                            SortOrder = 120
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000013"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ba",
+                            IsActive = true,
+                            NameAr = "البوسنة والهرسك",
+                            NameEn = "Bosnia and Herzegovina",
+                            SortOrder = 130
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000014"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "bf",
+                            IsActive = true,
+                            NameAr = "بوركينا فاسو",
+                            NameEn = "Burkina Faso",
+                            SortOrder = 140
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000015"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "bi",
+                            IsActive = true,
+                            NameAr = "بوروندي",
+                            NameEn = "Burundi",
+                            SortOrder = 150
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000016"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "cm",
+                            IsActive = true,
+                            NameAr = "الكاميرون",
+                            NameEn = "Cameroon",
+                            SortOrder = 160
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000017"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ca",
+                            IsActive = true,
+                            NameAr = "كندا",
+                            NameEn = "Canada",
+                            SortOrder = 170
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000018"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "cv",
+                            IsActive = true,
+                            NameAr = "الرأس الأخضر",
+                            NameEn = "Cape Verde",
+                            SortOrder = 180
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000019"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "td",
+                            IsActive = true,
+                            NameAr = "تشاد",
+                            NameEn = "Chad",
+                            SortOrder = 190
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000020"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "cn",
+                            IsActive = true,
+                            NameAr = "الصين",
+                            NameEn = "China",
+                            SortOrder = 200
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000021"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "co",
+                            IsActive = true,
+                            NameAr = "كولومبيا",
+                            NameEn = "Colombia",
+                            SortOrder = 210
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000022"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "km",
+                            IsActive = true,
+                            NameAr = "جزر القمر",
+                            NameEn = "Comoros",
+                            SortOrder = 220
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000023"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "cg",
+                            IsActive = true,
+                            NameAr = "الكونغو",
+                            NameEn = "Congo",
+                            SortOrder = 230
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000024"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "cr",
+                            IsActive = true,
+                            NameAr = "كوستاريكا",
+                            NameEn = "Costa Rica",
+                            SortOrder = 240
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000025"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ci",
+                            IsActive = true,
+                            NameAr = "ساحل العاج",
+                            NameEn = "Ivory Coast",
+                            SortOrder = 250
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000026"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "hr",
+                            IsActive = true,
+                            NameAr = "كرواتيا",
+                            NameEn = "Croatia",
+                            SortOrder = 260
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000027"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "cy",
+                            IsActive = true,
+                            NameAr = "قبرص",
+                            NameEn = "Cyprus",
+                            SortOrder = 270
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000028"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "cz",
+                            IsActive = true,
+                            NameAr = "التشيك",
+                            NameEn = "Czech Republic",
+                            SortOrder = 280
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000029"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "dk",
+                            IsActive = true,
+                            NameAr = "الدنمارك",
+                            NameEn = "Denmark",
+                            SortOrder = 290
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000030"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "dj",
+                            IsActive = true,
+                            NameAr = "جيبوتي",
+                            NameEn = "Djibouti",
+                            SortOrder = 300
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000031"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ec",
+                            IsActive = true,
+                            NameAr = "الإكوادور",
+                            NameEn = "Ecuador",
+                            SortOrder = 310
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000032"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "eg",
+                            IsActive = true,
+                            NameAr = "مصر",
+                            NameEn = "Egypt",
+                            SortOrder = 320
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000033"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "sv",
+                            IsActive = true,
+                            NameAr = "السلفادور",
+                            NameEn = "El Salvador",
+                            SortOrder = 330
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000034"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "er",
+                            IsActive = true,
+                            NameAr = "إريتريا",
+                            NameEn = "Eritrea",
+                            SortOrder = 340
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000035"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "et",
+                            IsActive = true,
+                            NameAr = "إثيوبيا",
+                            NameEn = "Ethiopia",
+                            SortOrder = 350
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000036"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "fi",
+                            IsActive = true,
+                            NameAr = "فنلندا",
+                            NameEn = "Finland",
+                            SortOrder = 360
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000037"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "fr",
+                            IsActive = true,
+                            NameAr = "فرنسا",
+                            NameEn = "France",
+                            SortOrder = 370
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000038"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "gm",
+                            IsActive = true,
+                            NameAr = "غامبيا",
+                            NameEn = "Gambia",
+                            SortOrder = 380
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000039"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ge",
+                            IsActive = true,
+                            NameAr = "جورجيا",
+                            NameEn = "Georgia",
+                            SortOrder = 390
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000040"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "de",
+                            IsActive = true,
+                            NameAr = "ألمانيا",
+                            NameEn = "Germany",
+                            SortOrder = 400
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000041"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "gh",
+                            IsActive = true,
+                            NameAr = "غانا",
+                            NameEn = "Ghana",
+                            SortOrder = 410
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000042"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "gr",
+                            IsActive = true,
+                            NameAr = "اليونان",
+                            NameEn = "Greece",
+                            SortOrder = 420
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000043"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "gn",
+                            IsActive = true,
+                            NameAr = "غينيا",
+                            NameEn = "Guinea",
+                            SortOrder = 430
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000044"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "hu",
+                            IsActive = true,
+                            NameAr = "المجر",
+                            NameEn = "Hungary",
+                            SortOrder = 440
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000045"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "is",
+                            IsActive = true,
+                            NameAr = "آيسلندا",
+                            NameEn = "Iceland",
+                            SortOrder = 450
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000046"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "in",
+                            IsActive = true,
+                            NameAr = "الهند",
+                            NameEn = "India",
+                            SortOrder = 460
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000047"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "id",
+                            IsActive = true,
+                            NameAr = "إندونيسيا",
+                            NameEn = "Indonesia",
+                            SortOrder = 470
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000048"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ir",
+                            IsActive = true,
+                            NameAr = "إيران",
+                            NameEn = "Iran",
+                            SortOrder = 480
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000049"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "iq",
+                            IsActive = true,
+                            NameAr = "العراق",
+                            NameEn = "Iraq",
+                            SortOrder = 490
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000050"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ie",
+                            IsActive = true,
+                            NameAr = "أيرلندا",
+                            NameEn = "Ireland",
+                            SortOrder = 500
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000051"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "it",
+                            IsActive = true,
+                            NameAr = "إيطاليا",
+                            NameEn = "Italy",
+                            SortOrder = 510
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000052"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "jm",
+                            IsActive = true,
+                            NameAr = "جامايكا",
+                            NameEn = "Jamaica",
+                            SortOrder = 520
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000053"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "jp",
+                            IsActive = true,
+                            NameAr = "اليابان",
+                            NameEn = "Japan",
+                            SortOrder = 530
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000054"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "jo",
+                            IsActive = true,
+                            NameAr = "الأردن",
+                            NameEn = "Jordan",
+                            SortOrder = 540
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000055"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "kz",
+                            IsActive = true,
+                            NameAr = "كازاخستان",
+                            NameEn = "Kazakhstan",
+                            SortOrder = 550
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000056"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ke",
+                            IsActive = true,
+                            NameAr = "كينيا",
+                            NameEn = "Kenya",
+                            SortOrder = 560
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000057"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "kw",
+                            IsActive = true,
+                            NameAr = "الكويت",
+                            NameEn = "Kuwait",
+                            SortOrder = 570
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000058"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "kg",
+                            IsActive = true,
+                            NameAr = "قيرغيزستان",
+                            NameEn = "Kyrgyzstan",
+                            SortOrder = 580
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000059"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "lb",
+                            IsActive = true,
+                            NameAr = "لبنان",
+                            NameEn = "Lebanon",
+                            SortOrder = 590
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000060"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ly",
+                            IsActive = true,
+                            NameAr = "ليبيا",
+                            NameEn = "Libya",
+                            SortOrder = 600
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000061"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "mg",
+                            IsActive = true,
+                            NameAr = "مدغشقر",
+                            NameEn = "Madagascar",
+                            SortOrder = 610
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000062"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "my",
+                            IsActive = true,
+                            NameAr = "ماليزيا",
+                            NameEn = "Malaysia",
+                            SortOrder = 620
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000063"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "mv",
+                            IsActive = true,
+                            NameAr = "جزر المالديف",
+                            NameEn = "Maldives",
+                            SortOrder = 630
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000064"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "mr",
+                            IsActive = true,
+                            NameAr = "موريتانيا",
+                            NameEn = "Mauritania",
+                            SortOrder = 640
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000065"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "mu",
+                            IsActive = true,
+                            NameAr = "موريشيوس",
+                            NameEn = "Mauritius",
+                            SortOrder = 650
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000066"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ma",
+                            IsActive = true,
+                            NameAr = "المغرب",
+                            NameEn = "Morocco",
+                            SortOrder = 660
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000067"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "mz",
+                            IsActive = true,
+                            NameAr = "موزمبيق",
+                            NameEn = "Mozambique",
+                            SortOrder = 670
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000068"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "np",
+                            IsActive = true,
+                            NameAr = "نيبال",
+                            NameEn = "Nepal",
+                            SortOrder = 680
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000069"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "nl",
+                            IsActive = true,
+                            NameAr = "هولندا",
+                            NameEn = "Netherlands",
+                            SortOrder = 690
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000070"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "nz",
+                            IsActive = true,
+                            NameAr = "نيوزيلندا",
+                            NameEn = "New Zealand",
+                            SortOrder = 700
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000071"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ne",
+                            IsActive = true,
+                            NameAr = "النيجر",
+                            NameEn = "Niger",
+                            SortOrder = 710
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000072"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ng",
+                            IsActive = true,
+                            NameAr = "نيجيريا",
+                            NameEn = "Nigeria",
+                            SortOrder = 720
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000073"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "no",
+                            IsActive = true,
+                            NameAr = "النرويج",
+                            NameEn = "Norway",
+                            SortOrder = 730
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000074"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "om",
+                            IsActive = true,
+                            NameAr = "عُمان",
+                            NameEn = "Oman",
+                            SortOrder = 740
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000075"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "pk",
+                            IsActive = true,
+                            NameAr = "باكستان",
+                            NameEn = "Pakistan",
+                            SortOrder = 750
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000076"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ps",
+                            IsActive = true,
+                            NameAr = "فلسطين",
+                            NameEn = "Palestine",
+                            SortOrder = 760
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000077"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "pa",
+                            IsActive = true,
+                            NameAr = "بنما",
+                            NameEn = "Panama",
+                            SortOrder = 770
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000078"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ph",
+                            IsActive = true,
+                            NameAr = "الفلبين",
+                            NameEn = "Philippines",
+                            SortOrder = 780
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000079"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "pl",
+                            IsActive = true,
+                            NameAr = "بولندا",
+                            NameEn = "Poland",
+                            SortOrder = 790
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000080"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "pt",
+                            IsActive = true,
+                            NameAr = "البرتغال",
+                            NameEn = "Portugal",
+                            SortOrder = 800
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000081"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "qa",
+                            IsActive = true,
+                            NameAr = "قطر",
+                            NameEn = "Qatar",
+                            SortOrder = 810
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000082"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ro",
+                            IsActive = true,
+                            NameAr = "رومانيا",
+                            NameEn = "Romania",
+                            SortOrder = 820
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000083"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ru",
+                            IsActive = true,
+                            NameAr = "روسيا",
+                            NameEn = "Russia",
+                            SortOrder = 830
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000084"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "rw",
+                            IsActive = true,
+                            NameAr = "رواندا",
+                            NameEn = "Rwanda",
+                            SortOrder = 840
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000085"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "sn",
+                            IsActive = true,
+                            NameAr = "السنغال",
+                            NameEn = "Senegal",
+                            SortOrder = 850
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000086"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "rs",
+                            IsActive = true,
+                            NameAr = "صربيا",
+                            NameEn = "Serbia",
+                            SortOrder = 860
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000087"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "sg",
+                            IsActive = true,
+                            NameAr = "سنغافورة",
+                            NameEn = "Singapore",
+                            SortOrder = 870
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000088"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "sk",
+                            IsActive = true,
+                            NameAr = "سلوفاكيا",
+                            NameEn = "Slovakia",
+                            SortOrder = 880
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000089"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "si",
+                            IsActive = true,
+                            NameAr = "سلوفينيا",
+                            NameEn = "Slovenia",
+                            SortOrder = 890
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000090"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "sb",
+                            IsActive = true,
+                            NameAr = "جزر سليمان",
+                            NameEn = "Solomon Islands",
+                            SortOrder = 900
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000091"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "so",
+                            IsActive = true,
+                            NameAr = "الصومال",
+                            NameEn = "Somalia",
+                            SortOrder = 910
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000092"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "za",
+                            IsActive = true,
+                            NameAr = "جنوب أفريقيا",
+                            NameEn = "South Africa",
+                            SortOrder = 920
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000093"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "kr",
+                            IsActive = true,
+                            NameAr = "كوريا الجنوبية",
+                            NameEn = "South Korea",
+                            SortOrder = 930
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000094"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "es",
+                            IsActive = true,
+                            NameAr = "إسبانيا",
+                            NameEn = "Spain",
+                            SortOrder = 940
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000095"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "lk",
+                            IsActive = true,
+                            NameAr = "سريلانكا",
+                            NameEn = "Sri Lanka",
+                            SortOrder = 950
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000096"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "sd",
+                            IsActive = true,
+                            NameAr = "السودان",
+                            NameEn = "Sudan",
+                            SortOrder = 960
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000097"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "se",
+                            IsActive = true,
+                            NameAr = "السويد",
+                            NameEn = "Sweden",
+                            SortOrder = 970
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000098"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ch",
+                            IsActive = true,
+                            NameAr = "سويسرا",
+                            NameEn = "Switzerland",
+                            SortOrder = 980
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000099"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "sy",
+                            IsActive = true,
+                            NameAr = "سوريا",
+                            NameEn = "Syria",
+                            SortOrder = 990
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000100"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "tj",
+                            IsActive = true,
+                            NameAr = "طاجيكستان",
+                            NameEn = "Tajikistan",
+                            SortOrder = 1000
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000101"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "th",
+                            IsActive = true,
+                            NameAr = "تايلاند",
+                            NameEn = "Thailand",
+                            SortOrder = 1010
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000102"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "tn",
+                            IsActive = true,
+                            NameAr = "تونس",
+                            NameEn = "Tunisia",
+                            SortOrder = 1020
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000103"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "tr",
+                            IsActive = true,
+                            NameAr = "تركيا",
+                            NameEn = "Turkey",
+                            SortOrder = 1030
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000104"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ug",
+                            IsActive = true,
+                            NameAr = "أوغندا",
+                            NameEn = "Uganda",
+                            SortOrder = 1040
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000105"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ua",
+                            IsActive = true,
+                            NameAr = "أوكرانيا",
+                            NameEn = "Ukraine",
+                            SortOrder = 1050
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000106"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ae",
+                            IsActive = true,
+                            NameAr = "الإمارات العربية المتحدة",
+                            NameEn = "United Arab Emirates",
+                            SortOrder = 1060
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000107"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "gb",
+                            IsActive = true,
+                            NameAr = "المملكة المتحدة",
+                            NameEn = "United Kingdom",
+                            SortOrder = 1070
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000108"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "us",
+                            IsActive = true,
+                            NameAr = "الولايات المتحدة الأمريكية",
+                            NameEn = "United States",
+                            SortOrder = 1080
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000109"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "uy",
+                            IsActive = true,
+                            NameAr = "أوروغواي",
+                            NameEn = "Uruguay",
+                            SortOrder = 1090
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000110"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "uz",
+                            IsActive = true,
+                            NameAr = "أوزبكستان",
+                            NameEn = "Uzbekistan",
+                            SortOrder = 1100
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000111"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "vn",
+                            IsActive = true,
+                            NameAr = "فيتنام",
+                            NameEn = "Vietnam",
+                            SortOrder = 1110
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000001-0000-4000-8000-000000000112"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "ye",
+                            IsActive = true,
+                            NameAr = "اليمن",
+                            NameEn = "Yemen",
+                            SortOrder = 1120
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000002-0000-4000-8000-000000000001"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000002"),
+                            Code = "national_id",
+                            IsActive = true,
+                            NameAr = "هوية وطنية",
+                            NameEn = "National ID",
+                            SortOrder = 10
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000002-0000-4000-8000-000000000002"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000002"),
+                            Code = "premium_residency",
+                            IsActive = true,
+                            NameAr = "إقامة مميزة",
+                            NameEn = "Premium residency",
+                            SortOrder = 20
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000002-0000-4000-8000-000000000003"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000002"),
+                            Code = "resident_id",
+                            IsActive = true,
+                            NameAr = "هوية مقيم",
+                            NameEn = "Resident ID",
+                            SortOrder = 30
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000002-0000-4000-8000-000000000004"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000002"),
+                            Code = "gcc_id",
+                            IsActive = true,
+                            NameAr = "هوية مواطني دول مجلس التعاون الخليجي",
+                            NameEn = "GCC citizen ID",
+                            SortOrder = 40
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000002-0000-4000-8000-000000000005"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000002"),
+                            Code = "passport",
+                            IsActive = true,
+                            NameAr = "جواز سفر",
+                            NameEn = "Passport",
+                            SortOrder = 50
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000002-0000-4000-8000-000000000006"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000002"),
+                            Code = "other",
+                            IsActive = true,
+                            NameAr = "أخرى",
+                            NameEn = "Other",
+                            SortOrder = 60
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000003-0000-4000-8000-000000000001"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000003"),
+                            Code = "riyadh",
+                            IsActive = true,
+                            NameAr = "الرياض",
+                            NameEn = "Riyadh",
+                            SortOrder = 10
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000003-0000-4000-8000-000000000002"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000003"),
+                            Code = "other",
+                            IsActive = true,
+                            NameAr = "أخرى",
+                            NameEn = "Other",
+                            SortOrder = 20
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000004-0000-4000-8000-000000000001"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000004"),
+                            Code = "new",
+                            IsActive = true,
+                            NameAr = "جديد",
+                            NameEn = "New",
+                            SortOrder = 10
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000004-0000-4000-8000-000000000002"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000004"),
+                            Code = "renewal",
+                            IsActive = true,
+                            NameAr = "تجديد",
+                            NameEn = "Renewal",
+                            SortOrder = 20
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000005-0000-4000-8000-000000000001"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000005"),
+                            Code = "mada",
+                            IsActive = true,
+                            NameAr = "مدى",
+                            NameEn = "Mada",
+                            SortOrder = 10
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000005-0000-4000-8000-000000000002"),
+                            CategoryId = new Guid("1c000000-0000-4000-8000-000000000005"),
+                            Code = "sadad",
+                            IsActive = true,
+                            NameAr = "سداد",
+                            NameEn = "SADAD",
+                            SortOrder = 20
+                        });
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Lookups.Entities.LookupCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("LookupCategories", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("1c000000-0000-4000-8000-000000000001"),
+                            Code = "nationality",
+                            NameAr = "الجنسية",
+                            NameEn = "Nationality"
+                        },
+                        new
+                        {
+                            Id = new Guid("1c000000-0000-4000-8000-000000000002"),
+                            Code = "id_type",
+                            NameAr = "نوع الهوية",
+                            NameEn = "ID type"
+                        },
+                        new
+                        {
+                            Id = new Guid("1c000000-0000-4000-8000-000000000003"),
+                            Code = "contract_place",
+                            NameAr = "مكان إبرام العقد",
+                            NameEn = "Place of signing"
+                        },
+                        new
+                        {
+                            Id = new Guid("1c000000-0000-4000-8000-000000000004"),
+                            Code = "contract_type",
+                            NameAr = "نوع العقد",
+                            NameEn = "Contract type"
+                        },
+                        new
+                        {
+                            Id = new Guid("1c000000-0000-4000-8000-000000000005"),
+                            Code = "payment_channel",
+                            NameAr = "قنوات الدفع",
+                            NameEn = "Payment channels"
+                        });
                 });
 
             modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.MaintenanceAttachment", b =>
@@ -2397,6 +3776,14 @@ namespace modaar.api.Persistence.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
+                    b.Property<string>("CommercialRegistrationNumber")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("CompanyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetimeoffset")
@@ -2445,6 +3832,34 @@ namespace modaar.api.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Brokers", (string)null);
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Users.Entities.BrokerEmployee", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BrokerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BrokerId", "IsActive");
+
+                    b.ToTable("BrokerEmployees", (string)null);
                 });
 
             modelBuilder.Entity("modaar.api.Features.Users.Entities.BrokerOfferedService", b =>
@@ -2705,6 +4120,9 @@ namespace modaar.api.Persistence.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<Guid?>("IdTypeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -2730,6 +4148,9 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<string>("Nationality")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("NationalityId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PasswordHash")
                         .HasMaxLength(500)
@@ -2772,9 +4193,13 @@ namespace modaar.api.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0 AND [Email] IS NOT NULL");
 
+                    b.HasIndex("IdTypeId");
+
                     b.HasIndex("NationalId")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0 AND [NationalId] IS NOT NULL");
+
+                    b.HasIndex("NationalityId");
 
                     b.HasIndex("CountryCode", "PhoneNumber")
                         .IsUnique()
@@ -3102,10 +4527,25 @@ namespace modaar.api.Persistence.Migrations
 
             modelBuilder.Entity("modaar.api.Features.Contracts.Entities.Contract", b =>
                 {
+                    b.HasOne("modaar.api.Features.Users.Entities.BrokerEmployee", "BrokerEmployee")
+                        .WithMany()
+                        .HasForeignKey("BrokerEmployeeId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("modaar.api.Features.Users.Entities.Broker", "Broker")
                         .WithMany()
                         .HasForeignKey("BrokerId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("modaar.api.Features.Lookups.Entities.Lookup", null)
+                        .WithMany()
+                        .HasForeignKey("ContractPlaceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("modaar.api.Features.Lookups.Entities.Lookup", null)
+                        .WithMany()
+                        .HasForeignKey("ContractTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("modaar.api.Features.Properties.Entities.Property", "Property")
                         .WithMany("Contracts")
@@ -3118,6 +4558,70 @@ namespace modaar.api.Persistence.Migrations
                         .HasForeignKey("TenantUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.OwnsOne("modaar.api.Features.Contracts.Entities.ContractRepresentative", "LessorRepresentative", b1 =>
+                        {
+                            b1.Property<Guid>("ContractId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("FullName")
+                                .IsRequired()
+                                .HasMaxLength(150)
+                                .HasColumnType("nvarchar(150)");
+
+                            b1.Property<string>("IdNumber")
+                                .HasMaxLength(10)
+                                .HasColumnType("nvarchar(10)");
+
+                            b1.Property<Guid?>("IdTypeId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<Guid?>("NationalityId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("PhoneNumber")
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)");
+
+                            b1.HasKey("ContractId");
+
+                            b1.ToTable("Contracts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ContractId");
+                        });
+
+                    b.OwnsOne("modaar.api.Features.Contracts.Entities.ContractRepresentative", "TenantRepresentative", b1 =>
+                        {
+                            b1.Property<Guid>("ContractId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("FullName")
+                                .IsRequired()
+                                .HasMaxLength(150)
+                                .HasColumnType("nvarchar(150)");
+
+                            b1.Property<string>("IdNumber")
+                                .HasMaxLength(10)
+                                .HasColumnType("nvarchar(10)");
+
+                            b1.Property<Guid?>("IdTypeId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<Guid?>("NationalityId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("PhoneNumber")
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)");
+
+                            b1.HasKey("ContractId");
+
+                            b1.ToTable("Contracts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ContractId");
+                        });
 
                     b.OwnsMany("modaar.api.Features.Contracts.Entities.ContractImage", "Images", b1 =>
                         {
@@ -3152,11 +4656,17 @@ namespace modaar.api.Persistence.Migrations
 
                     b.Navigation("Broker");
 
+                    b.Navigation("BrokerEmployee");
+
                     b.Navigation("Images");
+
+                    b.Navigation("LessorRepresentative");
 
                     b.Navigation("Property");
 
                     b.Navigation("Tenant");
+
+                    b.Navigation("TenantRepresentative");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Contracts.Entities.ContractRequest", b =>
@@ -3172,6 +4682,17 @@ namespace modaar.api.Persistence.Migrations
                         .HasForeignKey("RequestedByUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Lookups.Entities.Lookup", b =>
+                {
+                    b.HasOne("modaar.api.Features.Lookups.Entities.LookupCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Maintenance.Entities.MaintenanceAttachment", b =>
@@ -3594,6 +5115,17 @@ namespace modaar.api.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("modaar.api.Features.Users.Entities.BrokerEmployee", b =>
+                {
+                    b.HasOne("modaar.api.Features.Users.Entities.Broker", "Broker")
+                        .WithMany()
+                        .HasForeignKey("BrokerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Broker");
+                });
+
             modelBuilder.Entity("modaar.api.Features.Users.Entities.BrokerOfferedService", b =>
                 {
                     b.HasOne("modaar.api.Features.Users.Entities.Broker", null)
@@ -3645,6 +5177,19 @@ namespace modaar.api.Persistence.Migrations
                     b.Navigation("Building");
 
                     b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Users.Entities.User", b =>
+                {
+                    b.HasOne("modaar.api.Features.Lookups.Entities.Lookup", null)
+                        .WithMany()
+                        .HasForeignKey("IdTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("modaar.api.Features.Lookups.Entities.Lookup", null)
+                        .WithMany()
+                        .HasForeignKey("NationalityId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("modaar.api.Features.Wallets.Entities.Wallet", b =>

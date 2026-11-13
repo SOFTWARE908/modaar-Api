@@ -61,5 +61,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         b.HasIndex(u => u.NationalId)
             .IsUnique()
             .HasFilter("[IsDeleted] = 0 AND [NationalId] IS NOT NULL");
+
+        b.HasOne<modaar.api.Features.Lookups.Entities.Lookup>().WithMany().HasForeignKey(u => u.NationalityId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<modaar.api.Features.Lookups.Entities.Lookup>().WithMany().HasForeignKey(u => u.IdTypeId).OnDelete(DeleteBehavior.Restrict);
     }
 }

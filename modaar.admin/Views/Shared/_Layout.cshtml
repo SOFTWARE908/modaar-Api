@@ -21,9 +21,10 @@
                 <nav class="nav">
                     <a asp-controller="Home" asp-action="Index" class="@(current == "Home" ? "active" : "")">الرئيسية</a>
                     <a asp-controller="Buildings" asp-action="Index" class="@(current == "Buildings" ? "active" : "")">المباني والوحدات</a>
+                    <a asp-controller="Contracts" asp-action="Index" class="@(current == "Contracts" ? "active" : "")">العقود</a>
+                    <a asp-controller="Brokers" asp-action="Index" class="@(current == "Brokers" ? "active" : "")">الوسطاء</a>
                     <div class="nav-section">قريباً</div>
                     <span class="soon">المستخدمين <i class="tag">قريباً</i></span>
-                    <span class="soon">العقود <i class="tag">قريباً</i></span>
                     <span class="soon">القوائم الثابتة <i class="tag">قريباً</i></span>
                 </nav>
             </aside>

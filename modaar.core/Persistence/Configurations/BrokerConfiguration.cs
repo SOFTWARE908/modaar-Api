@@ -20,6 +20,8 @@ namespace modaar.api.Persistence.Configurations
             b.Property(x => x.AboutEn).HasMaxLength(4000);
 
             b.Property(x => x.LicenseNumber).HasMaxLength(50);
+            b.Property(x => x.CompanyName).HasMaxLength(200);
+            b.Property(x => x.CommercialRegistrationNumber).HasMaxLength(10);
 
             b.Property(x => x.RatingAverage).HasPrecision(3, 2);
 

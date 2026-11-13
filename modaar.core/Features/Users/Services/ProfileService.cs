@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using modaar.api.Common.Auth;
+using modaar.api.Common.Localization;
 using modaar.api.Common.Results;
 using modaar.api.Features.Authentication.Enums;
 using modaar.api.Features.Users.Dtos;
@@ -22,9 +23,12 @@ public sealed class ProfileService : IProfileService
     private readonly TimeProvider _time;
     private readonly IHttpContextAccessor _http;
     private readonly string _uploadsRoot;
+    private readonly IRequestLanguage _language;
 
-    public ProfileService(ModaarDbContext db, TimeProvider time, IConfiguration config, IHttpContextAccessor http)
+    public ProfileService(ModaarDbContext db, TimeProvider time, IConfiguration config, IHttpContextAccessor http,
+        IRequestLanguage language)
     {
+        _language = language;
         _db = db;
         _time = time;
         _http = http;
@@ -66,7 +70,7 @@ public sealed class ProfileService : IProfileService
 
         DeletePreviousAvatar(previousUrl, userId, folder);
 
-        return Result<UserProfileDto>.Ok(ToDto(user));
+        return Result<UserProfileDto>.Ok(await ToDtoAsync(user, ct));
     }
 
     // Only a file this endpoint wrote for this user: ProfileImageUrl can also be any URL sent
@@ -93,7 +97,7 @@ public sealed class ProfileService : IProfileService
         if (user is null)
             return AuthResult<UserProfileDto>.Fail(AuthErrorCode.UserNotFound, "User not found.");
 
-        return AuthResult<UserProfileDto>.Ok(ToDto(user));
+        return AuthResult<UserProfileDto>.Ok(await ToDtoAsync(user, ct));
     }
 
     public async Task<AuthResult<UserProfileDto>> UpdateAsync(Guid userId, UpdateProfileRequestDto request, CancellationToken ct)
@@ -162,10 +166,24 @@ public sealed class ProfileService : IProfileService
         user.UpdatedAt = _time.GetUtcNow();
         await _db.SaveChangesAsync(ct);
 
-        return AuthResult<UserProfileDto>.Ok(ToDto(user));
+        return AuthResult<UserProfileDto>.Ok(await ToDtoAsync(user, ct));
     }
 
-    private static UserProfileDto ToDto(User user) => new()
+    // Nationality: the lookup row in the caller's language when the account has one (set by the admin
+    // panel), else the old text. Same field and shape as before, so the app sees no change.
+    private async Task<UserProfileDto> ToDtoAsync(User user, CancellationToken ct)
+    {
+        var nationality = user.Nationality;
+        if (user.NationalityId is { } id)
+        {
+            var names = await _db.Lookups.AsNoTracking().Where(l => l.Id == id)
+                .Select(l => new { l.NameAr, l.NameEn }).FirstOrDefaultAsync(ct);
+            if (names is not null) nationality = _language.Pick(names.NameAr, names.NameEn);
+        }
+        return ToDto(user, nationality);
+    }
+
+    private static UserProfileDto ToDto(User user, string? nationality) => new()
     {
         PhoneNumber = user.PhoneNumber,
         CountryCode = user.CountryCode,
@@ -177,7 +195,7 @@ public sealed class ProfileService : IProfileService
         NationalId = user.NationalId,
         ProfileImageUrl = user.ProfileImageUrl,
         DateOfBirth = user.DateOfBirth,
-        Nationality = user.Nationality,
+        Nationality = nationality,
         Id = user.Id,
         Language = user.PreferredLanguage
     };

@@ -1,0 +1,56 @@
+@model modaar.admin.Features.Brokers.BrokerCompanyForm
+@{
+    var broker = (modaar.admin.Features.Brokers.BrokerDetails)ViewData["Broker"]!;
+    ViewData["Title"] = broker.Name ?? "وسيط";
+}
+
+<div class="page-head">
+    <a asp-action="Index" class="btn btn-ghost">→ كل الوسطاء</a>
+    <span class="muted" dir="ltr">@broker.Phone</span>
+</div>
+
+<form method="post" asp-action="Details" asp-route-id="@broker.Id" novalidate class="form-page">
+    <div asp-validation-summary="ModelOnly" class="alert"></div>
+    <section class="card form-section">
+        <h2>بيانات منشأة الوساطة العقارية</h2>
+        <div class="grid">
+            <div class="field span-2">
+                <label asp-for="CompanyName"></label>
+                <input asp-for="CompanyName" />
+                <span asp-validation-for="CompanyName" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="CommercialRegistrationNumber"></label>
+                <input asp-for="CommercialRegistrationNumber" inputmode="numeric" maxlength="10" dir="ltr" />
+                <span asp-validation-for="CommercialRegistrationNumber" class="field-error"></span>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">حفظ</button>
+    </section>
+</form>
+
+<section class="card form-section form-page">
+    <h2>الموظفين (الوسطاء)</h2>
+    <form method="post" asp-action="AddEmployee" asp-route-id="@broker.Id" class="inline-form">
+        <input name="name" placeholder="اسم الموظف" maxlength="150" required />
+        <button type="submit" class="btn btn-outline">+ إضافة</button>
+    </form>
+    @if (broker.Employees.Count == 0)
+    {
+        <p class="muted">لسه مفيش موظفين.</p>
+    }
+    else
+    {
+        <ul class="list">
+            @foreach (var e in broker.Employees)
+            {
+                <li>
+                    <span>@e.FullName</span>
+                    <form method="post" asp-action="RemoveEmployee" asp-route-id="@broker.Id" asp-route-employeeId="@e.Id">
+                        <button type="submit" class="btn btn-ghost">حذف</button>
+                    </form>
+                </li>
+            }
+        </ul>
+    }
+</section>

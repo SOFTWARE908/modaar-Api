@@ -17,6 +17,10 @@
 
         public string? LicenseNumber { get; set; }
 
+        // The brokerage firm (منشأة الوساطة العقارية) on Ejar contracts. Filled by the admin panel.
+        public string? CompanyName { get; set; }
+        public string? CommercialRegistrationNumber { get; set; }   // 10 digits
+
         // The year the brokerage started; "years of experience" is counted from it so it never
         // goes stale. Set the same way as the rest of the profile (no edit endpoint yet).
         public int? ExperienceSinceYear { get; set; }
@@ -56,5 +60,24 @@
 
         public string? Icon { get; set; }
         public int SortOrder { get; set; }
+    }
+}
+
+namespace modaar.api.Features.Users.Entities
+{
+    // A broker working for a brokerage (اسم الموظف الوسيط on the Ejar contract). Not an account:
+    // just a name the admin keeps per brokerage and picks on a contract.
+    public class BrokerEmployee
+    {
+        public Guid Id { get; set; }
+        public Guid BrokerId { get; set; }
+        public Broker Broker { get; set; } = null!;
+
+        public string FullName { get; set; } = null!;
+
+        // Removing someone who left keeps their name on the contracts they signed.
+        public bool IsActive { get; set; } = true;
+
+        public DateTimeOffset CreatedAt { get; set; }
     }
 }
