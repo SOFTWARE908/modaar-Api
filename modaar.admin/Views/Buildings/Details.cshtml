@@ -1,0 +1,62 @@
+@model BuildingDetails
+@{
+    var b = Model.Building;
+    ViewData["Title"] = b.Name;
+    var max = b.UnitsCount;
+}
+
+<div class="page-head">
+    <a asp-action="Index" class="btn btn-ghost">→ كل المباني</a>
+    @if (Model.IsFull)
+    {
+        <span class="badge badge-done">كل الوحدات اتضافت (@Model.Units.Count / @max)</span>
+    }
+    else
+    {
+        <a asp-action="CreateUnit" asp-route-id="@b.Id" class="btn btn-primary">+ إضافة وحدة</a>
+    }
+</div>
+
+<section class="card form-section">
+    <h2>بيانات المبنى</h2>
+    <dl class="facts">
+        <div><dt>نوع بناء العقار</dt><dd>@Labels.Of(b.Type)</dd></div>
+        <div><dt>الغرض من الاستخدام</dt><dd>@(b.UsagePurpose ?? "—")</dd></div>
+        <div><dt>عدد الطوابق</dt><dd>@(b.FloorsCount?.ToString() ?? "—")</dd></div>
+        <div><dt>عدد الوحدات</dt><dd>@Model.Units.Count @(max is null ? "" : $"من {max}")</dd></div>
+        <div><dt>عدد المواقف</dt><dd>@(b.ParkingSpaces?.ToString() ?? "—")</dd></div>
+        <div><dt>العنوان الوطني</dt><dd>@(b.BuildingNumber is null ? (b.AddressLine ?? "—") : $"{b.BuildingNumber} ، {b.Street} ، {b.AdditionalNumber} ، {b.District} ، {b.PostalCode} ، {Model.CityName}")</dd></div>
+        <div><dt>رقم الصك</dt><dd dir="ltr">@(b.DeedNumber ?? "—")</dd></div>
+        <div><dt>تاريخ إصدار الصك</dt><dd dir="ltr">@(b.DeedIssueDateHijri is null ? "—" : b.DeedIssueDateHijri + " هـ")</dd></div>
+        <div><dt>نوع الصك</dt><dd>@(b.DeedType is { } dt ? Labels.Of(dt) : "—")</dd></div>
+    </dl>
+</section>
+
+<section class="card table-card">
+    <h2 class="table-title">الوحدات</h2>
+    @if (Model.Units.Count == 0)
+    {
+        <p class="empty">لسه مفيش وحدات في المبنى ده.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr><th>رقم الوحدة</th><th>الطابق</th><th>النوع</th><th>المساحة</th><th>المالك</th><th>الإيجار السنوي</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model.Units)
+                {
+                    <tr>
+                        <td class="strong">@u.UnitNumber</td>
+                        <td>@u.Floor</td>
+                        <td>@Labels.Of(u.Type)</td>
+                        <td>@(u.Area is { } a ? $"{a:0.##} م²" : "—")</td>
+                        <td>@(u.OwnerName ?? "—")<div class="muted small" dir="ltr">@u.OwnerPhone</div></td>
+                        <td>@(u.AnnualRent > 0 ? u.AnnualRent.ToString("N0") + " ر.س" : "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>

@@ -27,6 +27,9 @@ public class PropertyConfiguration : IEntityTypeConfiguration<Property>
 
         b.Property(x => x.AnnualRent).HasPrecision(18, 2);
 
+        b.Property(x => x.AcType).HasMaxLength(100);
+        b.Property(x => x.ElectricityMeterNumber).HasMaxLength(30);
+
         b.Property(x => x.CoverImageUrl).HasMaxLength(500);
 
         b.Property(x => x.PropertyType)

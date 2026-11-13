@@ -1,0 +1,50 @@
+@model List<BuildingRow>
+@{
+    ViewData["Title"] = "المباني والوحدات";
+    var q = ViewData["Search"] as string;
+}
+
+<div class="page-head">
+    <form method="get" class="search">
+        <input type="search" name="q" value="@q" placeholder="ابحث بالاسم أو الحي أو المدينة أو رقم الصك" />
+        <button type="submit" class="btn btn-outline">بحث</button>
+    </form>
+    <a asp-action="Create" class="btn btn-primary">+ إضافة مبنى</a>
+</div>
+
+<section class="card table-card">
+    @if (Model.Count == 0)
+    {
+        <p class="empty">@(string.IsNullOrWhiteSpace(q) ? "لا توجد مباني بعد." : "لا توجد نتائج.")</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr><th>المبنى</th><th>المدينة</th><th>الحي</th><th>الوحدات</th><th>تاريخ الإضافة</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model)
+                {
+                    <tr>
+                        <td><a asp-action="Details" asp-route-id="@b.Id" class="strong">@b.Name</a></td>
+                        <td>@(b.City ?? "—")</td>
+                        <td>@(b.District ?? "—")</td>
+                        <td>
+                            @if (b.UnitsCount is { } max)
+                            {
+                                <span class="badge @(b.UnitsAdded >= max ? "badge-done" : "")">@b.UnitsAdded / @max</span>
+                            }
+                            else
+                            {
+                                <span class="badge">@b.UnitsAdded</span>
+                            }
+                        </td>
+                        <td class="muted">@b.CreatedAt.ToString("yyyy-MM-dd")</td>
+                        <td class="end"><a asp-action="Details" asp-route-id="@b.Id" class="btn btn-ghost">عرض</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>

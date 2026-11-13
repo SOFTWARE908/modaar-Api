@@ -20,9 +20,9 @@
                 <a class="logo" asp-controller="Home" asp-action="Index"><img src="~/img/logo-white.png" alt="مُدارة" /></a>
                 <nav class="nav">
                     <a asp-controller="Home" asp-action="Index" class="@(current == "Home" ? "active" : "")">الرئيسية</a>
+                    <a asp-controller="Buildings" asp-action="Index" class="@(current == "Buildings" ? "active" : "")">المباني والوحدات</a>
                     <div class="nav-section">قريباً</div>
                     <span class="soon">المستخدمين <i class="tag">قريباً</i></span>
-                    <span class="soon">العقارات والوحدات <i class="tag">قريباً</i></span>
                     <span class="soon">العقود <i class="tag">قريباً</i></span>
                     <span class="soon">القوائم الثابتة <i class="tag">قريباً</i></span>
                 </nav>
@@ -42,6 +42,10 @@
                     </div>
                 </header>
                 <main class="content">
+                    @if (TempData["Flash"] is string flash)
+                    {
+                        <div class="flash">@flash</div>
+                    }
                     @RenderBody()
                 </main>
             </div>
@@ -51,5 +55,6 @@
     {
         @RenderBody()
     }
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

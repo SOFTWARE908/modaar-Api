@@ -1,0 +1,155 @@
+@model UnitForm
+@{
+    var details = (BuildingDetails)ViewData["Building"]!;
+    var b = details.Building;
+    ViewData["Title"] = "إضافة وحدة";
+    var remaining = b.UnitsCount is { } max ? max - details.Units.Count : (int?)null;
+}
+
+<div class="page-head">
+    <a asp-action="Details" asp-route-id="@b.Id" class="btn btn-ghost">→ @b.Name</a>
+    @if (remaining is { } r)
+    {
+        <span class="badge">متبقي @r من @b.UnitsCount وحدات</span>
+    }
+</div>
+
+<form method="post" asp-action="CreateUnit" asp-route-id="@b.Id" novalidate class="form-page">
+    <div asp-validation-summary="ModelOnly" class="alert"></div>
+
+    <section class="card form-section">
+        <h2>المالك</h2>
+        <div class="grid">
+            <div class="field">
+                <label asp-for="OwnerPhone"></label>
+                <input asp-for="OwnerPhone" inputmode="tel" maxlength="10" dir="ltr" placeholder="05XXXXXXXX" />
+                <span asp-validation-for="OwnerPhone" class="field-error"></span>
+                <span id="owner-status" class="hint"></span>
+            </div>
+            <div class="field" id="owner-name-field">
+                <label asp-for="OwnerName"></label>
+                <input asp-for="OwnerName" placeholder="لو الرقم مش مسجل هيتعمل له حساب مالك بالاسم ده" />
+                <span asp-validation-for="OwnerName" class="field-error"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="card form-section">
+        <h2>بيانات الوحدة الإيجارية</h2>
+        <div class="grid">
+            <div class="field">
+                <label asp-for="PropertyType"></label>
+                <select asp-for="PropertyType">
+                    <option value="">اختر</option>
+                    @foreach (var t in Enum.GetValues<PropertyType>())
+                    {
+                        <option value="@t" selected="@(Model.PropertyType == t)">@Labels.Of(t)</option>
+                    }
+                </select>
+                <span asp-validation-for="PropertyType" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="UnitNumber"></label>
+                <input asp-for="UnitNumber" dir="ltr" />
+                <span asp-validation-for="UnitNumber" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Floor"></label>
+                <input asp-for="Floor" />
+                <span asp-validation-for="Floor" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Area"></label>
+                <input asp-for="Area" type="number" step="0.01" min="1" dir="ltr" />
+                <span asp-validation-for="Area" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="HasKitchenCabinets"></label>
+                <select asp-for="HasKitchenCabinets">
+                    <option value="">اختر</option>
+                    <option value="true" selected="@(Model.HasKitchenCabinets == true)">نعم</option>
+                    <option value="false" selected="@(Model.HasKitchenCabinets == false)">لا</option>
+                </select>
+                <span asp-validation-for="HasKitchenCabinets" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="AcUnitsCount"></label>
+                <input asp-for="AcUnitsCount" type="number" min="0" dir="ltr" />
+                <span asp-validation-for="AcUnitsCount" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="AcType"></label>
+                <input asp-for="AcType" placeholder="مثال: سبليت" />
+                <span asp-validation-for="AcType" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="ElectricityMeterNumber"></label>
+                <input asp-for="ElectricityMeterNumber" dir="ltr" placeholder="ECC2020810689199" />
+                <span asp-validation-for="ElectricityMeterNumber" class="field-error"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="card form-section">
+        <h2>بيانات اختيارية</h2>
+        <div class="grid">
+            <div class="field">
+                <label asp-for="RoomsCount"></label>
+                <input asp-for="RoomsCount" type="number" min="0" dir="ltr" />
+                <span asp-validation-for="RoomsCount" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="AnnualRent"></label>
+                <input asp-for="AnnualRent" type="number" step="0.01" min="0" dir="ltr" />
+                <span asp-validation-for="AnnualRent" class="field-error"></span>
+            </div>
+        </div>
+    </section>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">حفظ الوحدة</button>
+        @if (remaining is null || remaining > 1)
+        {
+            <button type="submit" name="next" value="another" class="btn btn-outline">حفظ وإضافة وحدة أخرى</button>
+        }
+        <a asp-action="Details" asp-route-id="@b.Id" class="btn btn-ghost">إلغاء</a>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        // Says whose number it is as the phone is typed; the name is only needed for a new owner.
+        (function () {
+            const phone = document.getElementById('OwnerPhone');
+            const status = document.getElementById('owner-status');
+            const nameField = document.getElementById('owner-name-field');
+            let last = '';
+            async function check() {
+                const v = phone.value.trim();
+                if (v === last) return;
+                last = v;
+                if (!/^0?5\d{8}$/.test(v)) { status.textContent = ''; nameField.hidden = false; return; }
+                try {
+                    const res = await fetch('@Url.Action("OwnerLookup")?phone=' + encodeURIComponent(v));
+                    if (!res.ok || phone.value.trim() !== v) return;
+                    const o = await res.json();
+                    if (!o.found) {
+                        status.textContent = 'مفيش حساب بالرقم ده: هيتعمل حساب مالك جديد بالاسم.';
+                        status.className = 'hint';
+                        nameField.hidden = false;
+                    } else if (!o.isActive) {
+                        status.textContent = 'حساب صاحب الرقم ده موقوف.';
+                        status.className = 'hint hint-error';
+                        nameField.hidden = true;
+                    } else {
+                        status.textContent = 'المالك: ' + (o.name || 'بدون اسم') + (o.isOwner ? '' : ' (هيتضاف له دور مالك)');
+                        status.className = 'hint hint-ok';
+                        nameField.hidden = true;
+                    }
+                } catch { /* the server checks again on save */ }
+            }
+            phone.addEventListener('input', check);
+            check();
+        })();
+    </script>
+}

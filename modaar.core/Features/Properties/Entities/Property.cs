@@ -48,6 +48,12 @@ public class Property
     public decimal? Area { get; set; }          // square metres
     public int? BathroomsCount { get; set; }
 
+    // Unit specs from the Ejar sheet, filled by the admin panel. Null on units added from the app.
+    public bool? HasKitchenCabinets { get; set; }   // خزائن مطبخ مركبة
+    public int? AcUnitsCount { get; set; }
+    public string? AcType { get; set; }             // free text: the sheet gives no list
+    public string? ElectricityMeterNumber { get; set; }
+
     // The asking rent, which is what a vacant unit is advertised at. What a sitting tenant
     // actually pays lives on their contract and can differ.
     public decimal AnnualRent { get; set; }

@@ -17,6 +17,7 @@ builder.Services.AddModaarCore(builder.Configuration);
 builder.Services.AddSingleton<IRealtimeNotifier, NoRealtimeNotifier>();
 
 builder.Services.AddScoped<AdminSignIn>();
+builder.Services.AddScoped<modaar.admin.Features.Buildings.AdminBuildingService>();
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

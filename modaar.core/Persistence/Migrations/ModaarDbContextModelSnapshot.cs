@@ -17,7 +17,7 @@ namespace modaar.api.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.22")
+                .HasAnnotation("ProductVersion", "9.0.23")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -554,13 +554,24 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AdditionalNumber")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<string>("AddressLine")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("BuildingNumber")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<string>("City")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("CityId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CoverImageUrl")
                         .HasMaxLength(500)
@@ -574,13 +585,24 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DeedIssueDateHijri")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<string>("DeedNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("DeedType")
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("District")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("FloorsCount")
+                        .HasColumnType("int");
 
                     b.Property<decimal?>("Latitude")
                         .HasPrecision(9, 6)
@@ -595,23 +617,43 @@ namespace modaar.api.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<int?>("ParkingSpaces")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<DateTimeOffset?>("RulesUpdatedAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Street")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
+                    b.Property<int?>("UnitsCount")
+                        .HasColumnType("int");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetimeoffset")
                         .HasDefaultValueSql("SYSDATETIMEOFFSET()");
 
+                    b.Property<string>("UsagePurpose")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<int?>("YearBuilt")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CityId");
 
                     b.HasIndex("CreatedByUserId");
 
@@ -814,6 +856,161 @@ namespace modaar.api.Persistence.Migrations
                             NameEn = "General",
                             SortOrder = 100,
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
+            modelBuilder.Entity("modaar.api.Features.Buildings.Entities.City", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "SortOrder");
+
+                    b.ToTable("Cities", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("c1700000-0000-4000-8000-000000000001"),
+                            Code = "riyadh",
+                            IsActive = true,
+                            NameAr = "الرياض",
+                            NameEn = "Riyadh",
+                            SortOrder = 10
+                        },
+                        new
+                        {
+                            Id = new Guid("c1700000-0000-4000-8000-000000000002"),
+                            Code = "makkah",
+                            IsActive = true,
+                            NameAr = "مكة المكرمة",
+                            NameEn = "Makkah",
+                            SortOrder = 20
+                        },
+                        new
+                        {
+                            Id = new Guid("c1700000-0000-4000-8000-000000000003"),
+                            Code = "madinah",
+                            IsActive = true,
+                            NameAr = "المدينة المنورة",
+                            NameEn = "Madinah",
+                            SortOrder = 30
+                        },
+                        new
+                        {
+                            Id = new Guid("c1700000-0000-4000-8000-000000000004"),
+                            Code = "buraydah",
+                            IsActive = true,
+                            NameAr = "بريدة",
+                            NameEn = "Buraydah",
+                            SortOrder = 40
+                        },
+                        new
+                        {
+                            Id = new Guid("c1700000-0000-4000-8000-000000000005"),
+                            Code = "dammam",
+                            IsActive = true,
+                            NameAr = "الدمام",
+                            NameEn = "Dammam",
+                            SortOrder = 50
+                        },
+                        new
+                        {
+                            Id = new Guid("c1700000-0000-4000-8000-000000000006"),
+                            Code = "tabuk",
+                            IsActive = true,
+                            NameAr = "تبوك",
+                            NameEn = "Tabuk",
+                            SortOrder = 60
+                        },
+                        new
+                        {
+                            Id = new Guid("c1700000-0000-4000-8000-000000000007"),
+                            Code = "hail",
+                            IsActive = true,
+                            NameAr = "حائل",
+                            NameEn = "Hail",
+                            SortOrder = 70
+                        },
+                        new
+                        {
+                            Id = new Guid("c1700000-0000-4000-8000-000000000008"),
+                            Code = "arar",
+                            IsActive = true,
+                            NameAr = "عرعر",
+                            NameEn = "Arar",
+                            SortOrder = 80
+                        },
+                        new
+                        {
+                            Id = new Guid("c1700000-0000-4000-8000-000000000009"),
+                            Code = "sakaka",
+                            IsActive = true,
+                            NameAr = "سكاكا",
+                            NameEn = "Sakaka",
+                            SortOrder = 90
+                        },
+                        new
+                        {
+                            Id = new Guid("c1700000-0000-4000-8000-000000000010"),
+                            Code = "abha",
+                            IsActive = true,
+                            NameAr = "أبها",
+                            NameEn = "Abha",
+                            SortOrder = 100
+                        },
+                        new
+                        {
+                            Id = new Guid("c1700000-0000-4000-8000-000000000011"),
+                            Code = "jazan",
+                            IsActive = true,
+                            NameAr = "جازان",
+                            NameEn = "Jazan",
+                            SortOrder = 110
+                        },
+                        new
+                        {
+                            Id = new Guid("c1700000-0000-4000-8000-000000000012"),
+                            Code = "najran",
+                            IsActive = true,
+                            NameAr = "نجران",
+                            NameEn = "Najran",
+                            SortOrder = 120
+                        },
+                        new
+                        {
+                            Id = new Guid("c1700000-0000-4000-8000-000000000013"),
+                            Code = "al_bahah",
+                            IsActive = true,
+                            NameAr = "الباحة",
+                            NameEn = "Al Bahah",
+                            SortOrder = 130
                         });
                 });
 
@@ -2030,6 +2227,13 @@ namespace modaar.api.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AcType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("AcUnitsCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("AddressLine")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -2071,9 +2275,16 @@ namespace modaar.api.Persistence.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<string>("ElectricityMeterNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
                     b.Property<string>("Floor")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool?>("HasKitchenCabinets")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -2799,11 +3010,18 @@ namespace modaar.api.Persistence.Migrations
 
             modelBuilder.Entity("modaar.api.Features.Buildings.Entities.Building", b =>
                 {
+                    b.HasOne("modaar.api.Features.Buildings.Entities.City", "CityLookup")
+                        .WithMany()
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("modaar.api.Features.Users.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("CityLookup");
                 });
 
             modelBuilder.Entity("modaar.api.Features.Buildings.Entities.BuildingContact", b =>

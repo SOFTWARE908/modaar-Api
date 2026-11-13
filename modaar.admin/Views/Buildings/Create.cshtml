@@ -1,0 +1,125 @@
+@model BuildingForm
+@{
+    ViewData["Title"] = "إضافة مبنى";
+    var cities = (List<CityOption>)ViewData["Cities"]!;
+}
+
+<form method="post" asp-action="Create" novalidate class="form-page">
+    <div asp-validation-summary="ModelOnly" class="alert"></div>
+
+    <section class="card form-section">
+        <h2>بيانات العقار</h2>
+        <div class="grid">
+            <div class="field span-2">
+                <label asp-for="Name"></label>
+                <input asp-for="Name" placeholder="مثال: عمارة الشهداء" />
+                <span asp-validation-for="Name" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Type"></label>
+                <select asp-for="Type">
+                    <option value="">اختر</option>
+                    @foreach (var t in Enum.GetValues<BuildingType>())
+                    {
+                        <option value="@t" selected="@(Model.Type == t)">@Labels.Of(t)</option>
+                    }
+                </select>
+                <span asp-validation-for="Type" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="UsagePurpose"></label>
+                <input asp-for="UsagePurpose" placeholder="مثال: سكن عائلات" />
+                <span asp-validation-for="UsagePurpose" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="FloorsCount"></label>
+                <input asp-for="FloorsCount" type="number" min="1" max="4" dir="ltr" />
+                <span asp-validation-for="FloorsCount" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="UnitsCount"></label>
+                <input asp-for="UnitsCount" type="number" min="1" dir="ltr" />
+                <span asp-validation-for="UnitsCount" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="ParkingSpaces"></label>
+                <input asp-for="ParkingSpaces" type="number" min="0" dir="ltr" />
+                <span asp-validation-for="ParkingSpaces" class="field-error"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="card form-section">
+        <h2>العنوان الوطني</h2>
+        <div class="grid">
+            <div class="field">
+                <label asp-for="BuildingNumber"></label>
+                <input asp-for="BuildingNumber" inputmode="numeric" maxlength="4" dir="ltr" placeholder="7328" />
+                <span asp-validation-for="BuildingNumber" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Street"></label>
+                <input asp-for="Street" placeholder="الشملول" />
+                <span asp-validation-for="Street" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="AdditionalNumber"></label>
+                <input asp-for="AdditionalNumber" inputmode="numeric" maxlength="4" dir="ltr" placeholder="3885" />
+                <span asp-validation-for="AdditionalNumber" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="District"></label>
+                <input asp-for="District" placeholder="الشهداء" />
+                <span asp-validation-for="District" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="PostalCode"></label>
+                <input asp-for="PostalCode" inputmode="numeric" maxlength="5" dir="ltr" placeholder="13241" />
+                <span asp-validation-for="PostalCode" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="CityId"></label>
+                <select asp-for="CityId">
+                    <option value="">اختر</option>
+                    @foreach (var c in cities)
+                    {
+                        <option value="@c.Id" selected="@(Model.CityId == c.Id)">@c.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="CityId" class="field-error"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="card form-section">
+        <h2>بيانات مستندات الملكية</h2>
+        <div class="grid">
+            <div class="field">
+                <label asp-for="DeedNumber"></label>
+                <input asp-for="DeedNumber" inputmode="numeric" maxlength="12" dir="ltr" placeholder="960604005957" />
+                <span asp-validation-for="DeedNumber" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="DeedIssueDateHijri"></label>
+                <input asp-for="DeedIssueDateHijri" maxlength="10" dir="ltr" placeholder="1445-11-12" />
+                <span asp-validation-for="DeedIssueDateHijri" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="DeedType"></label>
+                <select asp-for="DeedType">
+                    <option value="">اختر</option>
+                    @foreach (var t in Enum.GetValues<DeedType>())
+                    {
+                        <option value="@t" selected="@(Model.DeedType == t)">@Labels.Of(t)</option>
+                    }
+                </select>
+                <span asp-validation-for="DeedType" class="field-error"></span>
+            </div>
+        </div>
+    </section>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">حفظ المبنى</button>
+        <a asp-action="Index" class="btn btn-outline">إلغاء</a>
+    </div>
+</form>
